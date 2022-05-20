@@ -4,26 +4,32 @@
 #include "WindowsProject1.h"
 #include "Method.h"
 #include <comdef.h>
-#include "GdiPlus.h"
-using namespace Gdiplus;
+
+//using namespace std;
+
+//#include "GdiPlus.h"
 
 #define MAX_LOADSTRING 100
+#define DEFAULT_PORT 2336
+#define SERVER_IP "175.178.90.119"
 
 //extern vector <tank_info*> tank_list;
 
 // 全局变量:
-Tank tank1(80, 80);
 Tank tank2(80, 80);
+Tank tank1(80, 80);
 HDC hdcmem, hdc;
 bool isstart = false;
 
 //加载位图
-HBITMAP hbitmap1 = (HBITMAP)LoadImage(NULL, L"beila2.bmp", IMAGE_BITMAP, tank1.width, tank1.height, LR_DEFAULTSIZE | LR_LOADFROMFILE);
-HBITMAP hbitmap2 = (HBITMAP)LoadImage(NULL, L"jiaran.bmp", IMAGE_BITMAP, tank2.width, tank2.height, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+HBITMAP hbitmap1 = (HBITMAP)LoadImage(NULL, L"beila2.bmp", IMAGE_BITMAP, tank2.width, tank2.height, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+HBITMAP hbitmap2 = (HBITMAP)LoadImage(NULL, L"jiaran.bmp", IMAGE_BITMAP, tank1.width, tank1.height, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+HBITMAP op_bitmap = (HBITMAP)LoadImage(NULL, L"OP_BR.bmp", IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
 BITMAP bm1;
 BITMAP bm2;
+BITMAP op_bm;
 HINSTANCE hInst;                                // 当前实例
-WCHAR szTitle[MAX_LOADSTRING] = TEXT("Tank War");                  // 标题栏文本
+WCHAR szTitle[MAX_LOADSTRING] = L"Tank War";                  // 标题栏文本
 WCHAR szWindowClass[MAX_LOADSTRING];            // 主窗口类名
 HWND _hwnd;
 RECT _rect;
@@ -32,6 +38,10 @@ HWND hwndButton1;
 HWND hwndButton2;
 HWND hwndButton3;
 HWND hwndButton4;
+HWND hwndButton5;
+HWND hwndButton6;
+
+HWND Hall;
 
 HPEN tank_Pen = CreatePen(PS_SOLID, 0, RGB(100, 100, 200));
 HBRUSH tank_Brush = CreateSolidBrush(RGB(255, 238, 114));
@@ -40,6 +50,9 @@ HBRUSH bullet_Brush = CreateSolidBrush(RGB(255, 0, 0));
 
 
 WSADATA wsa;
+sockaddr_in addr_info;
+SOCKET mysocket = INVALID_SOCKET;
+char buffer[1024];
 
 // 此代码模块中包含的函数的前向声明:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -47,6 +60,7 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    Pause(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK    HALL(HWND, UINT, WPARAM, LPARAM);
 
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -134,6 +148,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
+	//op_bitmap = LoadBitmap(hInstance, MAKEINTRESOURCE(BITMAP_BK));
+
 	if (!hWnd)
 	{
 		return FALSE;
@@ -167,12 +183,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CREATE:
 	{
-		tank1.InitTank(rect.right - tank1.width / 2 - 20, (rect.bottom - rect.top) / 2, LEFT);
-		tank2.InitTank(rect.left + tank2.width / 2 + 20, (rect.bottom - rect.top) / 2, RIGHT);
+		if (!op_bitmap)
+		{
+			MessageBox(hWnd, _T("位图加载失败"), NULL, MB_OK);
+		}
+		tank2.InitTank(rect.right - tank2.width / 2 - 20, (rect.bottom - rect.top) / 2, LEFT);
+		tank1.InitTank(rect.left + tank1.width / 2 + 20, (rect.bottom - rect.top) / 2, RIGHT);
 		Get_Init_UI(_hwnd);
 		Get_Initinfo();
 		GetObject(hbitmap1, sizeof(BITMAP), &bm1);
 		GetObject(hbitmap2, sizeof(BITMAP), &bm2);
+		GetObject(op_bitmap, sizeof(BITMAP), &op_bm);
 	}
 	case WM_TIMER:
 	{
@@ -180,78 +201,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 		case tank:
 		{
-			if (GetAsyncKeyState(VK_UP) & 0x8000)
-			{
-				if (tank1.direction != UP)
-					tank1.direction = UP;
-				else if ((tank1.locationY - tank1.height / 2 - 10) < rect.top)
-					tank1.locationY = rect.top + tank1.height / 2;
-				else tank1.locationY -= 10;
-			}
-			else if (GetAsyncKeyState(VK_DOWN) & 0x8000)
-			{
-				if (tank1.direction != DOWN)
-					tank1.direction = DOWN;
-				else if ((tank1.locationY + tank1.height / 2 + 10) > rect.bottom)
-					tank1.locationY = rect.bottom - tank1.height / 2;
-				else tank1.locationY += 10;
-			}
-			else if (GetAsyncKeyState(VK_LEFT) & 0x8000)
-			{
-				if (tank1.direction != LEFT)
-					tank1.direction = LEFT;
-				else if ((tank1.locationX - tank1.width / 2 - 10) < rect.left)
-					tank1.locationX = rect.left + tank1.width / 2;
-				else tank1.locationX -= 10;
-			}
-			else if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
-			{
-				if (tank1.direction != RIGHT)
-					tank1.direction = RIGHT;
-				else if ((tank1.locationX + tank1.width / 2 + 10) > rect.right)
-					tank1.locationX = rect.right - tank1.width / 2;
-				else tank1.locationX += 10;
-			}
-			if (GetAsyncKeyState('W') & 0x8000)
-			{
-				if (tank2.direction != UP)
-					tank2.direction = UP;
-				else if ((tank2.locationY - tank2.height / 2 - 10) < rect.top)
-					tank2.locationY = rect.top + tank2.height / 2;
-				else tank2.locationY -= 10;
-			}
-			else if (GetAsyncKeyState('S') & 0x8000)
-			{
-				if (tank2.direction != DOWN)
-					tank2.direction = DOWN;
-				else if ((tank2.locationY + tank2.height / 2 + 10) > rect.bottom)
-					tank2.locationY = rect.bottom - tank2.height / 2;
-				else tank2.locationY += 10;
-			}
-			else if (GetAsyncKeyState('A') & 0x8000)
-			{
-				if (tank2.direction != LEFT)
-					tank2.direction = LEFT;
-				else if ((tank2.locationX - tank2.width / 2 - 10) < rect.left)
-					tank2.locationX = rect.left + tank2.width / 2;
-				else tank2.locationX -= 10;
-			}
-			else if (GetAsyncKeyState('D') & 0x8000)
-			{
-				if (tank2.direction != RIGHT)
-					tank2.direction = RIGHT;
-				else if ((tank2.locationX + tank2.width / 2 + 10) > rect.right)
-					tank2.locationX = rect.right - tank2.width / 2;
-				else tank2.locationX += 10;
-			}
+			tank1.Tank1_Move(rect);
+			tank2.Tank2_Move(rect);
 			break;
 		}
 		case bullet:
 		{
-			if (tank1.bullet_head != NULL)
-				(*(tank1.bullet_head)).Move(rect);
-			if (tank2.bullet_head != NULL)
+			if (tank2.bullet_head)
 				(*(tank2.bullet_head)).Move(rect);
+			if (tank1.bullet_head)
+				(*(tank1.bullet_head)).Move(rect);
 			break;
 		}
 		}
@@ -282,8 +241,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		int wmId = LOWORD(wParam);
 		// 分析菜单选择:
+
 		switch (wmId)
 		{
+			// 暂停
 		case IDB_ONE:
 		{
 			KillTimer(hWnd, tank);
@@ -305,19 +266,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 
+		// 开始游戏
 		case IDB_TWO: {
 			Init_all();
-			ShowWindow(hwndButton2, SW_HIDE);
-			ShowWindow(hwndButton3, SW_HIDE);
-			ShowWindow(hwndButton4, SW_HIDE);
+			Hide_Main_UI();
 			SetTimer(hWnd, tank, 100, NULL);
 			SetTimer(hWnd, bullet, 100, NULL);
 			ShowWindow(hwndButton1, SW_SHOW);
-			isstart = 1;
+			isstart = true;
 			break;
 		}
-		case IDB_THREE: {break; }
-		case IDB_FOUR://退出游戏
+					// 联机大厅
+		case IDB_THREE: {
+			Hide_Main_UI();
+			Hall = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_HALL), hWnd, HALL);
+			ShowWindow(Hall, SW_SHOW);
+			break;
+		}
+					  // 设置
+		case IDB_FOUR: {break; }
+		case IDB_FIVE:// 退出游戏
 		{
 			DestroyWindow(hWnd);
 			break;
@@ -340,41 +308,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		GetClientRect(hWnd, &rect);
 		switch (wParam)
 		{
-			//	case VK_UP:
-			//		if (tank1.direction != UP)
-			//			tank1.direction = UP;
-			//		else if ((tank1.locationY - tank1.height / 2 - 10) < rect.top)
-			//			tank1.locationY = rect.top + tank1.height / 2;
-			//		else tank1.locationY -= 10;
-			//		break;
-			//	case VK_DOWN:
-			//		if (tank1.direction != DOWN)
-			//			tank1.direction = DOWN;
-			//		else if ((tank1.locationY + tank1.height / 2 + 10) > rect.bottom)
-			//			tank1.locationY = rect.bottom - tank1.height / 2;
-			//		else tank1.locationY += 10;
-			//		break;
-			//	case VK_LEFT:
-			//		if (tank1.direction != LEFT)
-			//			tank1.direction = LEFT;
-			//		else if ((tank1.locationX - tank1.width / 2 - 10) < rect.left)
-			//			tank1.locationX = rect.left + tank1.width / 2;
-			//		else tank1.locationX -= 10;
-			//		break;
-			//	case VK_RIGHT:
-			//		if (tank1.direction != RIGHT)
-			//			tank1.direction = RIGHT;
-			//		else if ((tank1.locationX + tank1.width / 2 + 10) > rect.right)
-			//			tank1.locationX = rect.right - tank1.width / 2;
-			//		else tank1.locationX += 10;
-			//		break;
 		case VK_OEM_2:
-			if (tank1.isalive == true)
-				tank1.Addbullet();
-			break;
-		case VK_SPACE:
 			if (tank2.isalive == true)
 				tank2.Addbullet();
+			break;
+		case VK_SPACE:
+			if (tank1.isalive == true)
+				tank1.Addbullet();
 			break;
 		}
 		//InvalidateRect(hWnd, NULL, TRUE);
@@ -402,39 +342,46 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			//SelectObject(hdc, Pen2);
 			//LineTo(hdc, 600, 500);
 
+			hdcmem = CreateCompatibleDC(hdc);
+			HBITMAP _hMemoryBMP = CreateCompatibleBitmap(hdc, rect.right - rect.left, rect.right - rect.left);
+			SelectObject(hdcmem, _hMemoryBMP);
 			if (!isstart) {
-				SetBkColor(hdc, RGB(0, 0, 0));
+				//HBRUSH hBlackBrush = (HBRUSH)::GetStockObject(BLACK_BRUSH);
+				SelectObject(hdcmem, GetStockObject(GRAY_BRUSH));
+				Rectangle(hdcmem, -10, -10, rect.right, rect.bottom);
+				HDC op_hdc = CreateCompatibleDC(hdcmem);
+				SelectObject(op_hdc, op_bitmap);
+				StretchBlt(hdcmem, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, op_hdc, 0, 0, op_bm.bmWidth, op_bm.bmHeight, SRCCOPY);
+				DeleteDC(op_hdc);
 			}
 
 			else {
-				hdcmem = CreateCompatibleDC(hdc);
-				HBITMAP _hMemoryBMP = CreateCompatibleBitmap(hdc, rect.right, rect.bottom);
-				SelectObject(hdcmem, _hMemoryBMP);
 				SelectObject(hdcmem, WHITE_BRUSH);
 				Rectangle(hdcmem, -10, -10, rect.right, rect.bottom);
 
-				if (tank1.bullet_head)
-					(*(tank1.bullet_head)).Drawbullet(bullet_Pen, bullet_Brush);
 				if (tank2.bullet_head)
 					(*(tank2.bullet_head)).Drawbullet(bullet_Pen, bullet_Brush);
+				if (tank1.bullet_head)
+					(*(tank1.bullet_head)).Drawbullet(bullet_Pen, bullet_Brush);
 
-				if (tank1.isalive)
-					tank1.DrawTank(rect, hbitmap1, bm1);
 				if (tank2.isalive)
-					tank2.DrawTank(rect, hbitmap2, bm2);
+					tank2.DrawTank(rect, hbitmap1, bm1);
+				if (tank1.isalive)
+					tank1.DrawTank(rect, hbitmap2, bm2);
 
-				if (!BitBlt(hdc, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, hdcmem, 0, 0, SRCCOPY))
-					MessageBox(hWnd, L"BitBlt has failed", L"Failed", MB_OK);
-
-				DeleteObject(_hMemoryBMP);
-				DeleteDC(hdcmem);
-				ReleaseDC(hWnd, hdc);
 			}
+			if (!BitBlt(hdc, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, hdcmem, 0, 0, SRCCOPY))
+				MessageBox(hWnd, L"BitBlt has failed", L"Failed", MB_OK);
+			ReleaseDC(hWnd, hdc);
+			DeleteObject(_hMemoryBMP);
+			DeleteDC(hdcmem);
 		}
 		EndPaint(hWnd, &ps);
 	}
 	break;
+
 	case WM_DESTROY:
+		closesocket(mysocket);
 		PostQuitMessage(0);
 		break;
 	default:
@@ -509,3 +456,99 @@ INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 	return (INT_PTR)FALSE;
 }
 
+
+enum { refrash, reconnect };
+HWND room_list;
+HWND user_list;
+HWND edit_in;
+HWND edit_hall;
+INT_PTR CALLBACK HALL(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
+	UNREFERENCED_PARAMETER(lParam);
+	switch (message)
+	{
+	case WM_INITDIALOG:
+	{
+		SetTimer(hDlg, reconnect, 5000, NULL);
+		SetTimer(hDlg, refrash, 3000, NULL);
+		{
+			RECT Father_rect;
+			RECT My_rect;
+			GetClientRect(_hwnd, &Father_rect);
+			GetClientRect(hDlg, &My_rect);
+			SetWindowPos(
+				hDlg,
+				NULL,
+				Father_rect.left + (Father_rect.right - Father_rect.left) / 2 - My_rect.right / 2,
+				Father_rect.top + (Father_rect.bottom - Father_rect.top) / 2 - My_rect.bottom / 2,
+				100, 200,
+				SWP_NOSIZE
+			);
+		}
+		user_list = GetDlgItem(hDlg, IDC_LIST1);
+		room_list = GetDlgItem(hDlg, IDC_LIST2);
+		edit_hall = GetDlgItem(hDlg, IDC_EDIT1);
+		edit_in = GetDlgItem(hDlg, IDC_EDIT2);
+		{
+			WSAStartup(MAKEWORD(2, 2), &wsa);
+			ZeroMemory(&addr_info, sizeof(addr_info));
+			addr_info.sin_family = AF_INET;
+			addr_info.sin_port = htons(DEFAULT_PORT);
+			inet_pton(AF_INET, SERVER_IP, &(addr_info.sin_addr.S_un.S_addr));
+
+			memset(buffer, '\0', 1024);
+			mysocket = socket(addr_info.sin_family, SOCK_STREAM, 0);
+			connect(mysocket, (struct sockaddr*)&addr_info, sizeof(struct sockaddr));
+			thread T(recv_socket);
+		}
+		break;
+	}
+
+	case WM_COMMAND:
+	{
+		int wmId = LOWORD(wParam);
+		switch (wParam)
+		{
+			// 刷新
+		case IDC_BUTTON1:
+			Get_Hallinfo(room_list, user_list);
+			break;
+			// 加入房间
+		case IDC_BUTTON2:
+			break;
+			// 离开大厅
+		case IDC_BUTTON3:
+			closesocket(mysocket);
+			DestroyWindow(hDlg);
+			Show_Main_UI();
+			break;
+		case IDC_BUTTON4:
+		{
+			wstring temp;
+			GetWindowTextW(edit_in, &(temp[0]), 1024);
+			Send_Message(temp);
+			break;
+		}
+		default: return DefWindowProc(hDlg, message, wParam, lParam);
+		}
+		break;
+	}
+	case WM_TIMER:
+	{
+		switch (wParam)
+		{
+		case refrash:
+			Get_Hallinfo(room_list, user_list);
+			break;
+			//case reconnect:
+			//if (!isconnecting())			
+			//	if (connect(mysocket, (struct sockaddr*)&addr_info, sizeof(struct sockaddr)) == -1)
+			//	{
+			//		(int)SendMessage(user_list, LB_RESETCONTENT, 0, 0);
+			//		(int)SendMessage(user_list, LB_ADDSTRING, 0, (LPARAM) L"已断开连接，检查网络！");
+			//	}
+			break;
+		}
+	}
+	}
+	return (INT_PTR)FALSE;
+}

@@ -125,32 +125,76 @@ void Tank::DrawTank(RECT& rect, HBITMAP& hbitmap, BITMAP& bm)
 	DeleteObject(hMemoryBMP);
 };
 
-void Tank::AutoMove(HWND hWnd, RECT rect)
+void Tank::Tank2_Move(RECT& rect)
 {
-	switch (direction)
+	if (GetAsyncKeyState(VK_UP) & 0x8000)
 	{
-	case UP:
-		if ((this->locationY - this->height / 2 - 10) < rect.top)
+		if (this->direction != UP)
+			this->direction = UP;
+		else if ((this->locationY - this->height / 2 - 10) < rect.top)
 			this->locationY = rect.top + this->height / 2;
 		else this->locationY -= 10;
-		break;
-	case DOWN:
-		if ((this->locationY + this->height / 2 + 10) > rect.bottom)
+	}
+	else if (GetAsyncKeyState(VK_DOWN) & 0x8000)
+	{
+		if (this->direction != DOWN)
+			this->direction = DOWN;
+		else if ((this->locationY + this->height / 2 + 10) > rect.bottom)
 			this->locationY = rect.bottom - this->height / 2;
 		else this->locationY += 10;
-		break;
-	case LEFT:
-		if ((this->locationX - this->width / 2 - 10) < rect.left)
+	}
+	else if (GetAsyncKeyState(VK_LEFT) & 0x8000)
+	{
+		if (this->direction != LEFT)
+			this->direction = LEFT;
+		else if ((this->locationX - this->width / 2 - 10) < rect.left)
 			this->locationX = rect.left + this->width / 2;
 		else this->locationX -= 10;
-		break;
-	case RIGHT:
-		if ((this->locationX + this->width / 2 + 10) > rect.right)
+	}
+	else if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
+	{
+		if (this->direction != RIGHT)
+			this->direction = RIGHT;
+		else if ((this->locationX + this->width / 2 + 10) > rect.right)
 			this->locationX = rect.right - this->width / 2;
 		else this->locationX += 10;
-		break;
 	}
-	InvalidateRect(hWnd, NULL, TRUE);
+}
+
+void Tank::Tank1_Move(RECT& rect)
+{
+	if (GetAsyncKeyState('W') & 0x8000)
+	{
+		if (this->direction != UP)
+			this->direction = UP;
+		else if ((this->locationY - this->height / 2 - 10) < rect.top)
+			this->locationY = rect.top + this->height / 2;
+		else this->locationY -= 10;
+	}
+	else if (GetAsyncKeyState('S') & 0x8000)
+	{
+		if (this->direction != DOWN)
+			this->direction = DOWN;
+		else if ((this->locationY + this->height / 2 + 10) > rect.bottom)
+			this->locationY = rect.bottom - this->height / 2;
+		else this->locationY += 10;
+	}
+	else if (GetAsyncKeyState('A') & 0x8000)
+	{
+		if (this->direction != LEFT)
+			this->direction = LEFT;
+		else if ((this->locationX - this->width / 2 - 10) < rect.left)
+			this->locationX = rect.left + this->width / 2;
+		else this->locationX -= 10;
+	}
+	else if (GetAsyncKeyState('D') & 0x8000)
+	{
+		if (this->direction != RIGHT)
+			this->direction = RIGHT;
+		else if ((this->locationX + this->width / 2 + 10) > rect.right)
+			this->locationX = rect.right - this->width / 2;
+		else this->locationX += 10;
+	}
 }
 
 void Tank::Addbullet() {

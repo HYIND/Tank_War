@@ -155,7 +155,13 @@
     <ResourceCompile Include="WindowsProject1.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="liangliang.jpg" />
+    <Image Include="..\Debug\beila.bmp" />
+    <Image Include="..\Debug\beila2.bmp" />
+    <Image Include="..\Debug\jiaran.bmp" />
+    <Image Include="..\Debug\liangliang.bmp" />
+    <Image Include="..\Debug\OP_BK.bmp" />
+    <Image Include="..\Debug\OP_BR.bmp" />
+    <Image Include="..\Debug\taotao.bmp" />
     <Image Include="small.ico" />
     <Image Include="WindowsProject1.ico" />
   </ItemGroup>

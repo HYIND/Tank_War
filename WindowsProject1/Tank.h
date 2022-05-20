@@ -1,8 +1,6 @@
 #pragma once
 #include "framework.h"
 #include <vector>
-#include <WinSock2.h>
-#include <WS2tcpip.h>
 using namespace std;
 
 class Tank;
@@ -59,7 +57,8 @@ public:
 	void InitTank(int X, int Y, int direction);
 	void InitTank(int width, int height);
 	void DrawTank(RECT& rect, HBITMAP& hbitmap, BITMAP& bm);
-	void AutoMove(HWND hWnd, RECT rect);
+	void Tank1_Move(RECT& rect);
+	void Tank2_Move(RECT& rect);
 	void Addbullet();
 	bool crash();
 

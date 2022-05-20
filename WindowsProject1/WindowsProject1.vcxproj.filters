@@ -57,7 +57,25 @@
     <Image Include="WindowsProject1.ico">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="liangliang.jpg">
+    <Image Include="..\Debug\beila.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Debug\beila2.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Debug\jiaran.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Debug\liangliang.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Debug\OP_BK.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Debug\OP_BR.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Debug\taotao.bmp">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>
