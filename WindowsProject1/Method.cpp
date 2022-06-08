@@ -1,5 +1,8 @@
 #include"Method.h"
 
+extern Tank* mytank;
+extern Tank* optank;
+
 extern bool isstart;
 extern HWND hwndButton1;
 extern HWND hwndButton2;
@@ -7,13 +10,27 @@ extern HWND hwndButton3;
 extern HWND hwndButton4;
 extern HWND hwndButton5;
 extern HWND hwndButton6;
+extern HWND room_list;
+extern HWND user_list;
+extern HWND edit_hall;
+extern HWND edit_in;
+
 extern HWND _hwnd;
 extern HDC hdc;
+
+extern HWND Hall;
+extern HWND Room;
 
 extern SOCKET mysocket;
 extern char buffer[1024];
 
-void START(HWND hWnd) {}
+int room_id[65535];
+int room_count = 0;
+
+extern bool Hall_IOCP_flag;
+extern bool Game_IOCP_flag;
+
+//void START(HWND hWnd) {}
 
 wstring string2wstring(string str)
 {
@@ -56,7 +73,6 @@ string wstring2string(wstring wstr)
 void Get_Init_UI(HWND hWnd) {
 	RECT rect;
 	GetClientRect(hWnd, &rect);
-
 	{
 		hwndButton1 = CreateWindow(
 			L"BUTTON",	// predefined class    不区分大小写
@@ -158,6 +174,8 @@ void Hide_Main_UI() {
 	ShowWindow(hwndButton3, SW_HIDE);
 	ShowWindow(hwndButton4, SW_HIDE);
 	ShowWindow(hwndButton5, SW_HIDE);
+	ShowWindow(Hall, SW_HIDE);
+	ShowWindow(Room, SW_HIDE);
 }
 
 void Return_To_Mune() {
@@ -191,79 +209,249 @@ bool isconnecting() {
 	return true;
 }
 
-string send_socket(string& s) {
+void send_socket(string s) {
 	const char* send_buf = &(s[0]);
 	send(mysocket, send_buf, 1023, 0);
-	memset(buffer, '\0', 1024);
-	int num = recv(mysocket, buffer, 1023, MSG_PEEK);
-	if (num > 0) {
-		recv(mysocket, buffer, 1023, 0);
-		string re = buffer;
-		memset(buffer, '\0', 1024);
-		return re;
-	}
-	if (num == 0)return	"error";
 }
 
-void recv_socket() {
-	HANDLE hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
-	CreateIoCompletionPort((HANDLE)mysocket, hIOCP, NULL, 0);
-	DWORD dwBytesTranfered = 0;
-	ULONG_PTR uKey;
-	LPOVERLAPPED pov = NULL;
-	GetQueuedCompletionStatus(
-		hIOCP,
-		&dwBytesTranfered,
-		NULL,
-		&pov,
-		INFINITE
-	);
-	switch (pov->hEvent)
+void Return_Class(char buf[]) {
+	string re = buf;
+	string::const_iterator iterStart = re.begin();
+	string::const_iterator iterEnd = re.end();
+	smatch m;
+	regex reg("^[A-Z|a-z]+");
+	regex_search(iterStart, iterEnd, m, reg);
+	string temp;
+	temp = m[0];
+	if (!isstart)
 	{
-		//接收新的连接
-	case IO_ACCEPT:
-		//连接完成后，再次投递一个连接的请求
-		PostAccept(sockServer, hIocp);
-		cout << " 有新的连接接入" << endl;
-		PostRecv(pov->m_sockClient);
-		break;
-	case IO_RECV:
-		//投递一个接收数据的请求
-		printf("接收到数据%s\r\n", pov->m_btBuf);
-		PostRecv(pov->m_sockClient);
-		break;
-	default:
-		break;
+		if (temp == "user")
+		{
+			string recv_str(m[0].second + 1, iterEnd);
+			Return_Get_Hallinfo_User(recv_str);
+		}
+		else if (temp == "HallMessage")
+		{
+			string recv_str(m[0].second + 1, iterEnd);
+			Return_Hallinfo_Message(recv_str);
+		}
+		else if (temp == "room")
+		{
+			string recv_str(m[0].second + 1, iterEnd);
+			Return_Get_Hallinfo_Room(recv_str);
+		}
+		else if (temp == "roomid")
+		{
+			string recv_str(m[0].second + 1, iterEnd);
+			Return_Get_Hallinfo_Roomid(recv_str);
+		}
+		else if (temp == "EnterRoom")
+		{
+			SendMessage(Hall, WM_COMMAND, Enterroom, (LPARAM)_hwnd);
+		}
+		else if (temp == "Start")
+		{
+			SendMessage(Room, WM_COMMAND, START, (LPARAM)_hwnd);
+		}
 	}
-
-}
-142 }
-}
-
-void Get_Hallinfo(HWND& room_list, HWND& user_list) {
-	//if (!isconnecting())
-	//	return;
-	(int)SendMessage(user_list, LB_RESETCONTENT, 0, 0);
+	else
 	{
-		string s = "Getuser";
-		string re = send_socket(s);
-		if (re == "error") return;
+		if (temp == "oplocation")
+		{
+			try
+			{
+				memcpy(optank, &buf[11], 24);
+			}
+			catch (exception& e)
+			{
+				return;
+			}
+		}
+		else if (temp == "opbullet")
+		{
+			string recv_str(m[0].second + 1, iterEnd);
+			Refresh_opbullet(recv_str);
+		}
+	}
+}
+
+void Return_Hallinfo_Message(string& recv_str) {
+	string::const_iterator iterStart = recv_str.begin();
+	string::const_iterator iterEnd = recv_str.end();
+	smatch _content;
+	regex message_reg("_content");
+	regex_search(iterStart, iterEnd, _content, message_reg);
+	string user_id(iterStart, _content[0].first - 1);
+	user_id += ";\r\n";
+	string content(_content[0].second + 1, iterEnd);
+	wstring w_user_id = string2wstring(user_id);
+	wstring w_content = string2wstring(content);
+	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_id[0]));
+	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_content[0]));
+	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
+}
+
+void Get_Hallinfo() {
+	send_socket("Getuser");
+	send_socket("Getroom");
+}
+
+void Return_Get_Hallinfo_User(string& re) {
+	(int)PostMessage(user_list, LB_RESETCONTENT, 0, 0);
+	{
 		regex user_reg("[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+");
 		string temp;
 		wstring wtemp;
 		sregex_iterator end;
 		for (sregex_iterator iter(re.begin(), re.end(), user_reg); iter != end; iter++) {
 			wtemp = string2wstring((*iter)[0]);
-			(int)SendMessage(user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
+			(int)PostMessage(user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
 		}
 	}
+}
+
+void Return_Get_Hallinfo_Room(string re) {
+	(int)SendMessage(room_list, LB_RESETCONTENT, 0, 0);
 	{
-		string s = "Getroom";
+		regex user_reg("[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+");
+		string temp;
+		wstring wtemp;
+		sregex_iterator end;
+		for (sregex_iterator iter(re.begin(), re.end(), user_reg); iter != end; iter++) {
+			string s = (*iter)[0];
+			s += "的房间";
+			wtemp = string2wstring(s);
+			(int)SendMessage(room_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
+		}
 	}
+}
+
+void Return_Get_Hallinfo_Roomid(string re) {
+	regex user_reg("[0-9]+");
+	sregex_iterator end;
+	int counter = 0;
+	for (sregex_iterator iter(re.begin(), re.end(), user_reg); iter != end; iter++) {
+		string str = (*iter)[0];
+		int id = atoi(str.c_str());
+		room_id[counter] = id;
+		counter++;
+	}
+	room_count = counter + 1;
 }
 
 void Send_Message(wstring& ws) {
 	string s = wstring2string(ws);
-	s = "send:" + s;
+	SendMessage(edit_in, WM_SETTEXT, 0, (LPARAM)L"");
+	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM)L"我:\r\n");
+	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (ws[0]));
+	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
+	s = "HallSend:" + s;
 	send(mysocket, &(s[0]), 1023, 0);
+}
+
+DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam) {
+	HANDLE hIOCP = (HANDLE)lpParam;
+	DWORD dwBytesTranfered = 0;
+	int pPerHandle;
+	while (true) {
+		bool bl = ::GetQueuedCompletionStatus(hIOCP, &dwBytesTranfered, (PULONG_PTR)&pPerHandle, (LPOVERLAPPED*)&pPerIO, WSA_INFINITE);
+		if (!bl)
+		{
+			closesocket(mysocket);
+			GlobalFree(pPerIO);
+			continue;
+		}
+		if (dwBytesTranfered == 0 && (pPerIO->nOperationType == OP_READ || pPerIO->nOperationType == OP_WRITE)) {
+			closesocket(mysocket);
+			GlobalFree(pPerIO);
+			continue;
+		}
+		switch (pPerIO->nOperationType)
+		{   //通过per-IO数据中的nOperationType域查看有什么I/O请求完成了
+		case OP_READ:  //完成一个接收请求
+		{
+			pPerIO->buf[dwBytesTranfered] = '\0';
+			Return_Class(pPerIO->buf);
+			WSABUF buf;
+			buf.buf = pPerIO->buf;
+			buf.len = 1024;
+			pPerIO->nOperationType = OP_READ;
+			DWORD nFlags = 0;
+			::WSARecv(mysocket, &buf, 1, &dwBytesTranfered, &nFlags, &pPerIO->ol, NULL);
+		}
+		break;
+		case OP_WRITE:break;
+		}
+	}
+	return 0;
+}
+
+void Create_Room() {
+	send_socket("CreateRoom");
+}
+
+void Enter_Room(int index) {
+	string s = "EnterRoom:" + to_string(room_id[index]);
+	send_socket(s);
+}
+
+void send_location(Tank* tank)
+{
+	char buffer[1024] = "mylocation:";
+	int i = sizeof(Tank);
+	memcpy(&buffer[11], (char*)tank, sizeof(Tank));
+	send(mysocket, buffer, 1023, 0);
+}
+
+void send_bullet(bullet* cur)
+{
+	string str = "mybullet:";
+	while (cur != NULL)
+	{
+		str = str + "{"
+			+ to_string(cur->locationX)
+			+ ","
+			+ to_string(cur->locationY)
+			+ "}";
+		cur = cur->next;
+	}
+	send_socket(str);
+}
+
+void Refresh_opTank(char buf[])
+{
+	try
+	{
+		memcpy(optank, &buf[11], 24);
+	}
+	catch (exception& e)
+	{
+		return;
+	}
+}
+
+void Refresh_opbullet(string& re)
+{
+	bullet* newhead = new bullet();
+	bullet* temp = newhead;
+
+	regex user_reg("[0-9]+");
+	sregex_iterator end;
+	for (sregex_iterator iter(re.begin(), re.end(), user_reg); iter != end; iter++) {
+		string s1 = ((*iter)[0]);
+		if (iter != end)
+			iter++;
+		else break;
+		string s2 = ((*iter)[0]);
+		if (temp->next == NULL)
+		{
+			temp->next = new bullet();
+			temp = temp->next;
+			temp->locationX = atoi(s1.c_str());
+			temp->locationY = atoi(s2.c_str());
+			temp->speed = 20;
+			temp->owner = optank;
+		}
+	}
+	optank->bullet_head = newhead->next;
 }

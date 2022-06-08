@@ -20,6 +20,7 @@ public:
 	bullet* next = NULL;
 	bullet* last = NULL;
 
+	bullet(){};
 	bullet(int locationX, int locationY, int direction, int speed, Tank* owner = NULL, bullet* last = NULL) {
 		this->locationX = locationX;
 		this->locationY = locationY;

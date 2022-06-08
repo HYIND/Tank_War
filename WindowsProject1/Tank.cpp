@@ -109,7 +109,6 @@ void Tank::InitTank(int width, int height)
 	}
 }
 
-
 void Tank::DrawTank(RECT& rect, HBITMAP& hbitmap, BITMAP& bm)
 {
 	HDC hdcmem_bmp = CreateCompatibleDC(hdcmem);//内存设备环境句柄
@@ -124,42 +123,6 @@ void Tank::DrawTank(RECT& rect, HBITMAP& hbitmap, BITMAP& bm)
 	DeleteDC(hdcmem_bmp);
 	DeleteObject(hMemoryBMP);
 };
-
-void Tank::Tank2_Move(RECT& rect)
-{
-	if (GetAsyncKeyState(VK_UP) & 0x8000)
-	{
-		if (this->direction != UP)
-			this->direction = UP;
-		else if ((this->locationY - this->height / 2 - 10) < rect.top)
-			this->locationY = rect.top + this->height / 2;
-		else this->locationY -= 10;
-	}
-	else if (GetAsyncKeyState(VK_DOWN) & 0x8000)
-	{
-		if (this->direction != DOWN)
-			this->direction = DOWN;
-		else if ((this->locationY + this->height / 2 + 10) > rect.bottom)
-			this->locationY = rect.bottom - this->height / 2;
-		else this->locationY += 10;
-	}
-	else if (GetAsyncKeyState(VK_LEFT) & 0x8000)
-	{
-		if (this->direction != LEFT)
-			this->direction = LEFT;
-		else if ((this->locationX - this->width / 2 - 10) < rect.left)
-			this->locationX = rect.left + this->width / 2;
-		else this->locationX -= 10;
-	}
-	else if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
-	{
-		if (this->direction != RIGHT)
-			this->direction = RIGHT;
-		else if ((this->locationX + this->width / 2 + 10) > rect.right)
-			this->locationX = rect.right - this->width / 2;
-		else this->locationX += 10;
-	}
-}
 
 void Tank::Tank1_Move(RECT& rect)
 {
@@ -188,6 +151,42 @@ void Tank::Tank1_Move(RECT& rect)
 		else this->locationX -= 10;
 	}
 	else if (GetAsyncKeyState('D') & 0x8000)
+	{
+		if (this->direction != RIGHT)
+			this->direction = RIGHT;
+		else if ((this->locationX + this->width / 2 + 10) > rect.right)
+			this->locationX = rect.right - this->width / 2;
+		else this->locationX += 10;
+	}
+}
+
+void Tank::Tank2_Move(RECT& rect)
+{
+	if (GetAsyncKeyState(VK_UP) & 0x8000)
+	{
+		if (this->direction != UP)
+			this->direction = UP;
+		else if ((this->locationY - this->height / 2 - 10) < rect.top)
+			this->locationY = rect.top + this->height / 2;
+		else this->locationY -= 10;
+	}
+	else if (GetAsyncKeyState(VK_DOWN) & 0x8000)
+	{
+		if (this->direction != DOWN)
+			this->direction = DOWN;
+		else if ((this->locationY + this->height / 2 + 10) > rect.bottom)
+			this->locationY = rect.bottom - this->height / 2;
+		else this->locationY += 10;
+	}
+	else if (GetAsyncKeyState(VK_LEFT) & 0x8000)
+	{
+		if (this->direction != LEFT)
+			this->direction = LEFT;
+		else if ((this->locationX - this->width / 2 - 10) < rect.left)
+			this->locationX = rect.left + this->width / 2;
+		else this->locationX -= 10;
+	}
+	else if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
 	{
 		if (this->direction != RIGHT)
 			this->direction = RIGHT;
