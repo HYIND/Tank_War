@@ -1,6 +1,8 @@
 #include "Tank.h"
 using namespace std;
 
+extern ID2D1SolidColorBrush* bullet_pBrush;
+
 extern HDC hdcmem, hdc;
 vector <tank_info*> tank_list;
 void Get_Initinfo() {
@@ -109,25 +111,29 @@ void Tank::InitTank(int width, int height)
 	}
 }
 
-void Tank::DrawTank(RECT& rect, HBITMAP& hbitmap, BITMAP& bm)
+void Tank::DrawTank(ID2D1HwndRenderTarget* pRenderTarget, ID2D1Bitmap* Tank_Bitmap)
 {
-	HDC hdcmem_bmp = CreateCompatibleDC(hdcmem);//内存设备环境句柄
-	HBITMAP hMemoryBMP = CreateCompatibleBitmap(hdcmem, bm.bmWidth, bm.bmHeight);
-	SelectObject(hdcmem_bmp, hMemoryBMP);
-	SelectObject(hdcmem_bmp, hbitmap);
-
 	int Reloc1 = this->locationX - (this->width) / 2;
 	int Reloc2 = this->locationY - (this->height) / 2;
-	StretchBlt(hdcmem, Reloc1, Reloc2, this->width, this->height, hdcmem_bmp, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
-
-	DeleteDC(hdcmem_bmp);
-	DeleteObject(hMemoryBMP);
+	pRenderTarget->DrawBitmap(Tank_Bitmap, D2D1::RectF(Reloc1, Reloc2, Reloc1 + width, Reloc2 + height));
 };
 
 void Tank::Tank1_Move(RECT& rect)
 {
 	if (GetAsyncKeyState('W') & 0x8000)
 	{
+		//斜向移动
+		//if (GetAsyncKeyState('W') & 0x8000 && GetAsyncKeyState('D') & 0x8000)
+		//{
+		//	if ((this->locationY - this->height / 2 - 10) < rect.top)
+		//		this->locationY = rect.top + this->height / 2;
+		//	else this->locationY -= 10;
+
+		//	if ((this->locationX + this->width / 2 + 10) > rect.right)
+		//		this->locationX = rect.right - this->width / 2;
+		//	else this->locationX += 10;
+		//	return;
+		//}
 		if (this->direction != UP)
 			this->direction = UP;
 		else if ((this->locationY - this->height / 2 - 10) < rect.top)
@@ -138,8 +144,8 @@ void Tank::Tank1_Move(RECT& rect)
 	{
 		if (this->direction != DOWN)
 			this->direction = DOWN;
-		else if ((this->locationY + this->height / 2 + 10) > rect.bottom)
-			this->locationY = rect.bottom - this->height / 2;
+		else if ((this->locationY + this->height / 2 + 10) > rect.bottom - 3)
+			this->locationY = rect.bottom - this->height / 2 - 3;
 		else this->locationY += 10;
 	}
 	else if (GetAsyncKeyState('A') & 0x8000)
@@ -174,8 +180,8 @@ void Tank::Tank2_Move(RECT& rect)
 	{
 		if (this->direction != DOWN)
 			this->direction = DOWN;
-		else if ((this->locationY + this->height / 2 + 10) > rect.bottom)
-			this->locationY = rect.bottom - this->height / 2;
+		else if ((this->locationY + this->height / 2 + 10) > rect.bottom - 3)
+			this->locationY = rect.bottom - this->height / 2 - 3;
 		else this->locationY += 10;
 	}
 	else if (GetAsyncKeyState(VK_LEFT) & 0x8000)
@@ -209,18 +215,23 @@ void Tank::Addbullet() {
 	}
 }
 
-void bullet::Drawbullet(HPEN& Pen, HBRUSH& Brush)
+void bullet::Drawbullet(ID2D1HwndRenderTarget* pRenderTarget, ID2D1Bitmap* Bullet_Bitmap)
 {
-	SelectObject(hdcmem, Pen);
-	SelectObject(hdcmem, Brush);
-	int Reloc1 = this->locationX - (this->width) / 2;
-	int Reloc2 = this->locationY - (this->height) / 2;
-	int Reloc3 = this->locationX + (this->width) / 2;
-	int Reloc4 = this->locationY + (this->height) / 2;
-	Ellipse(hdcmem, Reloc1, Reloc2, Reloc3, Reloc4);
-	DeleteObject(Ellipse);
+	if (Bullet_Bitmap)
+	{
+		int Reloc1 = this->locationX - (this->width) / 2;
+		int Reloc2 = this->locationY - (this->height) / 2;
+		int Reloc3 = this->locationX + (this->width) / 2;
+		int Reloc4 = this->locationY + (this->height) / 2;
+		pRenderTarget->DrawBitmap(Bullet_Bitmap, D2D1::RectF(Reloc1, Reloc2, Reloc3, Reloc4));
+	}
+	else
+	{
+		//D2D1_ELLIPSE ellipse = D2D1::Ellipse(D2D1::Point2F(100.0f, 100.0f), 100.0f, 50.0f);
+ 	pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(this->locationX, this->locationY), this->width, this->height), bullet_pBrush);
+	}
 	if (this->next != NULL)
-		(*(this->next)).Drawbullet(Pen, Brush);
+		(*(this->next)).Drawbullet(pRenderTarget, Bullet_Bitmap);
 }
 
 void bullet::Move(RECT rect)
@@ -288,7 +299,7 @@ bool bullet::crash(RECT rect, int direction)
 		{
 			int half_height = it->cur->height / 2;
 			int half_width = it->cur->width / 2;
-			if (new_locationY <  it->cur->locationY + half_height / 2 && new_locationY >it->cur->locationY - half_height
+			if (new_locationY <  it->cur->locationY + half_height && new_locationY >it->cur->locationY - half_height
 				&& new_locationX < it->cur->locationX + half_width && new_locationX >it->cur->locationX - half_height)
 			{
 				it->cur->isalive = false;

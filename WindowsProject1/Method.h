@@ -3,12 +3,15 @@
 #include <signal.h>
 #include <string>
 #include <regex>
+#include <thread>
+
+// WinSocket
 #include <WinSock2.h>
 #include <WS2tcpip.h>
-#include <thread>
 #pragma comment(lib, "Ws2_32.lib")
 //#pragma comment(lib,"Kr")
 
+//hIOCP 重叠结构体
 typedef struct _PER_IO_DATA
 {
 	OVERLAPPED ol;            //重叠结构
@@ -19,6 +22,8 @@ typedef struct _PER_IO_DATA
 #define OP_ACCEPT 3
 }PER_IO_DATA, * PPER_IO_DATA;
 
+
+//按钮、位图及事件标识符
 #define IDB_ONE     3301  
 #define IDB_TWO     3302  
 #define IDB_THREE   3303  
@@ -32,6 +37,9 @@ typedef struct _PER_IO_DATA
 
 #define Enterroom 7777
 #define START 8888
+
+//D2D释放资源
+#define SafeRelease(P) if(P){P->Release() ; P = NULL ;}
 
 //void START(HWND hWnd);
 void Get_Init_UI(HWND hWnd);
@@ -56,3 +64,5 @@ void send_location(Tank* tank);
 void send_bullet(bullet* bullet_head);
 void Refresh_opTank(char buf[]);
 void Refresh_opbullet(string& re);
+
+HRESULT Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget, LPCTSTR pszResource, ID2D1Bitmap** ppBitmap);

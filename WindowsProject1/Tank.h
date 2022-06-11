@@ -1,6 +1,16 @@
 #pragma once
 #include "framework.h"
 #include <vector>
+
+//d2d及位图 头文件
+#include <d2d1.h>
+#include <dwrite.h>
+#include <wincodec.h>
+#include <d2d1helper.h>
+#pragma comment(lib, "d2d1.lib")
+#pragma comment(lib,"dxguid.lib")
+
+#pragma comment(lib,"Msimg32.lib")
 using namespace std;
 
 class Tank;
@@ -20,7 +30,7 @@ public:
 	bullet* next = NULL;
 	bullet* last = NULL;
 
-	bullet(){};
+	bullet() {};
 	bullet(int locationX, int locationY, int direction, int speed, Tank* owner = NULL, bullet* last = NULL) {
 		this->locationX = locationX;
 		this->locationY = locationY;
@@ -30,7 +40,7 @@ public:
 		this->last = last;
 	}
 
-	void Drawbullet(HPEN& Pen, HBRUSH& Brush);
+	void Drawbullet(ID2D1HwndRenderTarget* pRenderTarget, ID2D1Bitmap* Bullet_Bitmap);
 	void Move(RECT rect);
 	bool crash(RECT rect, int direction);
 	void destroy();
@@ -57,7 +67,7 @@ public:
 	void InitTank(int X, int Y, int width, int height, int direction);
 	void InitTank(int X, int Y, int direction);
 	void InitTank(int width, int height);
-	void DrawTank(RECT& rect, HBITMAP& hbitmap, BITMAP& bm);
+	void DrawTank(ID2D1HwndRenderTarget* pRenderTarget, ID2D1Bitmap* hbitmap);
 	void Tank1_Move(RECT& rect);
 	void Tank2_Move(RECT& rect);
 	void Addbullet();

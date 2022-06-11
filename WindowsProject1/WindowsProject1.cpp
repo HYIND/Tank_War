@@ -5,25 +5,43 @@
 #include "Method.h"
 #include <comdef.h>
 
+using namespace D2D1;
+
 //using namespace std;
 
 //#include "GdiPlus.h"
 
 #define MAX_LOADSTRING 100
+
 #define DEFAULT_PORT 2336
 #define SERVER_IP "175.178.90.119"
 
 //extern vector <tank_info*> tank_list;
 
 // 全局变量:
-Tank tank1(80, 80);
-Tank tank2(80, 80);
+Tank tank1(60, 60);
+Tank tank2(60, 60);
 Tank* mytank = &tank1;
 Tank* optank = &tank2;
 
 Tank* my_in = &tank1;
 Tank* op_in = &tank2;
 
+
+//ID2D1SolidColorBrush* pBrush = NULL; // A black brush, reflect the line color
+
+LPCTSTR OP_Resource = L"C:\\Users\\H\\Desktop\\WindowsProject1\\x64\\Debug\\Resource\\OP_BK.jpg";
+LPCTSTR Tank_Resource = L"C:\\Users\\H\\Desktop\\WindowsProject1\\x64\\Debug\\Resource\\Tank.bmp";
+
+ID2D1Factory* pD2DFactory = NULL; // Direct2D factory
+HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &pD2DFactory);
+ID2D1HwndRenderTarget* pRenderTarget = NULL;
+ID2D1SolidColorBrush* bullet_pBrush = NULL;
+
+ID2D1Bitmap* OP_pBitmap;
+ID2D1Bitmap* Tank_pBitmap;
+
+IWICImagingFactory* pIWICFactory = NULL;
 
 HDC hdcmem, hdc;
 bool isstart = false;
@@ -39,8 +57,8 @@ HANDLE Game_hIOCP;
 PPER_IO_DATA Game_pPerIO;
 
 //加载位图
-HBITMAP hbitmap1 = (HBITMAP)LoadImage(NULL, L"jiaran.bmp", IMAGE_BITMAP, mytank->width, mytank->height, LR_DEFAULTSIZE | LR_LOADFROMFILE);
-HBITMAP hbitmap2 = (HBITMAP)LoadImage(NULL, L"beila2.bmp", IMAGE_BITMAP, optank->width, optank->height, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+HBITMAP hbitmap1 = (HBITMAP)LoadImage(NULL, L"Tank2.bmp", IMAGE_BITMAP, mytank->width, mytank->height, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+//HBITMAP hbitmap2 = (HBITMAP)LoadImage(NULL, L"beila2.bmp", IMAGE_BITMAP, optank->width, optank->height, LR_DEFAULTSIZE | LR_LOADFROMFILE);
 HBITMAP op_bitmap = (HBITMAP)LoadImage(NULL, L"OP_BR.bmp", IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
 BITMAP bm1;
 BITMAP bm2;
@@ -202,17 +220,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CREATE:
 	{
-		if (!op_bitmap)
-		{
-			MessageBox(hWnd, _T("位图加载失败"), NULL, MB_OK);
-		}
 		mytank->InitTank(rect.left + mytank->width / 2 + 20, (rect.bottom - rect.top) / 2, RIGHT);
 		optank->InitTank(rect.right - optank->width / 2 - 20, (rect.bottom - rect.top) / 2, LEFT);
 		Get_Init_UI(_hwnd);
 		Get_Initinfo();
 		GetObject(hbitmap1, sizeof(BITMAP), &bm1);
-		GetObject(hbitmap2, sizeof(BITMAP), &bm2);
+		//GetObject(hbitmap2, sizeof(BITMAP), &bm2);
 		GetObject(op_bitmap, sizeof(BITMAP), &op_bm);
+
+		//hr = pD2DFactory->CreateHwndRenderTarget(
+		//	RenderTargetProperties(),
+		//	HwndRenderTargetProperties(hWnd, SizeU(rect.right - rect.left, rect.bottom - rect.top)),
+		//	&pRenderTarget
+		//);
+		//hr = Loadbitmap(pIWICFactory, pRenderTarget, OP_Resource, &OP_pBitmap);
+		//hr = Loadbitmap(pIWICFactory, pRenderTarget, Tank_Resource, &Tank_pBitmap);
+		//if (FAILED(hr))
+		//{
+		//	MessageBox(hWnd, _T("位图加载失败"), L"Error", MB_OK);
+		//}
+		//hr = pRenderTarget->CreateSolidColorBrush(ColorF(1, 0, 0, 1), &bullet_pBrush);
+		break;
 	}
 	case WM_TIMER:
 	{
@@ -225,6 +253,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				send_location(mytank);
 				send_bullet(mytank->bullet_head);
 			}
+			break;
 		}
 		case _tank:
 		{
@@ -312,11 +341,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case IDB_TWO: {
 			Init_all();
 			Hide_Main_UI();
-			SetTimer(hWnd, _tank, 100, NULL);
-			SetTimer(hWnd, _bullet, 100, NULL);
+			SetTimer(hWnd, _tank, 50, NULL);
+			SetTimer(hWnd, _bullet, 50, NULL);
 			ShowWindow(hwndButton1, SW_SHOW);
 			isstart = true;
 			isonline_game = false;
+			InvalidateRect(hWnd, NULL, TRUE);
 			break;
 		}
 					// 联机大厅
@@ -337,6 +367,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
 			break;
 		case IDM_EXIT:
+			SafeRelease(pRenderTarget);
+			//SafeRelease(pBrush);
+			SafeRelease(pD2DFactory);
 			DestroyWindow(hWnd);
 			break;
 		default:
@@ -353,35 +386,41 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 		case VK_SPACE:
 		{
-			if (reverse_in)
+			if (isstart)
 			{
-				if (mytank->isalive)
-					mytank->Addbullet();
-				break;
-			}
-			else if (!isonline_game)
-			{
-				if (optank->isalive)
-					optank->Addbullet();
-				break;
-			}
-		}
-		case VK_OEM_2:
-		{
-			if (reverse_in)
-			{
-				if (!isonline_game)
+				if (reverse_in)
+				{
+					if (mytank->isalive)
+						mytank->Addbullet();
+					break;
+				}
+				else if (!isonline_game)
 				{
 					if (optank->isalive)
 						optank->Addbullet();
 					break;
 				}
 			}
-			else
+		}
+		case VK_OEM_2:
+		{
+			if (isstart)
 			{
-				if (mytank->isalive)
-					mytank->Addbullet();
-				break;
+				if (reverse_in)
+				{
+					if (!isonline_game)
+					{
+						if (optank->isalive)
+							optank->Addbullet();
+						break;
+					}
+				}
+				else
+				{
+					if (mytank->isalive)
+						mytank->Addbullet();
+					break;
+				}
 			}
 		}
 		//InvalidateRect(hWnd, NULL, TRUE);
@@ -393,7 +432,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		RECT rect;
 		GetClientRect(hWnd, &rect);
-		hdc = BeginPaint(hWnd, &ps);
+		//hdc = BeginPaint(hWnd, &ps);
 		// TODO: 在此处添加使用 hdc 的任何绘图代码...
 		{
 			//Rectangle(hdc, 20, 20, 40, 40);
@@ -410,42 +449,92 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			//SelectObject(hdc, Pen2);
 			//LineTo(hdc, 600, 500);
 
-			hdcmem = CreateCompatibleDC(hdc);
-			HBITMAP _hMemoryBMP = CreateCompatibleBitmap(hdc, rect.right - rect.left, rect.right - rect.left);
-			SelectObject(hdcmem, _hMemoryBMP);
-			if (!isstart) {
-				//HBRUSH hBlackBrush = (HBRUSH)::GetStockObject(BLACK_BRUSH);
-				SelectObject(hdcmem, GetStockObject(GRAY_BRUSH));
-				Rectangle(hdcmem, -10, -10, rect.right, rect.bottom);
-				HDC op_hdc = CreateCompatibleDC(hdcmem);
-				SelectObject(op_hdc, op_bitmap);
-				StretchBlt(hdcmem, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, op_hdc, 0, 0, op_bm.bmWidth, op_bm.bmHeight, SRCCOPY);
-				DeleteDC(op_hdc);
-			}
+		//	hdcmem = CreateCompatibleDC(hdc);
+		//	HBITMAP _hMemoryBMP = CreateCompatibleBitmap(hdc, rect.right - rect.left, rect.right - rect.left);
+		//	SelectObject(hdcmem, _hMemoryBMP);
+		//	if (!isstart) {
+		//		//HBRUSH hBlackBrush = (HBRUSH)::GetStockObject(BLACK_BRUSH);
+		//		SelectObject(hdcmem, GetStockObject(GRAY_BRUSH));
+		//		Rectangle(hdcmem, -10, -10, rect.right, rect.bottom);
+		//		HDC op_hdc = CreateCompatibleDC(hdcmem);
+		//		SelectObject(op_hdc, op_bitmap);
+		//		StretchBlt(hdcmem, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, op_hdc, 0, 0, op_bm.bmWidth, op_bm.bmHeight, SRCCOPY);
+		//		DeleteDC(op_hdc);
+		//	}
+			//pRenderTarget->BeginDraw();
+			//pRenderTarget->Clear(ColorF(ColorF::White));
+			//if (!isstart) {
+			//	pRenderTarget->DrawBitmap(OP_pBitmap, RectF(0, 0, rect.right, rect.bottom));
 
-			else {
-				SelectObject(hdcmem, WHITE_BRUSH);
-				Rectangle(hdcmem, -10, -10, rect.right, rect.bottom);
+			//	if (FAILED(hr))
+			//	{
+			//		MessageBox(NULL, L"Draw failed!", L"Error", 0);
+			//	}
+			//}
+			//else {
 
-				if (tank1.bullet_head)
-					(*(tank1.bullet_head)).Drawbullet(bullet_Pen, bullet_Brush);
-				if (tank2.bullet_head)
-					(*(tank2.bullet_head)).Drawbullet(bullet_Pen, bullet_Brush);
+			//	if (tank1.bullet_head)
+			//		(*(tank1.bullet_head)).Drawbullet(pRenderTarget, NULL);
+			//	if (tank2.bullet_head)
+			//		(*(tank2.bullet_head)).Drawbullet(pRenderTarget, NULL);
 
-				if (tank1.isalive)
-					tank1.DrawTank(rect, hbitmap1, bm1);
-				if (tank2.isalive)
-					tank2.DrawTank(rect, hbitmap2, bm2);
-			}
-			if (!BitBlt(hdc, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, hdcmem, 0, 0, SRCCOPY))
-				MessageBox(hWnd, L"BitBlt has failed", L"Failed", MB_OK);
-			ReleaseDC(hWnd, hdc);
-			DeleteObject(_hMemoryBMP);
-			DeleteDC(hdcmem);
+			//	if (tank1.isalive)
+			//		tank1.DrawTank(pRenderTarget, Tank_pBitmap);
+			//	if (tank2.isalive)
+			//		tank1.DrawTank(pRenderTarget, Tank_pBitmap);
+			//}
+			//hr = pRenderTarget->EndDraw();
+			//	if (!BitBlt(hdc, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, hdcmem, 0, 0, SRCCOPY))
+			//		MessageBox(hWnd, L"BitBlt has failed", L"Failed", MB_OK);
+			//	ReleaseDC(hWnd, hdc);
+			//	DeleteObject(_hMemoryBMP);
+			//	DeleteDC(hdcmem);
 		}
-		EndPaint(hWnd, &ps);
+		//EndPaint(hWnd, &ps);
+		// 
+		// 
+		//RECT rc;
+		//GetClientRect(hWnd, &rc);
+
+		//// Create a Direct2D render target          
+		//ID2D1HwndRenderTarget* pRT = NULL;
+		//HRESULT hr = pD2DFactory->CreateHwndRenderTarget(
+		//	D2D1::RenderTargetProperties(),
+		//	D2D1::HwndRenderTargetProperties(
+		//		hWnd,
+		//		D2D1::SizeU(
+		//			rc.right - rc.left,
+		//			rc.bottom - rc.top)
+		//	),
+		//	&pRT
+		//);
+
+		//ID2D1SolidColorBrush* pBrush = NULL;
+		//if (SUCCEEDED(hr))
+		//{
+
+		//	pRT->CreateSolidColorBrush(
+		//		D2D1::ColorF(D2D1::ColorF::Blue),
+		//		&pBrush
+		//	);
+		//}
+		//pRT->BeginDraw();
+		//pRT->DrawRectangle(
+		//	D2D1::RectF(
+		//		rc.left + 100.0f,
+		//		rc.top + 100.0f,
+		//		rc.right - 100.0f,
+		//		rc.bottom - 100.0f),
+		//	pBrush);
+		//pRT->CreateSolidColorBrush(
+		//	D2D1::ColorF(D2D1::ColorF::White),
+		//	&pBrush
+		//);
+		//pRT->FillRectangle(&RectF,);
+
+		//hr = pRT->EndDraw();
+		break;
 	}
-	break;
 
 	case WM_DESTROY:
 		closesocket(mysocket);
