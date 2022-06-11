@@ -43,7 +43,7 @@ void delfd(int epollfd, int fd)
 
 string get_IP(int socket)
 {
-    for (auto v : hall_list)
+    for (auto &v : hall_list)
     {
         if (v.accept == socket)
             return inet_ntoa(v.addr.sin_addr);
@@ -73,7 +73,7 @@ void addsig(int sig)
 void Send_Message(int sock_accept, string &send_str)
 {
     send_str = "HallMessage:" + get_IP(sock_accept) + "_content:" + send_str;
-    for (auto v : hall_list)
+    for (auto &v : hall_list)
     {
         if (v.states == hall)
         {
@@ -96,7 +96,7 @@ void Send_Message(int sock_accept, string &send_str)
 string Get_hall_user(int sock_accept, string &s)
 {
     string re = "user:";
-    for (auto v : hall_list)
+    for (auto &v : hall_list)
     {
         if (v.accept == sock_accept)
             continue;
@@ -108,14 +108,14 @@ string Get_hall_user(int sock_accept, string &s)
 void Get_hall_room(int sock_accept, string &s)
 {
     string re_id = "roomid:";
-    for (auto v : room_list)
+    for (auto &v : room_list)
     {
         re_id += to_string(v.room_id);
         re_id += ";";
     }
     send(sock_accept, (const char *)&(re_id[0]), 1023, 0);
     string re = "room:";
-    for (auto v : room_user)
+    for (auto &v : room_user)
     {
         if (v == sock_accept)
             continue;
@@ -135,10 +135,10 @@ void Create_Room(int sock_accept)
     room_user.emplace_back(sock_accept);
 }
 
-void Enter_Room(int &sock_accept, string s)
+void Enter_Room(int sock_accept, string s)
 {
     int id = atoi(s.c_str());
-    for (auto v : room_list)
+    for (auto &v : room_list)
     {
         if (v.room_id == id)
         {
@@ -164,7 +164,7 @@ void Start_Game(int &user1)
         send(user2, (const char *)&(send_str[0]), 1023, 0);
         delfd(hall_epoll, user1);
         delfd(hall_epoll, user2);
-        for (auto v : hall_list)
+        for (auto &v : hall_list)
         {
             if (v.accept == user1)
                 v.states = gaming;
@@ -173,6 +173,28 @@ void Start_Game(int &user1)
         }
         thread T(game, user1, user2);
         T.detach();
+    }
+}
+
+void Quit_Room(int &user)
+{
+    for (auto it = room_list.begin(); it != room_list.end(); it++)
+    {
+        if (it->user1 == user)
+        {
+            string str = "QuitRoom";
+            if (it->user2 != 0)
+                send(it->user2, (const char *)&str[0], 1023, 0);
+            auto room_user_it = find(room_user.begin(), room_user.end(), it->user1);
+            room_user.erase(room_user_it);
+            room_list.erase(it);
+            return;
+        }
+        else if (it->user2 == user)
+        {
+            it->user2 = 0;
+            return;
+        }
     }
 }
 
@@ -203,9 +225,13 @@ string return_class(int &sock_accept, string &s)
         string send_str(m[0].second + 1, iterEnd);
         Enter_Room(sock_accept, send_str);
     }
-    else if (temp == "startgame")
+    else if (temp == "StartGame")
     {
         Start_Game(sock_accept);
+    }
+    else if (temp == "QuitRoom")
+    {
+        Quit_Room(sock_accept);
     }
     return "NULL";
 }
