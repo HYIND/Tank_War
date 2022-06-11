@@ -8,7 +8,7 @@
 #include <wincodec.h>
 #include <d2d1helper.h>
 #pragma comment(lib, "d2d1.lib")
-#pragma comment(lib,"dxguid.lib")
+//#pragma comment(lib,"dxguid.lib")
 
 #pragma comment(lib,"Msimg32.lib")
 using namespace std;

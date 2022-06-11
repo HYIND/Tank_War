@@ -228,18 +228,42 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		//GetObject(hbitmap2, sizeof(BITMAP), &bm2);
 		GetObject(op_bitmap, sizeof(BITMAP), &op_bm);
 
-		//hr = pD2DFactory->CreateHwndRenderTarget(
-		//	RenderTargetProperties(),
-		//	HwndRenderTargetProperties(hWnd, SizeU(rect.right - rect.left, rect.bottom - rect.top)),
-		//	&pRenderTarget
-		//);
-		//hr = Loadbitmap(pIWICFactory, pRenderTarget, OP_Resource, &OP_pBitmap);
-		//hr = Loadbitmap(pIWICFactory, pRenderTarget, Tank_Resource, &Tank_pBitmap);
-		//if (FAILED(hr))
-		//{
-		//	MessageBox(hWnd, _T("位图加载失败"), L"Error", MB_OK);
-		//}
-		//hr = pRenderTarget->CreateSolidColorBrush(ColorF(1, 0, 0, 1), &bullet_pBrush);
+		hr = pD2DFactory->CreateHwndRenderTarget(
+			RenderTargetProperties(),
+			HwndRenderTargetProperties(hWnd, SizeU(rect.right - rect.left, rect.bottom - rect.top)),
+			&pRenderTarget
+		);
+		hr = Loadbitmap(pIWICFactory, pRenderTarget, OP_Resource, &OP_pBitmap);
+		hr = Loadbitmap(pIWICFactory, pRenderTarget, Tank_Resource, &Tank_pBitmap);
+		if (FAILED(hr))
+		{
+			MessageBox(hWnd, _T("位图加载失败"), L"Error", MB_OK);
+		}
+		hr = pRenderTarget->CreateSolidColorBrush(ColorF(1, 0, 0, 1), &bullet_pBrush);
+
+		pRenderTarget->BeginDraw();
+		pRenderTarget->Clear(ColorF(ColorF::White));
+		if (!isstart) {
+			pRenderTarget->DrawBitmap(OP_pBitmap, RectF(0, 0, rect.right, rect.bottom));
+
+			if (FAILED(hr))
+			{
+				MessageBox(NULL, L"Draw failed!", L"Error", 0);
+			}
+		}
+		else {
+
+			if (tank1.bullet_head)
+				(*(tank1.bullet_head)).Drawbullet(pRenderTarget, NULL);
+			if (tank2.bullet_head)
+				(*(tank2.bullet_head)).Drawbullet(pRenderTarget, NULL);
+
+			if (tank1.isalive)
+				tank1.DrawTank(pRenderTarget, Tank_pBitmap);
+			if (tank2.isalive)
+				tank1.DrawTank(pRenderTarget, Tank_pBitmap);
+		}
+		hr = pRenderTarget->EndDraw();
 		break;
 	}
 	case WM_TIMER:
@@ -354,6 +378,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			Hide_Main_UI();
 			Hall = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_HALL), hWnd, HALL);
 			ShowWindow(Hall, SW_SHOW);
+			UpdateWindow(hWnd);
 			break;
 		}
 					  // 设置
@@ -432,65 +457,34 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		RECT rect;
 		GetClientRect(hWnd, &rect);
-		//hdc = BeginPaint(hWnd, &ps);
+		hdc = BeginPaint(hWnd, &ps);
 		// TODO: 在此处添加使用 hdc 的任何绘图代码...
 		{
-			//Rectangle(hdc, 20, 20, 40, 40);
-			//Ellipse(hdc, 200, 200, 400, 400);
-			//MoveToEx(hdc, 100, 100, NULL);
-			//LineTo(hdc, 150, 150);
-			//LineTo(hdc, 150, 200);
-			//LineTo(hdc, 400, 400);
-			//HPEN Pen1 = CreatePen(PS_SOLID, 10, RGB(255, 0, 0));
-			//SelectObject(hdc, Pen1);
-			//Rectangle(hdc, 400, 400, 500, 500);
-			//LineTo(hdc, 500, 500);
-			//HPEN Pen2 = CreatePen(PS_DASH, 1, RGB(0, 0, 255));
-			//SelectObject(hdc, Pen2);
-			//LineTo(hdc, 600, 500);
+			pRenderTarget->BeginDraw();
+			pRenderTarget->Clear(ColorF(ColorF::White));
+			if (!isstart) {
+				pRenderTarget->DrawBitmap(OP_pBitmap, RectF(0, 0, rect.right, rect.bottom));
 
-		//	hdcmem = CreateCompatibleDC(hdc);
-		//	HBITMAP _hMemoryBMP = CreateCompatibleBitmap(hdc, rect.right - rect.left, rect.right - rect.left);
-		//	SelectObject(hdcmem, _hMemoryBMP);
-		//	if (!isstart) {
-		//		//HBRUSH hBlackBrush = (HBRUSH)::GetStockObject(BLACK_BRUSH);
-		//		SelectObject(hdcmem, GetStockObject(GRAY_BRUSH));
-		//		Rectangle(hdcmem, -10, -10, rect.right, rect.bottom);
-		//		HDC op_hdc = CreateCompatibleDC(hdcmem);
-		//		SelectObject(op_hdc, op_bitmap);
-		//		StretchBlt(hdcmem, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, op_hdc, 0, 0, op_bm.bmWidth, op_bm.bmHeight, SRCCOPY);
-		//		DeleteDC(op_hdc);
-		//	}
-			//pRenderTarget->BeginDraw();
-			//pRenderTarget->Clear(ColorF(ColorF::White));
-			//if (!isstart) {
-			//	pRenderTarget->DrawBitmap(OP_pBitmap, RectF(0, 0, rect.right, rect.bottom));
+				if (FAILED(hr))
+				{
+					MessageBox(NULL, L"Draw failed!", L"Error", 0);
+				}
+			}
+			else {
 
-			//	if (FAILED(hr))
-			//	{
-			//		MessageBox(NULL, L"Draw failed!", L"Error", 0);
-			//	}
-			//}
-			//else {
+				if (tank1.bullet_head)
+					(*(tank1.bullet_head)).Drawbullet(pRenderTarget, NULL);
+				if (tank2.bullet_head)
+					(*(tank2.bullet_head)).Drawbullet(pRenderTarget, NULL);
 
-			//	if (tank1.bullet_head)
-			//		(*(tank1.bullet_head)).Drawbullet(pRenderTarget, NULL);
-			//	if (tank2.bullet_head)
-			//		(*(tank2.bullet_head)).Drawbullet(pRenderTarget, NULL);
-
-			//	if (tank1.isalive)
-			//		tank1.DrawTank(pRenderTarget, Tank_pBitmap);
-			//	if (tank2.isalive)
-			//		tank1.DrawTank(pRenderTarget, Tank_pBitmap);
-			//}
-			//hr = pRenderTarget->EndDraw();
-			//	if (!BitBlt(hdc, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, hdcmem, 0, 0, SRCCOPY))
-			//		MessageBox(hWnd, L"BitBlt has failed", L"Failed", MB_OK);
-			//	ReleaseDC(hWnd, hdc);
-			//	DeleteObject(_hMemoryBMP);
-			//	DeleteDC(hdcmem);
+				if (tank1.isalive)
+					tank1.DrawTank(pRenderTarget, Tank_pBitmap);
+				if (tank2.isalive)
+					tank2.DrawTank(pRenderTarget, Tank_pBitmap);
+			}
+			hr = pRenderTarget->EndDraw();
 		}
-		//EndPaint(hWnd, &ps);
+		EndPaint(hWnd, &ps);
 		// 
 		// 
 		//RECT rc;
@@ -668,6 +662,7 @@ INT_PTR CALLBACK HALL(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 			WSARecv(mysocket, &buf, 1, &dwRecv, &dwFlags, &Hall_pPerIO->ol, NULL);
 			thread T(Recv_Thread, Hall_pPerIO, LPVOID(Hall_hIOCP));
 			T.detach();
+			Get_Hallinfo();
 		}
 		break;
 	}
@@ -682,13 +677,16 @@ INT_PTR CALLBACK HALL(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 			ShowWindow(Hall, SW_HIDE);
 			Room = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_ROOM), _hwnd, ROOM);
 			ShowWindow(Room, SW_SHOW);
+			UpdateWindow(_hwnd);
 			break;
 		}
 		// 刷新
 		case IDC_BUTTON1:
+		{
 			Get_Hallinfo();
 			break;
-			// 加入房间
+		}
+		// 加入房间
 		case IDC_BUTTON2:
 		{
 			int index = SendMessage(room_list, LB_GETCURSEL, 0, 0);
@@ -704,6 +702,7 @@ INT_PTR CALLBACK HALL(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 			closesocket(mysocket);
 			DestroyWindow(hDlg);
 			Show_Main_UI();
+			UpdateWindow(_hwnd);
 			break;
 		case IDC_BUTTON4:
 		{
@@ -720,6 +719,7 @@ INT_PTR CALLBACK HALL(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 			Room = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_ROOM), _hwnd, ROOM);
 			host = true;
 			ShowWindow(Room, SW_SHOW);
+			UpdateWindow(_hwnd);
 			break;
 		}
 		if (HIWORD(wParam) == EN_SETFOCUS)
@@ -790,85 +790,85 @@ INT_PTR CALLBACK ROOM(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 				100, 200,
 				SWP_NOSIZE
 			);
-			{
-				CreateWindow(L"STATIC", L"#101", WS_CHILD | WS_VISIBLE | WS_BORDER | SS_BITMAP,
-					My_rect.left + (My_rect.right - My_rect.left) / 8, My_rect.top + (My_rect.bottom - My_rect.top) / 6,
-					(My_rect.right - My_rect.left) / 4, (My_rect.right - My_rect.left) / 4,
-					hDlg,       // parent window
-					(HMENU)IDB_Bitmap1,       // No menu
-					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
-					NULL);
-				CreateWindow(L"STATIC", L"#102", WS_CHILD | WS_VISIBLE | WS_BORDER | SS_BITMAP,
-					My_rect.left + ((My_rect.right - My_rect.left) / 8) * 5, My_rect.top + (My_rect.bottom - My_rect.top) / 6,
-					(My_rect.right - My_rect.left) / 4, (My_rect.right - My_rect.left) / 4,
-					hDlg,       // parent window
-					(HMENU)IDB_Bitmap2,       // No menu
-					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
-					NULL);
-			}
+			//{
+			//	CreateWindow(L"STATIC", L"#101", WS_CHILD | WS_VISIBLE | WS_BORDER | SS_BITMAP,
+			//		My_rect.left + (My_rect.right - My_rect.left) / 8, My_rect.top + (My_rect.bottom - My_rect.top) / 6,
+			//		(My_rect.right - My_rect.left) / 4, (My_rect.right - My_rect.left) / 4,
+			//		hDlg,       // parent window
+			//		(HMENU)IDB_Bitmap1,       // No menu
+			//		(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
+			//		NULL);
+			//	CreateWindow(L"STATIC", L"#102", WS_CHILD | WS_VISIBLE | WS_BORDER | SS_BITMAP,
+			//		My_rect.left + ((My_rect.right - My_rect.left) / 8) * 5, My_rect.top + (My_rect.bottom - My_rect.top) / 6,
+			//		(My_rect.right - My_rect.left) / 4, (My_rect.right - My_rect.left) / 4,
+			//		hDlg,       // parent window
+			//		(HMENU)IDB_Bitmap2,       // No menu
+			//		(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
+			//		NULL);
+			//}
 
-			{
-				CreateWindow(
-					L"BUTTON",	// predefined class    不区分大小写
-					L"<",       // button text
-					WS_CHILD | WS_VISIBLE,  // styles     注意 如果样式写错了 Button 将不会正常显示
+			//{
+			//	CreateWindow(
+			//		L"BUTTON",	// predefined class    不区分大小写
+			//		L"<",       // button text
+			//		WS_CHILD | WS_VISIBLE,  // styles     注意 如果样式写错了 Button 将不会正常显示
 
-				   // Size and position values are given explicitly, because
-				   // the CW_USEDEFAULT constant gives zero values for buttons.
-					My_rect.left + (My_rect.right - My_rect.left) / 8,         // starting x position
-					My_rect.top + (My_rect.bottom - My_rect.top) / 6 + (My_rect.right - My_rect.left) / 4 + 20,         // starting y position
-					40,        // button width
-					30,        // button height
-					hDlg,       // parent window
-					(HMENU)IDB_ONE,       // No menu
-					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
-					NULL);      // pointer not needed
-				CreateWindow(
-					L"BUTTON",	// predefined class    不区分大小写
-					L">",       // button text
-					WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
+			//	   // Size and position values are given explicitly, because
+			//	   // the CW_USEDEFAULT constant gives zero values for buttons.
+			//		My_rect.left + (My_rect.right - My_rect.left) / 8,         // starting x position
+			//		My_rect.top + (My_rect.bottom - My_rect.top) / 6 + (My_rect.right - My_rect.left) / 4 + 20,         // starting y position
+			//		40,        // button width
+			//		30,        // button height
+			//		hDlg,       // parent window
+			//		(HMENU)IDB_ONE,       // No menu
+			//		(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
+			//		NULL);      // pointer not needed
+			//	CreateWindow(
+			//		L"BUTTON",	// predefined class    不区分大小写
+			//		L">",       // button text
+			//		WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
 
-				   // Size and position values are given explicitly, because
-				   // the CW_USEDEFAULT constant gives zero values for buttons.
-					My_rect.left + (My_rect.right - My_rect.left) / 8 + (My_rect.right - My_rect.left) / 4 - 40,         // starting x position
-					My_rect.top + (My_rect.bottom - My_rect.top) / 6 + (My_rect.right - My_rect.left) / 4 + 20,         // starting y position
-					40,        // button width
-					30,        // button height
-					hDlg,       // parent window
-					(HMENU)IDB_TWO,       // No menu
-					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
-					NULL);      // pointer not needed
-				CreateWindow(
-					L"BUTTON",	// predefined class    不区分大小写
-					L"<",       // button text
-					WS_CHILD | WS_VISIBLE,  // styles     注意 如果样式写错了 Button 将不会正常显示
+			//	   // Size and position values are given explicitly, because
+			//	   // the CW_USEDEFAULT constant gives zero values for buttons.
+			//		My_rect.left + (My_rect.right - My_rect.left) / 8 + (My_rect.right - My_rect.left) / 4 - 40,         // starting x position
+			//		My_rect.top + (My_rect.bottom - My_rect.top) / 6 + (My_rect.right - My_rect.left) / 4 + 20,         // starting y position
+			//		40,        // button width
+			//		30,        // button height
+			//		hDlg,       // parent window
+			//		(HMENU)IDB_TWO,       // No menu
+			//		(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
+			//		NULL);      // pointer not needed
+			//	CreateWindow(
+			//		L"BUTTON",	// predefined class    不区分大小写
+			//		L"<",       // button text
+			//		WS_CHILD | WS_VISIBLE,  // styles     注意 如果样式写错了 Button 将不会正常显示
 
-				   // Size and position values are given explicitly, because
-				   // the CW_USEDEFAULT constant gives zero values for buttons.
-					My_rect.left + (My_rect.right - My_rect.left) / 8 * 5,         // starting x position
-					My_rect.top + (My_rect.bottom - My_rect.top) / 6 + (My_rect.right - My_rect.left) / 4 + 20,         // starting y position
-					40,        // button width
-					30,        // button height
-					hDlg,       // parent window
-					(HMENU)IDB_THREE,       // No menu
-					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
-					NULL);      // pointer not needed
-				CreateWindow(
-					L"BUTTON",	// predefined class    不区分大小写
-					L">",       // button text
-					WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
+			//	   // Size and position values are given explicitly, because
+			//	   // the CW_USEDEFAULT constant gives zero values for buttons.
+			//		My_rect.left + (My_rect.right - My_rect.left) / 8 * 5,         // starting x position
+			//		My_rect.top + (My_rect.bottom - My_rect.top) / 6 + (My_rect.right - My_rect.left) / 4 + 20,         // starting y position
+			//		40,        // button width
+			//		30,        // button height
+			//		hDlg,       // parent window
+			//		(HMENU)IDB_THREE,       // No menu
+			//		(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
+			//		NULL);      // pointer not needed
+			//	CreateWindow(
+			//		L"BUTTON",	// predefined class    不区分大小写
+			//		L">",       // button text
+			//		WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
 
-				   // Size and position values are given explicitly, because
-				   // the CW_USEDEFAULT constant gives zero values for buttons.
-					My_rect.left + (My_rect.right - My_rect.left) / 8 * 5 + (My_rect.right - My_rect.left) / 4 - 40,         // starting x position
-					My_rect.top + (My_rect.bottom - My_rect.top) / 6 + (My_rect.right - My_rect.left) / 4 + 20,         // starting y position
-					40,        // button width
-					30,        // button height
-					hDlg,       // parent window
-					(HMENU)IDB_FOUR,       // No menu
-					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
-					NULL);      // pointer not needed
-			}
+			//	   // Size and position values are given explicitly, because
+			//	   // the CW_USEDEFAULT constant gives zero values for buttons.
+			//		My_rect.left + (My_rect.right - My_rect.left) / 8 * 5 + (My_rect.right - My_rect.left) / 4 - 40,         // starting x position
+			//		My_rect.top + (My_rect.bottom - My_rect.top) / 6 + (My_rect.right - My_rect.left) / 4 + 20,         // starting y position
+			//		40,        // button width
+			//		30,        // button height
+			//		hDlg,       // parent window
+			//		(HMENU)IDB_FOUR,       // No menu
+			//		(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
+			//		NULL);      // pointer not needed
+			//}
 
 			{
 				CreateWindow(

@@ -299,15 +299,16 @@ void Get_Hallinfo() {
 }
 
 void Return_Get_Hallinfo_User(string& re) {
-	(int)PostMessage(user_list, LB_RESETCONTENT, 0, 0);
+	(int)SendMessage(user_list, LB_RESETCONTENT, 0, 0);
+	wstring wtemp = L"Äú";
+	(int)SendMessage(user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
 	{
 		regex user_reg("[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+");
 		string temp;
-		wstring wtemp;
 		sregex_iterator end;
 		for (sregex_iterator iter(re.begin(), re.end(), user_reg); iter != end; iter++) {
 			wtemp = string2wstring((*iter)[0]);
-			(int)PostMessage(user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
+			(int)SendMessage(user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
 		}
 	}
 }
@@ -316,10 +317,11 @@ void Return_Get_Hallinfo_Room(string re) {
 	(int)SendMessage(room_list, LB_RESETCONTENT, 0, 0);
 	{
 		regex user_reg("[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+");
-		string temp;
+		string temp;  
 		wstring wtemp;
 		sregex_iterator end;
-		for (sregex_iterator iter(re.begin(), re.end(), user_reg); iter != end; iter++) {
+		for (sregex_iterator iter(re.begin(), re.end(), user_reg); iter != end; iter++) 
+		{
 			string s = (*iter)[0];
 			s += "µÄ·¿¼ä";
 			wtemp = string2wstring(s);
