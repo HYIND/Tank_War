@@ -37,7 +37,10 @@ typedef struct _PER_IO_DATA
 
 #define Enterroom 7777
 #define START 8888
+#define QUITROOM 9999
 
+//status 枚举
+enum { NONE, Hall_Status, Room_Status, Game_Status };
 //D2D释放资源
 #define SafeRelease(P) if(P){P->Release() ; P = NULL ;}
 
@@ -55,7 +58,7 @@ void Return_Hallinfo_Message(string& recv_str);
 wstring string2wstring(string str);
 string wstring2string(wstring wstr);
 bool isconnecting();
-void Send_Message(wstring& ws);
+void Send_Message(wstring& w_content);
 void Return_Class(char buf[]);
 DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam);
 void Create_Room();

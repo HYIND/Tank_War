@@ -6,6 +6,9 @@ extern Tank* optank;
 extern ID2D1HwndRenderTarget* pRenderTarget;
 
 extern bool isstart;
+
+extern int status;
+
 extern HWND hwndButton1;
 extern HWND hwndButton2;
 extern HWND hwndButton3;
@@ -227,33 +230,43 @@ void Return_Class(char buf[]) {
 	temp = m[0];
 	if (!isstart)
 	{
-		if (temp == "user")
+		if (status == Hall_Status)
 		{
-			string recv_str(m[0].second + 1, iterEnd);
-			Return_Get_Hallinfo_User(recv_str);
+			if (temp == "user")
+			{
+				string recv_str(m[0].second + 1, iterEnd);
+				Return_Get_Hallinfo_User(recv_str);
+			}
+			else if (temp == "HallMessage")
+			{
+				string recv_str(m[0].second + 1, iterEnd);
+				Return_Hallinfo_Message(recv_str);
+			}
+			else if (temp == "room")
+			{
+				string recv_str(m[0].second + 1, iterEnd);
+				Return_Get_Hallinfo_Room(recv_str);
+			}
+			else if (temp == "roomid")
+			{
+				string recv_str(m[0].second + 1, iterEnd);
+				Return_Get_Hallinfo_Roomid(recv_str);
+			}
+			else if (temp == "EnterRoom")
+			{
+				SendMessage(Hall, WM_COMMAND, Enterroom, (LPARAM)_hwnd);
+			}
 		}
-		else if (temp == "HallMessage")
+		else if (status == Room_Status)
 		{
-			string recv_str(m[0].second + 1, iterEnd);
-			Return_Hallinfo_Message(recv_str);
-		}
-		else if (temp == "room")
-		{
-			string recv_str(m[0].second + 1, iterEnd);
-			Return_Get_Hallinfo_Room(recv_str);
-		}
-		else if (temp == "roomid")
-		{
-			string recv_str(m[0].second + 1, iterEnd);
-			Return_Get_Hallinfo_Roomid(recv_str);
-		}
-		else if (temp == "EnterRoom")
-		{
-			SendMessage(Hall, WM_COMMAND, Enterroom, (LPARAM)_hwnd);
-		}
-		else if (temp == "Start")
-		{
-			SendMessage(Room, WM_COMMAND, START, (LPARAM)_hwnd);
+			if (temp == "Start")
+			{
+				SendMessage(Room, WM_COMMAND, START, (LPARAM)_hwnd);
+			}
+			if (temp == "QuitRoom")
+			{
+				SendMessage(Room, WM_COMMAND, QUITROOM, (LPARAM)_hwnd);
+			}
 		}
 	}
 	else
@@ -283,12 +296,31 @@ void Return_Hallinfo_Message(string& recv_str) {
 	smatch _content;
 	regex message_reg("_content");
 	regex_search(iterStart, iterEnd, _content, message_reg);
-	string user_id(iterStart, _content[0].first - 1);
-	user_id += ";\r\n";
+
+	//获取当前时间并格式化为字符串
+	auto now = std::chrono::system_clock::now();
+	time_t tt = std::chrono::system_clock::to_time_t(now);
+	struct tm t;   //tm结构指针
+	auto time_tm = localtime_s(&t, &tt);
+	char charTime[25] = { 0 };
+	sprintf_s(charTime, "%d-%02d-%02d %02d:%02d:%02d", t.tm_year + 1900,
+		t.tm_mon + 1, t.tm_mday, t.tm_hour,
+		t.tm_min, t.tm_sec);
+
+	//消息头(用户ID 时间;)
+	string strTime = charTime;
+	string user_head(iterStart, _content[0].first - 1);
+	user_head += "  ";
+	user_head += strTime;
+	user_head += ";\r\n";
+	wstring w_user_head = string2wstring(user_head);
+
+	//消息内容
 	string content(_content[0].second + 1, iterEnd);
-	wstring w_user_id = string2wstring(user_id);
 	wstring w_content = string2wstring(content);
-	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_id[0]));
+
+	//发送消息到文本框
+	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_head[0]));
 	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_content[0]));
 	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
 }
@@ -300,8 +332,7 @@ void Get_Hallinfo() {
 
 void Return_Get_Hallinfo_User(string& re) {
 	(int)SendMessage(user_list, LB_RESETCONTENT, 0, 0);
-	wstring wtemp = L"您";
-	(int)SendMessage(user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
+	wstring wtemp;
 	{
 		regex user_reg("[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+");
 		string temp;
@@ -310,6 +341,8 @@ void Return_Get_Hallinfo_User(string& re) {
 			wtemp = string2wstring((*iter)[0]);
 			(int)SendMessage(user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
 		}
+		wtemp = L"unname(您)";
+		(int)SendMessage(user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
 	}
 }
 
@@ -317,10 +350,10 @@ void Return_Get_Hallinfo_Room(string re) {
 	(int)SendMessage(room_list, LB_RESETCONTENT, 0, 0);
 	{
 		regex user_reg("[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+");
-		string temp;  
+		string temp;
 		wstring wtemp;
 		sregex_iterator end;
-		for (sregex_iterator iter(re.begin(), re.end(), user_reg); iter != end; iter++) 
+		for (sregex_iterator iter(re.begin(), re.end(), user_reg); iter != end; iter++)
 		{
 			string s = (*iter)[0];
 			s += "的房间";
@@ -343,12 +376,32 @@ void Return_Get_Hallinfo_Roomid(string re) {
 	room_count = counter + 1;
 }
 
-void Send_Message(wstring& ws) {
-	string s = wstring2string(ws);
+void Send_Message(wstring& w_content) {
+	//获取当前时间并格式化为字符串
+	auto now = std::chrono::system_clock::now();
+	time_t tt = std::chrono::system_clock::to_time_t(now);
+	struct tm t;   //tm结构指针
+	auto time_tm = localtime_s(&t, &tt);
+	char charTime[25] = { 0 };
+	sprintf_s(charTime, "%d-%02d-%02d %02d:%02d:%02d", t.tm_year + 1900,
+		t.tm_mon + 1, t.tm_mday, t.tm_hour,
+		t.tm_min, t.tm_sec);
+	string strTime = charTime;
+
+	string user_head = "我  ";
+	user_head += strTime;
+	user_head += ":\r\n";
+
+	wstring w_user_head = string2wstring(user_head);
+	//清空输入文本框
 	SendMessage(edit_in, WM_SETTEXT, 0, (LPARAM)L"");
-	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM)L"我:\r\n");
-	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (ws[0]));
+	//发送消息到文本框
+	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_head[0]));
+	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_content[0]));
 	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
+
+	//发送消息
+	string s = wstring2string(w_content);
 	s = "HallSend:" + s;
 	send(mysocket, &(s[0]), 1023, 0);
 }

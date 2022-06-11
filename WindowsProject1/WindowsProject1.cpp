@@ -51,6 +51,8 @@ bool Hall_IOCP_flag = false;
 bool Game_IOCP_flag = false;
 bool reverse_in = true;
 
+int status = NONE;
+
 HANDLE Hall_hIOCP;
 PPER_IO_DATA Hall_pPerIO;
 HANDLE Game_hIOCP;
@@ -378,6 +380,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			Hide_Main_UI();
 			Hall = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_HALL), hWnd, HALL);
 			ShowWindow(Hall, SW_SHOW);
+			status = Hall_Status;
 			UpdateWindow(hWnd);
 			break;
 		}
@@ -619,6 +622,7 @@ INT_PTR CALLBACK HALL(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 	{
 	case WM_INITDIALOG:
 	{
+		status = Hall_Status;
 		SetTimer(hDlg, reconnect, 5000, NULL);
 		SetTimer(hDlg, refrash, 3000, NULL);
 		{
@@ -674,6 +678,7 @@ INT_PTR CALLBACK HALL(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 		{
 		case Enterroom:
 		{
+			status = Room_Status;
 			ShowWindow(Hall, SW_HIDE);
 			Room = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_ROOM), _hwnd, ROOM);
 			ShowWindow(Room, SW_SHOW);
@@ -701,6 +706,7 @@ INT_PTR CALLBACK HALL(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 		case IDC_BUTTON3:
 			closesocket(mysocket);
 			DestroyWindow(hDlg);
+			status = NONE;
 			Show_Main_UI();
 			UpdateWindow(_hwnd);
 			break;
@@ -715,11 +721,12 @@ INT_PTR CALLBACK HALL(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 		case IDC_BUTTON5:
 		{
 			ShowWindow(Hall, SW_HIDE);
-			Create_Room();
 			Room = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_ROOM), _hwnd, ROOM);
 			host = true;
 			ShowWindow(Room, SW_SHOW);
 			UpdateWindow(_hwnd);
+			status = Room_Status;
+			Create_Room();
 			break;
 		}
 		if (HIWORD(wParam) == EN_SETFOCUS)
@@ -782,6 +789,7 @@ INT_PTR CALLBACK ROOM(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 			RECT My_rect;
 			GetClientRect(_hwnd, &Father_rect);
 			GetClientRect(hDlg, &My_rect);
+			status = Room_Status;
 			SetWindowPos(
 				hDlg,
 				NULL,
@@ -790,85 +798,85 @@ INT_PTR CALLBACK ROOM(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 				100, 200,
 				SWP_NOSIZE
 			);
-			//{
-			//	CreateWindow(L"STATIC", L"#101", WS_CHILD | WS_VISIBLE | WS_BORDER | SS_BITMAP,
-			//		My_rect.left + (My_rect.right - My_rect.left) / 8, My_rect.top + (My_rect.bottom - My_rect.top) / 6,
-			//		(My_rect.right - My_rect.left) / 4, (My_rect.right - My_rect.left) / 4,
-			//		hDlg,       // parent window
-			//		(HMENU)IDB_Bitmap1,       // No menu
-			//		(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
-			//		NULL);
-			//	CreateWindow(L"STATIC", L"#102", WS_CHILD | WS_VISIBLE | WS_BORDER | SS_BITMAP,
-			//		My_rect.left + ((My_rect.right - My_rect.left) / 8) * 5, My_rect.top + (My_rect.bottom - My_rect.top) / 6,
-			//		(My_rect.right - My_rect.left) / 4, (My_rect.right - My_rect.left) / 4,
-			//		hDlg,       // parent window
-			//		(HMENU)IDB_Bitmap2,       // No menu
-			//		(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
-			//		NULL);
-			//}
+			{
+				CreateWindow(L"STATIC", L"#101", WS_CHILD | WS_VISIBLE | WS_BORDER | SS_BITMAP,
+					My_rect.left + (My_rect.right - My_rect.left) / 8, My_rect.top + (My_rect.bottom - My_rect.top) / 6,
+					(My_rect.right - My_rect.left) / 4, (My_rect.right - My_rect.left) / 4,
+					hDlg,       // parent window
+					(HMENU)IDB_Bitmap1,       // No menu
+					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
+					NULL);
+				CreateWindow(L"STATIC", L"#102", WS_CHILD | WS_VISIBLE | WS_BORDER | SS_BITMAP,
+					My_rect.left + ((My_rect.right - My_rect.left) / 8) * 5, My_rect.top + (My_rect.bottom - My_rect.top) / 6,
+					(My_rect.right - My_rect.left) / 4, (My_rect.right - My_rect.left) / 4,
+					hDlg,       // parent window
+					(HMENU)IDB_Bitmap2,       // No menu
+					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
+					NULL);
+			}
 
-			//{
-			//	CreateWindow(
-			//		L"BUTTON",	// predefined class    不区分大小写
-			//		L"<",       // button text
-			//		WS_CHILD | WS_VISIBLE,  // styles     注意 如果样式写错了 Button 将不会正常显示
+			{
+				CreateWindow(
+					L"BUTTON",	// predefined class    不区分大小写
+					L"<",       // button text
+					WS_CHILD | WS_VISIBLE,  // styles     注意 如果样式写错了 Button 将不会正常显示
 
-			//	   // Size and position values are given explicitly, because
-			//	   // the CW_USEDEFAULT constant gives zero values for buttons.
-			//		My_rect.left + (My_rect.right - My_rect.left) / 8,         // starting x position
-			//		My_rect.top + (My_rect.bottom - My_rect.top) / 6 + (My_rect.right - My_rect.left) / 4 + 20,         // starting y position
-			//		40,        // button width
-			//		30,        // button height
-			//		hDlg,       // parent window
-			//		(HMENU)IDB_ONE,       // No menu
-			//		(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
-			//		NULL);      // pointer not needed
-			//	CreateWindow(
-			//		L"BUTTON",	// predefined class    不区分大小写
-			//		L">",       // button text
-			//		WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
+				   // Size and position values are given explicitly, because
+				   // the CW_USEDEFAULT constant gives zero values for buttons.
+					My_rect.left + (My_rect.right - My_rect.left) / 8,         // starting x position
+					My_rect.top + (My_rect.bottom - My_rect.top) / 6 + (My_rect.right - My_rect.left) / 4 + 20,         // starting y position
+					40,        // button width
+					30,        // button height
+					hDlg,       // parent window
+					(HMENU)IDB_ONE,       // No menu
+					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
+					NULL);      // pointer not needed
+				CreateWindow(
+					L"BUTTON",	// predefined class    不区分大小写
+					L">",       // button text
+					WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
 
-			//	   // Size and position values are given explicitly, because
-			//	   // the CW_USEDEFAULT constant gives zero values for buttons.
-			//		My_rect.left + (My_rect.right - My_rect.left) / 8 + (My_rect.right - My_rect.left) / 4 - 40,         // starting x position
-			//		My_rect.top + (My_rect.bottom - My_rect.top) / 6 + (My_rect.right - My_rect.left) / 4 + 20,         // starting y position
-			//		40,        // button width
-			//		30,        // button height
-			//		hDlg,       // parent window
-			//		(HMENU)IDB_TWO,       // No menu
-			//		(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
-			//		NULL);      // pointer not needed
-			//	CreateWindow(
-			//		L"BUTTON",	// predefined class    不区分大小写
-			//		L"<",       // button text
-			//		WS_CHILD | WS_VISIBLE,  // styles     注意 如果样式写错了 Button 将不会正常显示
+				   // Size and position values are given explicitly, because
+				   // the CW_USEDEFAULT constant gives zero values for buttons.
+					My_rect.left + (My_rect.right - My_rect.left) / 8 + (My_rect.right - My_rect.left) / 4 - 40,         // starting x position
+					My_rect.top + (My_rect.bottom - My_rect.top) / 6 + (My_rect.right - My_rect.left) / 4 + 20,         // starting y position
+					40,        // button width
+					30,        // button height
+					hDlg,       // parent window
+					(HMENU)IDB_TWO,       // No menu
+					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
+					NULL);      // pointer not needed
+				CreateWindow(
+					L"BUTTON",	// predefined class    不区分大小写
+					L"<",       // button text
+					WS_CHILD | WS_VISIBLE,  // styles     注意 如果样式写错了 Button 将不会正常显示
 
-			//	   // Size and position values are given explicitly, because
-			//	   // the CW_USEDEFAULT constant gives zero values for buttons.
-			//		My_rect.left + (My_rect.right - My_rect.left) / 8 * 5,         // starting x position
-			//		My_rect.top + (My_rect.bottom - My_rect.top) / 6 + (My_rect.right - My_rect.left) / 4 + 20,         // starting y position
-			//		40,        // button width
-			//		30,        // button height
-			//		hDlg,       // parent window
-			//		(HMENU)IDB_THREE,       // No menu
-			//		(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
-			//		NULL);      // pointer not needed
-			//	CreateWindow(
-			//		L"BUTTON",	// predefined class    不区分大小写
-			//		L">",       // button text
-			//		WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
+				   // Size and position values are given explicitly, because
+				   // the CW_USEDEFAULT constant gives zero values for buttons.
+					My_rect.left + (My_rect.right - My_rect.left) / 8 * 5,         // starting x position
+					My_rect.top + (My_rect.bottom - My_rect.top) / 6 + (My_rect.right - My_rect.left) / 4 + 20,         // starting y position
+					40,        // button width
+					30,        // button height
+					hDlg,       // parent window
+					(HMENU)IDB_THREE,       // No menu
+					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
+					NULL);      // pointer not needed
+				CreateWindow(
+					L"BUTTON",	// predefined class    不区分大小写
+					L">",       // button text
+					WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
 
-			//	   // Size and position values are given explicitly, because
-			//	   // the CW_USEDEFAULT constant gives zero values for buttons.
-			//		My_rect.left + (My_rect.right - My_rect.left) / 8 * 5 + (My_rect.right - My_rect.left) / 4 - 40,         // starting x position
-			//		My_rect.top + (My_rect.bottom - My_rect.top) / 6 + (My_rect.right - My_rect.left) / 4 + 20,         // starting y position
-			//		40,        // button width
-			//		30,        // button height
-			//		hDlg,       // parent window
-			//		(HMENU)IDB_FOUR,       // No menu
-			//		(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
-			//		NULL);      // pointer not needed
-			//}
+				   // Size and position values are given explicitly, because
+				   // the CW_USEDEFAULT constant gives zero values for buttons.
+					My_rect.left + (My_rect.right - My_rect.left) / 8 * 5 + (My_rect.right - My_rect.left) / 4 - 40,         // starting x position
+					My_rect.top + (My_rect.bottom - My_rect.top) / 6 + (My_rect.right - My_rect.left) / 4 + 20,         // starting y position
+					40,        // button width
+					30,        // button height
+					hDlg,       // parent window
+					(HMENU)IDB_FOUR,       // No menu
+					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
+					NULL);      // pointer not needed
+			}
 
 			{
 				CreateWindow(
@@ -878,12 +886,29 @@ INT_PTR CALLBACK ROOM(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 
 				   // Size and position values are given explicitly, because
 				   // the CW_USEDEFAULT constant gives zero values for buttons.
-					My_rect.right - 160,         // starting x position
+					My_rect.right - 270,         // starting x position
 					My_rect.bottom - 70,         // starting y position
 					80,        // button width
 					30,        // button height
 					hDlg,       // parent window
 					(HMENU)IDB_FIVE,       // No menu
+					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
+					NULL);      // pointer not needed
+			}
+			{
+				CreateWindow(
+					L"BUTTON",	// predefined class    不区分大小写
+					L"退出房间",       // button text
+					WS_CHILD | WS_VISIBLE,  // styles     注意 如果样式写错了 Button 将不会正常显示
+
+				   // Size and position values are given explicitly, because
+				   // the CW_USEDEFAULT constant gives zero values for buttons.
+					My_rect.right - 160,         // starting x position
+					My_rect.bottom - 70,         // starting y position
+					80,        // button width
+					30,        // button height
+					hDlg,       // parent window
+					(HMENU)IDB_SIX,       // No menu
 					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
 					NULL);      // pointer not needed
 			}
@@ -899,7 +924,16 @@ INT_PTR CALLBACK ROOM(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 				MessageBox(hDlg, L"您不是房主，请等待房主开始游戏", NULL, MB_OK);
 				break;
 			}
-			send(mysocket, "startgame", 1023, 0);
+			send(mysocket, "StartGame", 1023, 0);
+			break;
+		}
+		case IDB_SIX:
+		{
+			send(mysocket, "QuitRoom", 1023, 0);
+			DestroyWindow(hDlg);
+			status = Hall_Status;
+			ShowWindow(Hall, SW_SHOW);
+			UpdateWindow(_hwnd);
 			break;
 		}
 		case START:
@@ -931,6 +965,15 @@ INT_PTR CALLBACK ROOM(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 				reverse_in = false;
 				swap(mytank, optank);
 			}
+			break;
+		}
+		case QUITROOM:
+		{
+			MessageBox(hDlg, L"房主已将房间解散！", NULL, MB_OK);
+			DestroyWindow(hDlg);
+			status = Hall_Status;
+			ShowWindow(Hall, SW_SHOW);
+			UpdateWindow(_hwnd);
 			break;
 		}
 		}
