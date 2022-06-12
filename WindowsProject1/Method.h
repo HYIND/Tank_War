@@ -1,15 +1,10 @@
 #pragma once
-#include"Tank.h"
+#include "Tank.h"
 #include <signal.h>
 #include <string>
 #include <regex>
 #include <thread>
 
-// WinSocket
-#include <WinSock2.h>
-#include <WS2tcpip.h>
-#pragma comment(lib, "Ws2_32.lib")
-//#pragma comment(lib,"Kr")
 
 //hIOCP 重叠结构体
 typedef struct _PER_IO_DATA
@@ -67,5 +62,6 @@ void send_location(Tank* tank);
 void send_bullet(bullet* bullet_head);
 void Refresh_opTank(char buf[]);
 void Refresh_opbullet(string& re);
+void send_destroy(bullet* bullet);
 
 HRESULT Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget, LPCTSTR pszResource, ID2D1Bitmap** ppBitmap);

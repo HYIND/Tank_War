@@ -141,12 +141,14 @@
   <ItemGroup>
     <ClInclude Include="framework.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="Scene.h" />
     <ClInclude Include="Tank.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="WindowsProject1.h" />
     <ClInclude Include="Method.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Sence.cpp" />
     <ClCompile Include="Tank.cpp" />
     <ClCompile Include="WindowsProject1.cpp" />
     <ClCompile Include="Method.cpp" />

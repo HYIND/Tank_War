@@ -1,13 +1,13 @@
 #pragma once
 #include "framework.h"
-#include <vector>
+#include "Scene.h"
 
-//d2d及位图 头文件
-#include <d2d1.h>
-#include <dwrite.h>
-#include <wincodec.h>
-#include <d2d1helper.h>
-#pragma comment(lib, "d2d1.lib")
+// WinSocket
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#pragma comment(lib, "Ws2_32.lib")
+//#pragma comment(lib,"Kr")
+// 
 //#pragma comment(lib,"dxguid.lib")
 
 #pragma comment(lib,"Msimg32.lib")
@@ -96,3 +96,4 @@ struct tank_info {
 void Get_Initinfo();
 void Return_Tankinfo();
 void Init_all();
+extern void send_destroy(bullet* bullet);

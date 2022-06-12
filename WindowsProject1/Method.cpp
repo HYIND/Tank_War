@@ -287,6 +287,14 @@ void Return_Class(char buf[]) {
 			string recv_str(m[0].second + 1, iterEnd);
 			Refresh_opbullet(recv_str);
 		}
+		else if (temp == "destroy")
+		{
+			mytank->isalive = false;
+		}
+		else if (temp == "opdestroy")
+		{
+			optank->isalive = false;
+		}
 	}
 }
 
@@ -332,7 +340,8 @@ void Get_Hallinfo() {
 
 void Return_Get_Hallinfo_User(string& re) {
 	(int)SendMessage(user_list, LB_RESETCONTENT, 0, 0);
-	wstring wtemp;
+	wstring wtemp = L"unname(Äú)";
+	(int)SendMessage(user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
 	{
 		regex user_reg("[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+");
 		string temp;
@@ -341,8 +350,6 @@ void Return_Get_Hallinfo_User(string& re) {
 			wtemp = string2wstring((*iter)[0]);
 			(int)SendMessage(user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
 		}
-		wtemp = L"unname(Äú)";
-		(int)SendMessage(user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
 	}
 }
 
@@ -513,6 +520,15 @@ void Refresh_opbullet(string& re)
 	optank->bullet_head = newhead->next;
 }
 
+void send_destroy(bullet* bullet)
+{
+	string str = "destroy:{";
+	str += to_string(bullet->locationX);
+	str += ",";
+	str += to_string(bullet->locationY);
+	str += "}";
+	send(mysocket, (const char*)&(str[0]), 1023, 0);
+}
 
 HRESULT Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget, LPCTSTR pszResource, ID2D1Bitmap** ppBitmap)
 {

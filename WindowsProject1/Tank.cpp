@@ -2,6 +2,7 @@
 using namespace std;
 
 extern ID2D1SolidColorBrush* bullet_pBrush;
+extern bool isonline_game;
 
 extern HDC hdcmem, hdc;
 vector <tank_info*> tank_list;
@@ -228,7 +229,7 @@ void bullet::Drawbullet(ID2D1HwndRenderTarget* pRenderTarget, ID2D1Bitmap* Bulle
 	else
 	{
 		//D2D1_ELLIPSE ellipse = D2D1::Ellipse(D2D1::Point2F(100.0f, 100.0f), 100.0f, 50.0f);
- 	pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(this->locationX, this->locationY), this->width, this->height), bullet_pBrush);
+		pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(this->locationX, this->locationY), this->width, this->height), bullet_pBrush);
 	}
 	if (this->next != NULL)
 		(*(this->next)).Drawbullet(pRenderTarget, Bullet_Bitmap);
@@ -300,9 +301,16 @@ bool bullet::crash(RECT rect, int direction)
 			int half_height = it->cur->height / 2;
 			int half_width = it->cur->width / 2;
 			if (new_locationY <  it->cur->locationY + half_height && new_locationY >it->cur->locationY - half_height
-				&& new_locationX < it->cur->locationX + half_width && new_locationX >it->cur->locationX - half_height)
+				&& new_locationX < it->cur->locationX + half_width && new_locationX >it->cur->locationX - half_width)
 			{
-				it->cur->isalive = false;
+				if (!isonline_game)
+					it->cur->isalive = false;
+				else
+				{
+					this->locationX = new_locationX;
+					this->locationY = new_locationY;
+					send_destroy(this);
+				}
 				/*tank_list.erase(it);*/
 				return true;
 			}
