@@ -1,10 +1,15 @@
 #include "Tank.h"
 using namespace std;
 
-extern ID2D1SolidColorBrush* bullet_pBrush;
+ID2D1SolidColorBrush* bullet_pBrush;
+
 extern bool isonline_game;
 
-extern HDC hdcmem, hdc;
+extern SOCKET mysocket;
+
+extern Tank* mytank;
+extern Tank* optank;
+
 vector <tank_info*> tank_list;
 void Get_Initinfo() {
 	for (auto it : tank_list)
@@ -317,4 +322,86 @@ bool bullet::crash(RECT rect, int direction)
 		}
 	}
 	return false;
+}
+
+
+void send_location(Tank* tank)
+{
+	char buffer[1024] = "mylocation:";
+	int i = sizeof(Tank);
+	memcpy(&buffer[11], (char*)tank, sizeof(Tank));
+	send(mysocket, buffer, 1023, 0);
+}
+
+void send_bullet(bullet* cur)
+{
+	string str = "mybullet:";
+	while (cur != NULL)
+	{
+		str = str + "{"
+			+ to_string(cur->locationX)
+			+ ","
+			+ to_string(cur->locationY)
+			+ "}";
+		cur = cur->next;
+	}
+	send(mysocket, (const char*)&str[0], 1023, 0);
+}
+
+void Refresh_opTank(char buf[])
+{
+	try
+	{
+		memcpy(optank, &buf[11], 24);
+	}
+	catch (exception& e)
+	{
+		return;
+	}
+}
+
+void Refresh_opbullet(string& re)
+{
+	bullet* newhead = new bullet();
+	bullet* temp = newhead;
+
+	regex user_reg("[0-9]+");
+	sregex_iterator end;
+	for (sregex_iterator iter(re.begin(), re.end(), user_reg); iter != end; iter++) {
+		string s1 = ((*iter)[0]);
+		if (iter != end)
+			iter++;
+		else break;
+		string s2 = ((*iter)[0]);
+		if (temp->next == NULL)
+		{
+			temp->next = new bullet();
+			temp = temp->next;
+			temp->locationX = atoi(s1.c_str());
+			temp->locationY = atoi(s2.c_str());
+			temp->speed = 20;
+			temp->owner = optank;
+		}
+	}
+	optank->bullet_head = newhead->next;
+}
+
+void send_destroy(bullet* bullet)
+{
+	string str = "destroy:{";
+	str += to_string(bullet->locationX);
+	str += ",";
+	str += to_string(bullet->locationY);
+	str += "}";
+	send(mysocket, (const char*)&(str[0]), 1023, 0);
+}
+
+void my_destroy()
+{
+	mytank->isalive = false;
+}
+
+void op_destory()
+{
+	optank->isalive = false;
 }

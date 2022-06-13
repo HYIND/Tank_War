@@ -1,10 +1,5 @@
 #include"Method.h"
 
-extern Tank* mytank;
-extern Tank* optank;
-
-extern ID2D1HwndRenderTarget* pRenderTarget;
-
 extern bool isstart;
 
 extern int status;
@@ -35,7 +30,15 @@ int room_count = 0;
 extern bool Hall_IOCP_flag;
 extern bool Game_IOCP_flag;
 
+
+extern void Refresh_opTank(char buf[]);
+extern void Refresh_opbullet(string& re);
+extern void my_destroy();
+extern void op_destory();
+
+
 //void START(HWND hWnd) {}
+
 
 wstring string2wstring(string str)
 {
@@ -273,14 +276,7 @@ void Return_Class(char buf[]) {
 	{
 		if (temp == "oplocation")
 		{
-			try
-			{
-				memcpy(optank, &buf[11], 24);
-			}
-			catch (exception& e)
-			{
-				return;
-			}
+			Refresh_opTank(buf);
 		}
 		else if (temp == "opbullet")
 		{
@@ -289,11 +285,13 @@ void Return_Class(char buf[]) {
 		}
 		else if (temp == "destroy")
 		{
-			mytank->isalive = false;
+			my_destroy();
+			lost_game();
 		}
 		else if (temp == "opdestroy")
 		{
-			optank->isalive = false;
+			op_destory();
+			win_game();
 		}
 	}
 }
@@ -459,75 +457,14 @@ void Enter_Room(int index) {
 	send_socket(s);
 }
 
-void send_location(Tank* tank)
+void win_game()
 {
-	char buffer[1024] = "mylocation:";
-	int i = sizeof(Tank);
-	memcpy(&buffer[11], (char*)tank, sizeof(Tank));
-	send(mysocket, buffer, 1023, 0);
+	SendMessage(_hwnd, WM_COMMAND, WIN, (LPARAM)_hwnd);
 }
 
-void send_bullet(bullet* cur)
+void lost_game()
 {
-	string str = "mybullet:";
-	while (cur != NULL)
-	{
-		str = str + "{"
-			+ to_string(cur->locationX)
-			+ ","
-			+ to_string(cur->locationY)
-			+ "}";
-		cur = cur->next;
-	}
-	send_socket(str);
-}
-
-void Refresh_opTank(char buf[])
-{
-	try
-	{
-		memcpy(optank, &buf[11], 24);
-	}
-	catch (exception& e)
-	{
-		return;
-	}
-}
-
-void Refresh_opbullet(string& re)
-{
-	bullet* newhead = new bullet();
-	bullet* temp = newhead;
-
-	regex user_reg("[0-9]+");
-	sregex_iterator end;
-	for (sregex_iterator iter(re.begin(), re.end(), user_reg); iter != end; iter++) {
-		string s1 = ((*iter)[0]);
-		if (iter != end)
-			iter++;
-		else break;
-		string s2 = ((*iter)[0]);
-		if (temp->next == NULL)
-		{
-			temp->next = new bullet();
-			temp = temp->next;
-			temp->locationX = atoi(s1.c_str());
-			temp->locationY = atoi(s2.c_str());
-			temp->speed = 20;
-			temp->owner = optank;
-		}
-	}
-	optank->bullet_head = newhead->next;
-}
-
-void send_destroy(bullet* bullet)
-{
-	string str = "destroy:{";
-	str += to_string(bullet->locationX);
-	str += ",";
-	str += to_string(bullet->locationY);
-	str += "}";
-	send(mysocket, (const char*)&(str[0]), 1023, 0);
+	SendMessage(_hwnd, WM_COMMAND, FAIL, (LPARAM)_hwnd);
 }
 
 HRESULT Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget, LPCTSTR pszResource, ID2D1Bitmap** ppBitmap)

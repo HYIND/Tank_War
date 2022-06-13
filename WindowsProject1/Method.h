@@ -1,10 +1,11 @@
 #pragma once
-#include "Tank.h"
-#include <signal.h>
-#include <string>
-#include <regex>
-#include <thread>
+//#include "Tank.h"
+//#include <signal.h>
+//#include <regex>
+//#include <thread>
+#include "header.h"
 
+using namespace std;
 
 //hIOCP 重叠结构体
 typedef struct _PER_IO_DATA
@@ -33,11 +34,12 @@ typedef struct _PER_IO_DATA
 #define Enterroom 7777
 #define START 8888
 #define QUITROOM 9999
+#define WIN 666
+#define FAIL 777
+
 
 //status 枚举
 enum { NONE, Hall_Status, Room_Status, Game_Status };
-//D2D释放资源
-#define SafeRelease(P) if(P){P->Release() ; P = NULL ;}
 
 //void START(HWND hWnd);
 void Get_Init_UI(HWND hWnd);
@@ -58,10 +60,7 @@ void Return_Class(char buf[]);
 DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam);
 void Create_Room();
 void Enter_Room(int index);
-void send_location(Tank* tank);
-void send_bullet(bullet* bullet_head);
-void Refresh_opTank(char buf[]);
-void Refresh_opbullet(string& re);
-void send_destroy(bullet* bullet);
+void win_game();
+void lost_game();
 
 HRESULT Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget, LPCTSTR pszResource, ID2D1Bitmap** ppBitmap);

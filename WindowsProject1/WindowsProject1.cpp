@@ -3,10 +3,11 @@
 
 #include "WindowsProject1.h"
 #include "Method.h"
-#include <comdef.h>
+#include "Scene.h"
+#include "Tank.h"
+//#include <comdef.h>
 
 using namespace D2D1;
-
 //using namespace std;
 
 //#include "GdiPlus.h"
@@ -27,21 +28,15 @@ Tank* optank = &tank2;
 Tank* my_in = &tank1;
 Tank* op_in = &tank2;
 
-
 //ID2D1SolidColorBrush* pBrush = NULL; // A black brush, reflect the line color
 
 LPCTSTR OP_Resource = L"C:\\Users\\H\\Desktop\\WindowsProject1\\x64\\Debug\\Resource\\OP_BK.jpg";
 LPCTSTR Tank_Resource = L"C:\\Users\\H\\Desktop\\WindowsProject1\\x64\\Debug\\Resource\\Tank.bmp";
 
-ID2D1Factory* pD2DFactory = NULL; // Direct2D factory
 HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &pD2DFactory);
-ID2D1HwndRenderTarget* pRenderTarget = NULL;
-ID2D1SolidColorBrush* bullet_pBrush = NULL;
 
 ID2D1Bitmap* OP_pBitmap;
 ID2D1Bitmap* Tank_pBitmap;
-
-IWICImagingFactory* pIWICFactory = NULL;
 
 HDC hdcmem, hdc;
 bool isstart = false;
@@ -242,30 +237,34 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			MessageBox(hWnd, _T("位图加载失败"), L"Error", MB_OK);
 		}
 		hr = pRenderTarget->CreateSolidColorBrush(ColorF(1, 0, 0, 1), &bullet_pBrush);
-
-		pRenderTarget->BeginDraw();
-		pRenderTarget->Clear(ColorF(ColorF::White));
-		if (!isstart) {
-			pRenderTarget->DrawBitmap(OP_pBitmap, RectF(0, 0, rect.right, rect.bottom));
-
-			if (FAILED(hr))
-			{
-				MessageBox(NULL, L"Draw failed!", L"Error", 0);
-			}
+		hr = pRenderTarget->CreateSolidColorBrush(ColorF(0, 0, 0, 1), &pDefaultBrush);
+		hr = pRenderTarget->CreateSolidColorBrush(ColorF(1, 1, 1, 1), &pClickBrush);
+		hr = DWriteCreateFactory(
+			DWRITE_FACTORY_TYPE_SHARED,
+			__uuidof(IDWriteFactory),
+			reinterpret_cast<IUnknown**>(&pIDWriteFactory)
+		);
+		hr = pIDWriteFactory->CreateTextFormat(
+			L"Gabriola",                   // Font family name
+			NULL,                          // Font collection(NULL sets it to the system font collection)
+			DWRITE_FONT_WEIGHT_REGULAR,    // Weight
+			DWRITE_FONT_STYLE_NORMAL,      // Style
+			DWRITE_FONT_STRETCH_NORMAL,    // Stretch
+			50.0f,                         // Size    
+			L"en-us",                      // Local
+			&pTextFormat                 // Pointer to recieve the created object
+		);
+		{
+			CoInitialize(NULL);
+			CoCreateInstance(
+				CLSID_WICImagingFactory,
+				NULL,
+				CLSCTX_INPROC_SERVER,
+				IID_PPV_ARGS(&pIWICFactory)
+			);
 		}
-		else {
-
-			if (tank1.bullet_head)
-				(*(tank1.bullet_head)).Drawbullet(pRenderTarget, NULL);
-			if (tank2.bullet_head)
-				(*(tank2.bullet_head)).Drawbullet(pRenderTarget, NULL);
-
-			if (tank1.isalive)
-				tank1.DrawTank(pRenderTarget, Tank_pBitmap);
-			if (tank2.isalive)
-				tank1.DrawTank(pRenderTarget, Tank_pBitmap);
-		}
-		hr = pRenderTarget->EndDraw();
+		InitScene(pD2DFactory, pRenderTarget, pIWICFactory, pIDWriteFactory);
+		Load_D2DResource();
 		break;
 	}
 	case WM_TIMER:
@@ -391,6 +390,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			DestroyWindow(hWnd);
 			break;
 		}
+
+		case WIN:
+		{
+			CurScene = SWinGame;
+			break;
+		}
+
+		case ReturnInEndGame:
+		{
+			isstart = false;
+			isonline_game = true;
+			ShowWindow(Room, SW_SHOW);
+			CurScene = SRoom;
+			break;
+		}
+
+
+
 		case IDM_ABOUT:
 			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
 			break;
@@ -404,6 +421,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			return DefWindowProc(hWnd, message, wParam, lParam);
 		}
 	}
+	case WM_MOUSEMOVE:
+	{
+		MoveX = LOWORD(lParam);
+		MoveY = HIWORD(lParam);
+		if (CurScene)
+			CurScene->Move();
+		InvalidateRect(hWnd, NULL, TRUE);
+		break;
+	}
+	case WM_LBUTTONDOWN:
+	{
+		ClickX = LOWORD(lParam);
+		ClickY = HIWORD(lParam);
+		if (CurScene)
+			CurScene->Click();
+		InvalidateRect(hWnd, NULL, TRUE);
+		break;
+	}
+
 	break;
 
 	case WM_KEYDOWN:
@@ -485,6 +521,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				if (tank2.isalive)
 					tank2.DrawTank(pRenderTarget, Tank_pBitmap);
 			}
+			if (CurScene)
+				CurScene->DrawScene();
 			hr = pRenderTarget->EndDraw();
 		}
 		EndPaint(hWnd, &ps);

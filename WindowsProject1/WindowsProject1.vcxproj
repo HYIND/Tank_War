@@ -146,9 +146,10 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="WindowsProject1.h" />
     <ClInclude Include="Method.h" />
+    <ClInclude Include="header.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Sence.cpp" />
+    <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Tank.cpp" />
     <ClCompile Include="WindowsProject1.cpp" />
     <ClCompile Include="Method.cpp" />

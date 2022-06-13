@@ -1,17 +1,21 @@
 #pragma once
-#include "framework.h"
-#include "Scene.h"
+//#include "framework.h"
+//#include "Scene.h"
 
-// WinSocket
-#include <WinSock2.h>
-#include <WS2tcpip.h>
-#pragma comment(lib, "Ws2_32.lib")
-//#pragma comment(lib,"Kr")
+//// WinSocket
+//#include <WinSock2.h>
+//#include <WS2tcpip.h>
+//#pragma comment(lib, "Ws2_32.lib")
+////#pragma comment(lib,"Kr")
 // 
 //#pragma comment(lib,"dxguid.lib")
 
+#include "header.h"
+
 #pragma comment(lib,"Msimg32.lib")
 using namespace std;
+
+extern ID2D1SolidColorBrush* bullet_pBrush;
 
 class Tank;
 
@@ -96,4 +100,12 @@ struct tank_info {
 void Get_Initinfo();
 void Return_Tankinfo();
 void Init_all();
-extern void send_destroy(bullet* bullet);
+
+
+void send_location(Tank* tank);
+void send_bullet(bullet* cur);
+void send_destroy(bullet* bullet);
+void Refresh_opTank(char buf[]);
+void Refresh_opbullet(string& re);
+void my_destroy();
+void op_destory();
