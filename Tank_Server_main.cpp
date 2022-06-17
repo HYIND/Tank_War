@@ -2,7 +2,7 @@
 
 using namespace std;
 
-vector<sock_info> hall_list;
+vector<sock_info> user_list;
 vector<room_info> room_list;
 vector<int> room_user;
 vector<int> game_pipe_list;
@@ -68,11 +68,13 @@ void server_hall()
             if (hall_events->events & EPOLLRDHUP)
             {
                 delfd(hall_epoll, socket);
-                for (auto it = hall_list.begin(); it != hall_list.end(); it++)
+                for (auto it = user_list.begin(); it != user_list.end(); it++)
                 {
                     if (it->accept == socket)
                     {
-                        hall_list.erase(it);
+                        if (it->states == room)
+                            Quit_Room(socket);
+                        user_list.erase(it);
                         break;
                     }
                 }
@@ -90,11 +92,11 @@ void server_hall()
                 }
                 else if (re_num == 0)
                 {
-                    for (auto it = hall_list.begin(); it != hall_list.end(); it++)
+                    for (auto it = user_list.begin(); it != user_list.end(); it++)
                     {
                         if (it->accept == socket)
                         {
-                            hall_list.erase(it);
+                            user_list.erase(it);
                             break;
                         }
                     }
@@ -157,7 +159,7 @@ void server_listen(int mysocket)
                 int socket = accept(mysocket, (struct sockaddr *)&client, &length);
                 if (socket != -1)
                 {
-                    hall_list.emplace_back(sock_info(socket, client));
+                    user_list.emplace_back(sock_info(socket, client));
                     addfd(hall_epoll, socket);
                     // thread T(server_hall, socket);
                     // T.detach();

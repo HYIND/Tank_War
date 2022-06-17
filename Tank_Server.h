@@ -17,11 +17,12 @@
 
 using namespace std;
 
-enum states
+enum
 {
     hall,
     room,
-    gaming
+    gaming,
+    disconnection
 };
 struct sock_info
 {
@@ -75,8 +76,18 @@ string Get_hall_user(int sock_accept, string &s);
 
 void Get_hall_room(int sock_accept, string &s);
 
+void Create_Room(int sock_accept);
+
+void Enter_Room(int sock_accept, string s);
+
+void Quit_Room(int &user);
+
+void Start_Game(int &user1);
+
 string return_class(int &sock_accept, string &s);
 
 void return_game_class(int mysocket, int opsocket, char buf[]);
 
-void game(int socket1, int socket2);
+void game(int socket1, int socket2, room_info* roominfo);
+
+void Tank_destroy(int scoket);
