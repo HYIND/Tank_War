@@ -1,4 +1,6 @@
 #pragma once
+#define WIN32_LEAN_AND_MEAN
+
 #include "framework.h"
 #include <comdef.h>
 // WinSocket
@@ -26,3 +28,4 @@
 
 #include <vector>
 #include <string>
+#include <queue>

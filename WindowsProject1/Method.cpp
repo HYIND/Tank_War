@@ -30,15 +30,23 @@ int room_count = 0;
 extern bool Hall_IOCP_flag;
 extern bool Game_IOCP_flag;
 
+extern WSADATA wsa;
+extern sockaddr_in addr_info;
+extern SOCKET mysocket;
+
+extern HANDLE Hall_hIOCP;
+extern PPER_IO_DATA Hall_pPerIO;
 
 extern void Refresh_opTank(char buf[]);
 extern void Refresh_opbullet(string& re);
 extern void my_destroy();
 extern void op_destory();
 
+queue<Ping_info> ping_queue;
+int delay = 0;
+int ping_id = 0;
 
 //void START(HWND hWnd) {}
-
 
 wstring string2wstring(string str)
 {
@@ -78,97 +86,97 @@ string wstring2string(wstring wstr)
 	return str;
 }
 
-void Get_Init_UI(HWND hWnd) {
-	RECT rect;
-	GetClientRect(hWnd, &rect);
-	{
-		hwndButton1 = CreateWindow(
-			L"BUTTON",	// predefined class    不区分大小写
-			L"暂停",       // button text
-			WS_CHILD | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
-
-		   // Size and position values are given explicitly, because
-		   // the CW_USEDEFAULT constant gives zero values for buttons.
-			10,         // starting x position
-			10,         // starting y position
-			80,        // button width
-			30,        // button height
-			hWnd,       // parent window
-			(HMENU)IDB_ONE,       // No menu
-			(HINSTANCE)GetWindowLong(hWnd, GWLP_HINSTANCE),
-			NULL);      // pointer not needed
-		ShowWindow(hwndButton1, SW_HIDE);
-	}
-	{
-		hwndButton2 = CreateWindow(
-			L"BUTTON",	// predefined class    不区分大小写
-			L"本地游戏",       // button text
-			WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
-
-		   // Size and position values are given explicitly, because
-		   // the CW_USEDEFAULT constant gives zero values for buttons.
-			(rect.left + rect.right) / 2 - 90,         // starting x position
-			80,         // starting y position
-			180,        // button width
-			50,        // button height
-			hWnd,       // parent window
-			(HMENU)IDB_TWO,       // No menu
-			(HINSTANCE)GetWindowLong(hWnd, GWLP_HINSTANCE),
-			NULL);      // pointer not needed
-	}
-	{
-		hwndButton3 = CreateWindow(
-			L"BUTTON",	// predefined class    不区分大小写
-			L"联机大厅",       // button text
-			WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
-
-		   // Size and position values are given explicitly, because
-		   // the CW_USEDEFAULT constant gives zero values for buttons.
-			(rect.left + rect.right) / 2 - 90,         // starting x position
-			180,         // starting y position
-			180,        // button width
-			50,        // button height
-			hWnd,       // parent window
-			(HMENU)IDB_THREE,       // No menu
-			(HINSTANCE)GetWindowLong(hWnd, GWLP_HINSTANCE),
-			NULL);      // pointer not needed
-	}
-	{
-		hwndButton4 = CreateWindow(
-			L"BUTTON",	// predefined class    不区分大小写
-			L"设置",       // button text
-			WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
-
-		   // Size and position values are given explicitly, because
-		   // the CW_USEDEFAULT constant gives zero values for buttons.
-			(rect.left + rect.right) / 2 - 90,         // starting x position
-			280,         // starting y position
-			180,        // button width
-			50,        // button height
-			hWnd,       // parent window
-			(HMENU)IDB_FOUR,       // No menu
-			(HINSTANCE)GetWindowLong(hWnd, GWLP_HINSTANCE),
-			NULL);      // pointer not needed
-	}
-	{
-		hwndButton5 = CreateWindow(
-			L"BUTTON",	// predefined class    不区分大小写
-			L"退出游戏",       // button text
-			WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
-
-		   // Size and position values are given explicitly, because
-		   // the CW_USEDEFAULT constant gives zero values for buttons.
-			(rect.left + rect.right) / 2 - 90,         // starting x position
-			380,         // starting y position
-			180,        // button width
-			50,        // button height
-			hWnd,       // parent window
-			(HMENU)IDB_FIVE,       // No menu
-			(HINSTANCE)GetWindowLong(hWnd, GWLP_HINSTANCE),
-			NULL);      // pointer not needed
-	}
-
-}
+//void Get_Init_UI(HWND hWnd) {
+//	RECT rect;
+//	GetClientRect(hWnd, &rect);
+//	{
+//		hwndButton1 = CreateWindow(
+//			L"BUTTON",	// predefined class    不区分大小写
+//			L"暂停",       // button text
+//			WS_CHILD | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
+//
+//		   // Size and position values are given explicitly, because
+//		   // the CW_USEDEFAULT constant gives zero values for buttons.
+//			10,         // starting x position
+//			10,         // starting y position
+//			80,        // button width
+//			30,        // button height
+//			hWnd,       // parent window
+//			(HMENU)IDB_ONE,       // No menu
+//			(HINSTANCE)GetWindowLong(hWnd, GWLP_HINSTANCE),
+//			NULL);      // pointer not needed
+//		ShowWindow(hwndButton1, SW_HIDE);
+//	}
+//	{
+//		hwndButton2 = CreateWindow(
+//			L"BUTTON",	// predefined class    不区分大小写
+//			L"本地游戏",       // button text
+//			WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
+//
+//		   // Size and position values are given explicitly, because
+//		   // the CW_USEDEFAULT constant gives zero values for buttons.
+//			(rect.left + rect.right) / 2 - 90,         // starting x position
+//			80,         // starting y position
+//			180,        // button width
+//			50,        // button height
+//			hWnd,       // parent window
+//			(HMENU)IDB_TWO,       // No menu
+//			(HINSTANCE)GetWindowLong(hWnd, GWLP_HINSTANCE),
+//			NULL);      // pointer not needed
+//	}
+//	{
+//		hwndButton3 = CreateWindow(
+//			L"BUTTON",	// predefined class    不区分大小写
+//			L"联机大厅",       // button text
+//			WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
+//
+//		   // Size and position values are given explicitly, because
+//		   // the CW_USEDEFAULT constant gives zero values for buttons.
+//			(rect.left + rect.right) / 2 - 90,         // starting x position
+//			180,         // starting y position
+//			180,        // button width
+//			50,        // button height
+//			hWnd,       // parent window
+//			(HMENU)IDB_THREE,       // No menu
+//			(HINSTANCE)GetWindowLong(hWnd, GWLP_HINSTANCE),
+//			NULL);      // pointer not needed
+//	}
+//	{
+//		hwndButton4 = CreateWindow(
+//			L"BUTTON",	// predefined class    不区分大小写
+//			L"设置",       // button text
+//			WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
+//
+//		   // Size and position values are given explicitly, because
+//		   // the CW_USEDEFAULT constant gives zero values for buttons.
+//			(rect.left + rect.right) / 2 - 90,         // starting x position
+//			280,         // starting y position
+//			180,        // button width
+//			50,        // button height
+//			hWnd,       // parent window
+//			(HMENU)IDB_FOUR,       // No menu
+//			(HINSTANCE)GetWindowLong(hWnd, GWLP_HINSTANCE),
+//			NULL);      // pointer not needed
+//	}
+//	{
+//		hwndButton5 = CreateWindow(
+//			L"BUTTON",	// predefined class    不区分大小写
+//			L"退出游戏",       // button text
+//			WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
+//
+//		   // Size and position values are given explicitly, because
+//		   // the CW_USEDEFAULT constant gives zero values for buttons.
+//			(rect.left + rect.right) / 2 - 90,         // starting x position
+//			380,         // starting y position
+//			180,        // button width
+//			50,        // button height
+//			hWnd,       // parent window
+//			(HMENU)IDB_FIVE,       // No menu
+//			(HINSTANCE)GetWindowLong(hWnd, GWLP_HINSTANCE),
+//			NULL);      // pointer not needed
+//	}
+//
+//}
 
 void Show_Main_UI() {
 	ShowWindow(hwndButton2, SW_SHOW);
@@ -182,7 +190,7 @@ void Hide_Main_UI() {
 	ShowWindow(hwndButton3, SW_HIDE);
 	ShowWindow(hwndButton4, SW_HIDE);
 	ShowWindow(hwndButton5, SW_HIDE);
-	ShowWindow(Hall, SW_HIDE);
+	//ShowWindow(Hall, SW_HIDE);
 	ShowWindow(Room, SW_HIDE);
 }
 
@@ -231,6 +239,12 @@ void Return_Class(char buf[]) {
 	regex_search(iterStart, iterEnd, m, reg);
 	string temp;
 	temp = m[0];
+	if (temp == "ping")
+	{
+		string recv_str(m[0].second + 1, iterEnd);
+		Ping_Count(recv_str);
+		return;
+	}
 	if (!isstart)
 	{
 		if (status == Hall_Status)
@@ -257,7 +271,7 @@ void Return_Class(char buf[]) {
 			}
 			else if (temp == "EnterRoom")
 			{
-				SendMessage(Hall, WM_COMMAND, Enterroom, (LPARAM)_hwnd);
+				SendMessage(_hwnd, WM_COMMAND, Enterroom, (LPARAM)_hwnd);
 			}
 		}
 		else if (status == Room_Status)
@@ -534,4 +548,138 @@ HRESULT Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderT
 	SafeRelease(pScaler);
 
 	return hr;
+}
+
+HBRUSH OnCtlColorEdit(WPARAM wParam, LPARAM lParam)
+{
+	HWND hEdit1, hedit2;
+	hEdit1 = ::GetDlgItem(_hwnd, 1017);
+	HDC hDc = GetDC(room_list);
+
+	if (hEdit1 == (HWND)lParam)
+	{
+		::SetTextColor(hDc, RGB(0, 0, 255)); //RGB(0, 0, 255)
+		::SetBkMode(hDc, TRANSPARENT);
+		//SetBkColor(RGB(125, 255, 0)); //文字背景
+		HBRUSH hbr = (HBRUSH)::GetStockObject(NULL_BRUSH); //编辑框背景。注意：和文字背景不是一个意思。
+		//TRANSPARENT,OPAQUE
+
+		//说明:TRANSPARENT是设置背景透明,但是控件多行滚动时有重影,
+
+		//还没弄明白,所以用的OPAOUE,这也不明白是啥玩意,但能达到目的就OK,
+
+		//::SetBkColor(hDc,RGB(255,0,0));
+		return hbr;//返回背景色的画刷
+	}
+	ReleaseDC(hEdit1, hDc);
+	return 0;
+}
+
+void Show_Hall(bool flag)
+{
+	if (flag)
+	{
+		ShowWindow(edit_hall, SW_SHOW);
+		ShowWindow(edit_in, SW_SHOW);
+		ShowWindow(room_list, SW_SHOW);
+		ShowWindow(user_list, SW_SHOW);
+	}
+	else
+	{
+		ShowWindow(edit_hall, SW_HIDE);
+		ShowWindow(edit_in, SW_HIDE);
+		ShowWindow(room_list, SW_HIDE);
+		ShowWindow(user_list, SW_HIDE);
+	}
+}
+
+bool Init_Hall()
+{
+	WSAStartup(MAKEWORD(2, 2), &wsa);
+	ZeroMemory(&addr_info, sizeof(addr_info));
+	addr_info.sin_family = AF_INET;
+	addr_info.sin_port = htons(DEFAULT_PORT);
+	inet_pton(AF_INET, SERVER_IP, &(addr_info.sin_addr.S_un.S_addr));
+
+	memset(buffer, '\0', 1024);
+	mysocket = WSASocket(addr_info.sin_family, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+	if (-1 == connect(mysocket, (struct sockaddr*)&addr_info, sizeof(struct sockaddr)))
+	{
+		MessageBoxW(_hwnd, L"无法连接服务器，请检查网络设置", L"网络连接错误", NULL);
+		return false;
+	}
+
+	Hall_hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
+	CreateIoCompletionPort((HANDLE)mysocket, Hall_hIOCP, NULL, 0);
+	Hall_pPerIO = (PPER_IO_DATA)::GlobalAlloc(GPTR, sizeof(PER_IO_DATA));
+	Hall_pPerIO->nOperationType = OP_READ;
+	WSABUF buf;
+	buf.buf = Hall_pPerIO->buf;
+	buf.len = 1024;
+	DWORD dwRecv;
+	DWORD dwFlags = 0;
+	WSARecv(mysocket, &buf, 1, &dwRecv, &dwFlags, &Hall_pPerIO->ol, NULL);
+	thread T(Recv_Thread, Hall_pPerIO, LPVOID(Hall_hIOCP));
+	T.detach();
+	return true;
+}
+
+void Ping_Count(string& str)
+{
+	chrono::milliseconds ms = chrono::duration_cast<chrono::milliseconds>(
+		chrono::system_clock::now().time_since_epoch()
+		);
+	int recv_time = ms.count();
+	try
+	{
+		int recv_id = atoi(str.c_str());
+		while (!ping_queue.empty())
+		{
+			if (ping_queue.front().id > recv_id)
+			{
+				return;
+			}
+			else if (ping_queue.front().id == recv_id)
+			{
+				delay = min((recv_time - ping_queue.front().send_time) / 2, 999);
+				ping_queue.pop();
+				return;
+			}
+			else
+			{
+				ping_queue.pop();
+			}
+		}
+	}
+	catch (const std::exception&)
+	{
+		return;
+	}
+}
+
+void send_pingmessage()
+{
+	chrono::milliseconds ms = chrono::duration_cast<chrono::milliseconds>(
+		chrono::system_clock::now().time_since_epoch()
+		);
+	int time = ms.count();
+
+	Ping_info ping_info;
+	ping_info.id = ping_id;
+	ping_info.send_time = time;
+	ping_queue.push(ping_info);
+
+	send_socket("ping:" + to_string(ping_id));
+	if (ping_id != INT32_MAX)
+	{
+		ping_id++;
+	}
+	else
+	{
+		ping_id = 0;
+		while (!ping_queue.empty())
+		{
+			ping_queue.pop();
+		}
+	}
 }

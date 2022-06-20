@@ -1,7 +1,7 @@
 #include "Tank.h"
 using namespace std;
 
-ID2D1SolidColorBrush* bullet_pBrush;
+extern ID2D1SolidColorBrush* bullet_pBrush;
 
 extern bool isonline_game;
 
@@ -323,7 +323,6 @@ bool bullet::crash(RECT rect, int direction)
 	}
 	return false;
 }
-
 
 void send_location(Tank* tank)
 {
