@@ -242,7 +242,11 @@ string return_class(int &sock_accept, string &s)
     regex_search(iterStart, iterEnd, m, reg);
     string temp;
     temp = m[0];
-    if (temp == "Getroom")
+    if (temp == "ping")
+    {
+        send(sock_accept, (const char *)&(s[0]), 1023, 0);
+    }
+    else if (temp == "Getroom")
         Get_hall_room(sock_accept, s);
     else if (temp == "Getuser")
         return Get_hall_user(sock_accept, s);
@@ -399,16 +403,16 @@ void game(int socket1, int socket2, room_info *roominfo)
             }
             if (events->events & EPOLLIN)
             {
-                string re = buffer;
-                string::const_iterator iterStart = re.begin();
-                string::const_iterator iterEnd = re.end();
-                smatch m;
-                regex reg("^[A-Z|a-z]+");
-                regex_search(iterStart, iterEnd, m, reg);
-                string temp = m[0];
                 int re_num = recv(socket, buffer, 1023, 0);
                 if (re_num > 0)
                 {
+                    string re = buffer;
+                    string::const_iterator iterStart = re.begin();
+                    string::const_iterator iterEnd = re.end();
+                    smatch m;
+                    regex reg("^[A-Z|a-z]+");
+                    regex_search(iterStart, iterEnd, m, reg);
+                    string temp = m[0];
                     try
                     {
                         if (temp == "returntoroom")
@@ -455,7 +459,10 @@ void game(int socket1, int socket2, room_info *roominfo)
                             addfd(hall_epoll, mysocket);
                             break;
                         }
-                        return_game_class(mysocket, opsocket, buffer);
+                        else
+                        {
+                            return_game_class(mysocket, opsocket, temp, buffer);
+                        }
                     }
                     catch (const std::exception &e)
                     {
@@ -531,16 +538,14 @@ void game(int socket1, int socket2, room_info *roominfo)
     delete (Tank2);
 }
 
-void return_game_class(int mysocket, int opsocket, char buf[])
+void return_game_class(int mysocket, int opsocket, string &option, char buf[])
 {
-    string re = buf;
-    string::const_iterator iterStart = re.begin();
-    string::const_iterator iterEnd = re.end();
-    smatch m;
-    regex reg("^[A-Z|a-z]+");
-    regex_search(iterStart, iterEnd, m, reg);
-    string temp = m[0];
-    if (temp == "mylocation")
+    if (option == "ping")
+    {
+        string s = buf;
+        send(mysocket, (const char *)buf, 1023, 0);
+    }
+    if (option == "mylocation")
     {
         try
         {
@@ -559,14 +564,14 @@ void return_game_class(int mysocket, int opsocket, char buf[])
             return;
         }
     }
-    else if (temp == "mybullet")
+    else if (option == "mybullet")
     {
         char send_ch[1024] = "opbullet:";
         memcpy(&send_ch[9], &buf[9], 1011);
         send(opsocket, (const char *)&(send_ch[0]), 1023, 0);
     }
     // destory:{111,222}
-    else if (temp == "destroy")
+    else if (option == "destroy")
     {
         Tank *optank = Tank_info[opsocket];
         if (optank->isalive)
@@ -574,9 +579,10 @@ void return_game_class(int mysocket, int opsocket, char buf[])
             try
             {
                 regex loc_reg("[0-9]+");
-                string temp;
-                sregex_iterator end;
-                sregex_iterator iter(re.begin(), re.end(), loc_reg);
+                string temp = buf;
+                string::const_iterator iterStart = temp.begin();
+                string::const_iterator iterEnd = temp.end();
+                sregex_iterator iter(iterStart, iterEnd, loc_reg);
                 string s_loc_X = ((*iter)[0]);
                 iter++;
                 string s_loc_Y = ((*iter)[0]);

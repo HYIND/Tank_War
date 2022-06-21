@@ -86,7 +86,7 @@ void Start_Game(int &user1);
 
 string return_class(int &sock_accept, string &s);
 
-void return_game_class(int mysocket, int opsocket, char buf[]);
+void return_game_class(int mysocket, int opsocket, string& option,char buf[]);
 
 void game(int socket1, int socket2, room_info* roominfo);
 
