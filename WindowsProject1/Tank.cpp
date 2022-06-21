@@ -1,4 +1,5 @@
 #include "Tank.h"
+#include <mutex> 
 using namespace std;
 
 extern ID2D1SolidColorBrush* bullet_pBrush;
@@ -9,6 +10,8 @@ extern SOCKET mysocket;
 
 extern Tank* mytank;
 extern Tank* optank;
+
+queue <bullet*> to_destroyed_bulletinfo;
 
 vector <tank_info*> tank_list;
 void Get_Initinfo() {
@@ -121,7 +124,12 @@ void Tank::DrawTank(ID2D1HwndRenderTarget* pRenderTarget, ID2D1Bitmap* Tank_Bitm
 {
 	int Reloc1 = this->locationX - (this->width) / 2;
 	int Reloc2 = this->locationY - (this->height) / 2;
+
+	D2D1_POINT_2F center = D2D1::Point2F(this->locationX, this->locationY);
+
+	pRenderTarget->SetTransform(D2D1::Matrix3x2F::Rotation(this->direction * 90.0f, center));
 	pRenderTarget->DrawBitmap(Tank_Bitmap, D2D1::RectF(Reloc1, Reloc2, Reloc1 + width, Reloc2 + height));
+	pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 };
 
 void Tank::Tank1_Move(RECT& rect)
@@ -234,7 +242,7 @@ void bullet::Drawbullet(ID2D1HwndRenderTarget* pRenderTarget, ID2D1Bitmap* Bulle
 	else
 	{
 		//D2D1_ELLIPSE ellipse = D2D1::Ellipse(D2D1::Point2F(100.0f, 100.0f), 100.0f, 50.0f);
-		pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(this->locationX, this->locationY), this->width, this->height), bullet_pBrush);
+ 		pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(this->locationX, this->locationY), this->width, this->height), bullet_pBrush);
 	}
 	if (this->next != NULL)
 		(*(this->next)).Drawbullet(pRenderTarget, Bullet_Bitmap);
@@ -359,6 +367,8 @@ void Refresh_opTank(char buf[])
 	}
 }
 
+mutex mtx; // 主线程唤醒子线程的锁
+condition_variable cv;//主线程唤醒子线程的条件变量 
 void Refresh_opbullet(string& re)
 {
 	bullet* newhead = new bullet();
@@ -368,21 +378,47 @@ void Refresh_opbullet(string& re)
 	sregex_iterator end;
 	for (sregex_iterator iter(re.begin(), re.end(), user_reg); iter != end; iter++) {
 		string s1 = ((*iter)[0]);
-		if (iter != end)
-			iter++;
-		else break;
-		string s2 = ((*iter)[0]);
-		if (temp->next == NULL)
+		if (++iter != end)
 		{
-			temp->next = new bullet();
-			temp = temp->next;
-			temp->locationX = atoi(s1.c_str());
-			temp->locationY = atoi(s2.c_str());
-			temp->speed = 20;
-			temp->owner = optank;
+			string s2 = ((*iter)[0]);
+			if (temp->next == NULL)
+			{
+				temp->next = new bullet();
+				temp = temp->next;
+				temp->locationX = atoi(s1.c_str());
+				temp->locationY = atoi(s2.c_str());
+				temp->speed = 20;
+				temp->owner = optank;
+			}
 		}
+		else break;
 	}
 	optank->bullet_head = newhead->next;
+	to_destroyed_bulletinfo.push(optank->bullet_head);
+	//cv.notify_one();
+}
+
+void destory_bulletinfo()
+{
+	bullet* cur = NULL;
+	bullet* temp = NULL;
+	while (1) {
+		std::unique_lock<std::mutex> lck(mtx);
+		cv.wait(lck);
+		while (!to_destroyed_bulletinfo.empty())
+		{
+			cur = to_destroyed_bulletinfo.front();
+			temp = NULL;
+			while (cur)
+			{
+				cur->next = temp;
+				delete(cur);
+				cur = temp;
+			}
+			to_destroyed_bulletinfo.pop();
+		}
+		lck.unlock();
+	}
 }
 
 void send_destroy(bullet* bullet)

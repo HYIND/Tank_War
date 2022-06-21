@@ -19,7 +19,7 @@ extern ID2D1SolidColorBrush* bullet_pBrush;
 
 class Tank;
 
-enum { UP, DOWN, LEFT, RIGHT };
+enum { DOWN, LEFT, UP, RIGHT };
 class bullet
 {
 public:
@@ -107,5 +107,6 @@ void send_bullet(bullet* cur);
 void send_destroy(bullet* bullet);
 void Refresh_opTank(char buf[]);
 void Refresh_opbullet(string& re);
+void destory_bulletinfo();
 void my_destroy();
 void op_destory();

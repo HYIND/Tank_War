@@ -395,6 +395,7 @@ void Init_D2DTool(RECT& rect)
 	hr = pHall_Format->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
 	hr = pHall_Format->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 
+	DelayRect = RectF(rect.right - 60, rect.top + 5, rect.right - 5, rect.top + 30);
 }
 
 void InitResource()

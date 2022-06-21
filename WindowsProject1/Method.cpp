@@ -446,11 +446,11 @@ DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam) {
 		{   //通过per-IO数据中的nOperationType域查看有什么I/O请求完成了
 		case OP_READ:  //完成一个接收请求
 		{
-			pPerIO->buf[dwBytesTranfered] = '\0';
+			//pPerIO->buf[dwBytesTranfered] = '\0';
 			Return_Class(pPerIO->buf);
 			WSABUF buf;
 			buf.buf = pPerIO->buf;
-			buf.len = 1024;
+			buf.len = 1023;
 			pPerIO->nOperationType = OP_READ;
 			DWORD nFlags = 0;
 			::WSARecv(mysocket, &buf, 1, &dwBytesTranfered, &nFlags, &pPerIO->ol, NULL);
@@ -608,6 +608,8 @@ bool Init_Hall()
 		MessageBoxW(_hwnd, L"无法连接服务器，请检查网络设置", L"网络连接错误", NULL);
 		return false;
 	}
+	unsigned long ul = 1;
+	ioctlsocket(mysocket, FIONBIO, &ul);
 
 	Hall_hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
 	CreateIoCompletionPort((HANDLE)mysocket, Hall_hIOCP, NULL, 0);
@@ -615,7 +617,7 @@ bool Init_Hall()
 	Hall_pPerIO->nOperationType = OP_READ;
 	WSABUF buf;
 	buf.buf = Hall_pPerIO->buf;
-	buf.len = 1024;
+	buf.len = 1023;
 	DWORD dwRecv;
 	DWORD dwFlags = 0;
 	WSARecv(mysocket, &buf, 1, &dwRecv, &dwFlags, &Hall_pPerIO->ol, NULL);

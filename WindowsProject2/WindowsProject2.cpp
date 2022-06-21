@@ -69,8 +69,8 @@ D3D12_VERTEX_BUFFER_VIEW stVertexBufferView = {};
 UINT64 n64FenceValue = 0ui64;
 HANDLE hFenceEvent = nullptr;
 
-CD3DX12_VIEWPORT stViewPort(0.0f, 0.0f, static_cast<float>(iWidth), static_cast<float>(iHeight));
-CD3DX12_RECT  stScissorRect(0, 0, static_cast<LONG>(iWidth), static_cast<LONG>(iHeight));
+//CD3DX12_VIEWPORT stViewPort(0.0f, 0.0f, static_cast<float>(iWidth), static_cast<float>(iHeight));
+//CD3DX12_RECT  stScissorRect(0, 0, static_cast<LONG>(iWidth), static_cast<LONG>(iHeight));
 
 ComPtr<IDXGIFactory5>                pIDXGIFactory5;
 ComPtr<IDXGIAdapter1>                pIAdapter;

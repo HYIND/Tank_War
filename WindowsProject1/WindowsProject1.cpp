@@ -19,7 +19,8 @@ using namespace D2D1;
 
 //extern vector <tank_info*> tank_list;
 
-ID2D1HwndRenderTarget* pRenderTarget_t;
+//ID2D1BitmapRenderTarget* pBitmapRenderTarget;
+//ID2D1BitmapBrush* pBitmapBrush;
 
 // 全局变量:
 Tank tank1(60, 60);
@@ -33,7 +34,7 @@ Tank* op_in = &tank2;
 //ID2D1SolidColorBrush* pBrush = NULL; // A black brush, reflect the line color
 
 LPCTSTR OP_Resource = L"C:\\Users\\H\\Desktop\\WindowsProject1\\x64\\Debug\\Resource\\OP_BK.jpg";
-LPCTSTR Tank_Resource = L"C:\\Users\\H\\Desktop\\WindowsProject1\\x64\\Debug\\Resource\\Tank.bmp";
+LPCTSTR Tank_Resource = L"C:\\Users\\H\\Desktop\\WindowsProject1\\x64\\Debug\\Resource\\jiaran.jpg";
 LPCTSTR TEXT_Resource = L"C:\\Users\\H\\Desktop\\WindowsProject1\\x64\\Debug\\Resource\\TEXT_BK.png";
 
 HRESULT hr = S_OK;
@@ -240,11 +241,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		InitResource();
 		hr = Loadbitmap(pIWICFactory, pRenderTarget, OP_Resource, &OP_pBitmap);
 		hr = Loadbitmap(pIWICFactory, pRenderTarget, Tank_Resource, &Tank_pBitmap);
+
+		//hr = pRenderTarget->CreateCompatibleRenderTarget(
+		//	D2D1::SizeF(tank1.width, tank1.height),
+		//	&pBitmapRenderTarget);
+
+		//pBitmapRenderTarget->BeginDraw();
+		//pBitmapRenderTarget->DrawBitmap(Tank_pBitmap, D2D1::RectF(0, 0, 60, 40));
+		//pBitmapRenderTarget->EndDraw();
+		//pBitmapRenderTarget->GetBitmap(&Tank_pBitmap);
+
+		//D2D1_BITMAP_BRUSH_PROPERTIES bbp;
+		//bbp.extendModeX = D2D1_EXTEND_MODE_WRAP;
+		//bbp.extendModeY = D2D1_EXTEND_MODE_WRAP;
+		//bbp.interpolationMode = D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
+		//hr = pRenderTarget->CreateBitmapBrush(Tank_pBitmap, bbp, &pBitmapBrush);
+
 		if (FAILED(hr))
 		{
 			MessageBox(hWnd, _T("位图加载失败"), L"Error", MB_OK);
 		}
-		DelayRect = RectF(rect.right - 35, rect.top + 5, rect.right - 5, rect.top + 30);
+
 		//{
 		//	CoInitialize(NULL);
 		//	CoCreateInstance(
@@ -256,6 +273,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		//}
 
 		CurScene = SMain;
+
+		thread T(destory_bulletinfo);
+		T.detach();
 
 		//RECT rect_t;
 		//GetClientRect(edit_in,&rect_t);
@@ -442,9 +462,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case Enterroom:
 			{
 				status = Room_Status;
-				//ShowWindow(Hall, SW_HIDE);
-				//Room = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_ROOM), _hwnd, ROOM);
-				//ShowWindow(Room, SW_SHOW);
+				ShowWindow(Hall, SW_HIDE);
+				Room = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_ROOM), _hwnd, ROOM);
+				ShowWindow(Room, SW_SHOW);
 				CurScene = SRoom;
 				UpdateWindow(_hwnd);
 				break;
@@ -459,10 +479,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case IDB_ENTERROOM:
 			{
 				int index = SendMessage(room_list, LB_GETCURSEL, 0, 0);
-				//TCHAR buff[255];
-				//SendMessage(room_list,LB_GETTEXT, index, (LPARAM)buff);
-				//wstring wtemp = string2wstring(to_string(index));
-				//MessageBox(hDlg, buff, &wtemp[0], MB_OK);
+				TCHAR buff[255];
+				SendMessage(room_list, LB_GETTEXT, index, (LPARAM)buff);
 				Enter_Room(index);
 				break;
 			}
@@ -489,9 +507,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case IDB_CREATEROOM:
 			{
 				Create_Room();
-				//Room = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_ROOM), _hwnd, ROOM);
-				//ShowWindow(Hall, SW_HIDE);
-				//ShowWindow(Room, SW_SHOW);
+				Room = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_ROOM), _hwnd, ROOM);
+				ShowWindow(Hall, SW_HIDE);
+				ShowWindow(Room, SW_SHOW);
 				CurScene = SRoom;
 				host = true;
 				status = Room_Status;
@@ -685,7 +703,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			pRenderTarget->Clear(ColorF(1, 1, 1, 1));
 			if (status != Game_Status) {
 				pRenderTarget->DrawBitmap(OP_pBitmap, D2D1::RectF(0, 0, rect.right, rect.bottom));
-
 				if (FAILED(hr))
 				{
 					MessageBox(NULL, L"Draw failed!", L"Error", 0);
@@ -693,9 +710,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			if (CurScene)
 				CurScene->DrawScene();
-			if (status != NONE || (status == Game_Status && isonline_game))
+			if (status == Hall_Status || status == Room_Status || (status == Game_Status && isonline_game))
 			{
-				wstring ws = to_wstring(delay);
+				wstring ws = to_wstring(delay) + L"ms";
 				const wchar_t* delay_ch = ws.c_str();
 				pRenderTarget->DrawText(
 					delay_ch,
@@ -707,15 +724,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			if (status == Game_Status)
 			{
+				if (tank1.isalive)
+					tank1.DrawTank(pRenderTarget, Tank_pBitmap);
+				if (tank2.isalive)
+					tank2.DrawTank(pRenderTarget, Tank_pBitmap);
+
 				if (tank1.bullet_head)
 					(*(tank1.bullet_head)).Drawbullet(pRenderTarget, NULL);
 				if (tank2.bullet_head)
 					(*(tank2.bullet_head)).Drawbullet(pRenderTarget, NULL);
 
-				if (tank1.isalive)
-					tank1.DrawTank(pRenderTarget, Tank_pBitmap);
-				if (tank2.isalive)
-					tank2.DrawTank(pRenderTarget, Tank_pBitmap);
 			}
 			hr = pRenderTarget->EndDraw();
 		}
@@ -1217,13 +1235,13 @@ INT_PTR CALLBACK ROOM(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 		}
 		case START:
 		{
-			KillTimer(Hall, refrash);
+			//KillTimer(Hall, refrash);
 			Init_all();
 			Hide_Main_UI();
 			SetTimer(_hwnd, _tank, 100, NULL);
 			SetTimer(_hwnd, _bullet, 100, NULL);
 			SetTimer(_hwnd, online, 40, NULL);
-			ShowWindow(hwndButton1, SW_SHOW);
+			//ShowWindow(hwndButton1, SW_SHOW);
 
 			//Game_hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
 			//CreateIoCompletionPort((HANDLE)mysocket, Game_hIOCP, NULL, 0);
@@ -1239,6 +1257,8 @@ INT_PTR CALLBACK ROOM(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 			//T.detach();
 			isonline_game = true;
 			isstart = true;
+			Show_Hall(0);
+			status = Game_Status;
 			if (!host)
 			{
 				reverse_in = false;
