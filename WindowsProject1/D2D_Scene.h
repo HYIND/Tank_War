@@ -66,6 +66,14 @@ extern IDWriteTextFormat* pHall_Format;
 extern IDWriteTextFormat* pPing_Format;
 
 
+extern ID2D1Bitmap* OP_pBitmap;
+extern ID2D1Bitmap* TEXT_pBitmap;
+
+extern ID2D1Bitmap* P1_CurTank_Form;
+extern ID2D1Bitmap* P2_CurTank_Form;
+extern ID2D1Bitmap* DefTank_pBitmap;
+
+
 extern D2D1_RECT_F DelayRect;
 
 extern Scene* CurScene;
@@ -78,6 +86,10 @@ extern Scene* SPause;
 extern Scene* SGaming;
 extern Scene* SWinGame;
 extern Scene* SFailGame;
+
+
+extern HWND _hwnd;
+extern HINSTANCE hInst;
 
 extern int MoveX, MoveY, ClickX, ClickY;
 
@@ -160,7 +172,11 @@ public:
 		pD2DFactory(pD2DFactory), pRenderTarget(pRenderTarget), pIWICFactory(pIWICFactory), pIDWriteFactory(pIDWriteFactory) {};
 
 	// 添加位图
-	D2D_Bitmap* Loadbitmap(int loc1, int loc2, int loc3, int loc4, LPCTSTR pszResource, float opicaty = 1.0f);
+	D2D_Bitmap* Loadbitmap(int loc1, int loc2, int loc3, int loc4, 
+		LPCTSTR pszResource, float opicaty = 1.0f);
+	D2D_Bitmap* LoadResourceBitmap(int loc1, int loc2, int loc3, int loc4,
+		LPCWSTR resourceType, LPCWSTR resourceName, float opacity = 1.0f, HINSTANCE hinstance = hInst
+	);
 	// 添加文本
 	D2D_Text* LoadText(int loc1, int loc2, int loc3, int loc4, const wchar_t* pwch, ID2D1SolidColorBrush* pDefaultBrush = ::pMain_Brush, ID2D1SolidColorBrush* pClickBrush = ::pMain_ClickBrush, IDWriteTextFormat* pTextFormat = ::pMain_Format);
 	// 添加按钮
@@ -182,5 +198,5 @@ private:
 };
 
 void InitScene(ID2D1Factory*& pD2DFactory, ID2D1HwndRenderTarget*& pRenderTarget, IWICImagingFactory*& pIWICFactory, IDWriteFactory*& pDWriteFactory);
-void Load_D2DResource(RECT& rect);
-void InitResource();
+void Load_D2DUI(RECT& rect);
+void Init_D2DResource();

@@ -481,75 +481,6 @@ void lost_game()
 	SendMessage(_hwnd, WM_COMMAND, FAIL, (LPARAM)_hwnd);
 }
 
-HRESULT Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget, LPCTSTR pszResource, ID2D1Bitmap** ppBitmap)
-{
-	if (NULL == pIWICFactory)
-	{
-		CoInitialize(NULL);
-		CoCreateInstance(
-			CLSID_WICImagingFactory,
-			NULL,
-			CLSCTX_INPROC_SERVER,
-			IID_PPV_ARGS(&pIWICFactory)
-		);
-	}
-	HRESULT hr = S_OK;
-	IWICStream* pStream = NULL;
-	IWICBitmapScaler* pScaler = NULL;
-	IWICBitmapDecoder* pDecoder = NULL;
-	IWICBitmapFrameDecode* pSource = NULL;
-	IWICFormatConverter* pConverter = NULL;
-
-	hr = pIWICFactory->CreateDecoderFromFilename(
-		pszResource,
-		NULL,
-		GENERIC_READ,
-		WICDecodeMetadataCacheOnLoad,
-		&pDecoder
-	);
-
-	if (SUCCEEDED(hr))
-	{
-		// Create the initial frame.
-		hr = pDecoder->GetFrame(0, &pSource);
-	}
-
-	if (SUCCEEDED(hr))
-	{
-		hr = pIWICFactory->CreateFormatConverter(&pConverter);
-	}
-
-	if (SUCCEEDED(hr))
-	{
-		hr = pConverter->Initialize(
-			pSource,
-			GUID_WICPixelFormat32bppPBGRA,
-			WICBitmapDitherTypeNone,
-			NULL,
-			0.f,
-			WICBitmapPaletteTypeMedianCut
-		);
-	}
-
-	if (SUCCEEDED(hr))
-	{
-		// Create a Direct2D bitmap from the WIC bitmap.
-		hr = pRenderTarget->CreateBitmapFromWicBitmap(
-			pConverter,
-			NULL,
-			ppBitmap
-		);
-	}
-
-	SafeRelease(pDecoder);
-	SafeRelease(pSource);
-	SafeRelease(pStream);
-	SafeRelease(pConverter);
-	SafeRelease(pScaler);
-
-	return hr;
-}
-
 HBRUSH OnCtlColorEdit(WPARAM wParam, LPARAM lParam)
 {
 	HWND hEdit1, hedit2;
@@ -685,3 +616,4 @@ void send_pingmessage()
 		}
 	}
 }
+

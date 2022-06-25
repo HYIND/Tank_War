@@ -71,7 +71,7 @@ void win_game();
 void lost_game();
 
 HRESULT Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget, LPCTSTR pszResource, ID2D1Bitmap** ppBitmap);
-
+HRESULT LoadResourceBitmap(HINSTANCE hinstance,IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget, LPCWSTR resourceType, LPCWSTR resourceName, ID2D1Bitmap** ppBitmap);
 HBRUSH OnCtlColorEdit(WPARAM wParam, LPARAM lParam);
 
 void Show_Hall(bool flag);
@@ -79,3 +79,5 @@ bool Init_Hall();
 
 void Ping_Count(string&);
 void send_pingmessage();
+
+void Init_GameResource();

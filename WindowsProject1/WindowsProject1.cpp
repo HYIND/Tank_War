@@ -1,10 +1,11 @@
 ﻿// WindowsProject1.cpp : 定义应用程序的入口点。
 //
 
-#include "WindowsProject1.h"
 #include "Method.h"
-#include "Scene.h"
+#include "D2D_Scene.h"
 #include "Tank.h"
+#include "box2d/box2d.h"
+
 //#include <GdiPlus.h>
 //#pragma comment(lib,"Gdiplus.lib")
 //using namespace Gdiplus;
@@ -33,15 +34,11 @@ Tank* op_in = &tank2;
 
 //ID2D1SolidColorBrush* pBrush = NULL; // A black brush, reflect the line color
 
-LPCTSTR OP_Resource = L"C:\\Users\\H\\Desktop\\WindowsProject1\\x64\\Debug\\Resource\\OP_BK.jpg";
-LPCTSTR Tank_Resource = L"C:\\Users\\H\\Desktop\\WindowsProject1\\x64\\Debug\\Resource\\jiaran.jpg";
-LPCTSTR TEXT_Resource = L"C:\\Users\\H\\Desktop\\WindowsProject1\\x64\\Debug\\Resource\\TEXT_BK.png";
+//LPCTSTR OP_Resource = L"C:\\Users\\H\\Desktop\\WindowsProject1\\x64\\Debug\\Resource\\OP_BK.jpg";
+//LPCTSTR Tank_Resource = L"C:\\Users\\H\\Desktop\\WindowsProject1\\x64\\Debug\\Resource\\Tank2.bmp";
+//LPCTSTR TEXT_Resource = L"C:\\Users\\H\\Desktop\\WindowsProject1\\x64\\Debug\\Resource\\TEXT_BK.png";
 
 HRESULT hr = S_OK;
-
-ID2D1Bitmap* OP_pBitmap;
-ID2D1Bitmap* TEXT_pBitmap;
-ID2D1Bitmap* Tank_pBitmap;
 
 HDC hdcmem, hdc, tdc;
 bool isstart = false;
@@ -49,7 +46,7 @@ bool host = false;
 bool isonline_game = false;
 bool Hall_IOCP_flag = false;
 bool Game_IOCP_flag = false;
-bool reverse_in = true;
+bool reverse_in = false;
 
 int status = NONE;
 
@@ -58,13 +55,14 @@ PPER_IO_DATA Hall_pPerIO;
 HANDLE Game_hIOCP;
 PPER_IO_DATA Game_pPerIO;
 
-//加载位图
-HBITMAP hbitmap1 = (HBITMAP)LoadImage(NULL, L"Resource\\OP_BK.bmp", IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
-//HBITMAP hbitmap2 = (HBITMAP)LoadImage(NULL, L"beila2.bmp", IMAGE_BITMAP, optank->width, optank->height, LR_DEFAULTSIZE | LR_LOADFROMFILE);
-HBITMAP op_bitmap = (HBITMAP)LoadImage(NULL, L"Resource\\OP_BK.bmp", IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
-BITMAP bm1;
-BITMAP bm2;
-BITMAP op_bm;
+////加载位图
+//HBITMAP hbitmap1 = (HBITMAP)LoadImage(NULL, L"Resource\\OP_BK.bmp", IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+////HBITMAP hbitmap2 = (HBITMAP)LoadImage(NULL, L"beila2.bmp", IMAGE_BITMAP, optank->width, optank->height, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+//HBITMAP op_bitmap = (HBITMAP)LoadImage(NULL, L"Resource\\OP_BK.bmp", IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+//BITMAP bm1;
+//BITMAP bm2;
+//BITMAP op_bm;
+
 HINSTANCE hInst;                                // 当前实例
 WCHAR szTitle[MAX_LOADSTRING] = L"Tank War";                  // 标题栏文本
 WCHAR szWindowClass[MAX_LOADSTRING];            // 主窗口类名
@@ -166,7 +164,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 	wcex.cbWndExtra = 0;
 	wcex.hInstance = hInstance;
 	wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WINDOWSPROJECT1));
-	wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+	wcex.hCursor = LoadCursor(hInstance, MAKEINTRESOURCE(MYCURSOR));
 	wcex.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
 	wcex.lpszMenuName = NULL;
 	wcex.lpszClassName = szWindowClass;
@@ -199,7 +197,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 		return FALSE;
 	}
 
-
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
 
@@ -216,7 +213,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_DESTROY  - 发送退出消息并返回
 //
 //
-enum { _tank, _bullet, online, refrash, reconnect, ping };	//定时器ID
+enum { _tank, _bullet, _online, refrash, reconnect, ping };	//定时器ID
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	PAINTSTRUCT ps;
@@ -234,13 +231,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		//Get_Init_UI(_hwnd);
 		Get_Initinfo();
 
-		//GetObject(hbitmap1, sizeof(BITMAP), &bm1);
-		////GetObject(hbitmap2, sizeof(BITMAP), &bm2);
-		//GetObject(op_bitmap, sizeof(BITMAP), &op_bm);
 
-		InitResource();
-		hr = Loadbitmap(pIWICFactory, pRenderTarget, OP_Resource, &OP_pBitmap);
-		hr = Loadbitmap(pIWICFactory, pRenderTarget, Tank_Resource, &Tank_pBitmap);
+		Init_D2DResource();
+		//hr = Loadbitmap(pIWICFactory, pRenderTarget, OP_Resource, &OP_pBitmap);
+
+		Init_GameResource();
+
 
 		//hr = pRenderTarget->CreateCompatibleRenderTarget(
 		//	D2D1::SizeF(tank1.width, tank1.height),
@@ -260,6 +256,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		if (FAILED(hr))
 		{
 			MessageBox(hWnd, _T("位图加载失败"), L"Error", MB_OK);
+			DestroyWindow(hWnd);
 		}
 
 		//{
@@ -297,11 +294,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		//	20, 300, 360, 440, hWnd, (HMENU)IDC_LIST1, GetModuleHandle(nullptr), nullptr);
 		break;
 	}
+
 	case WM_TIMER:
 	{
 		switch (wParam)
 		{
-		case online:
+		case _online:
 		{
 			if (isonline_game)
 			{
@@ -314,7 +312,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			if (GetFocus() != _hwnd)
 				break;
-			if (reverse_in)
+			if (!reverse_in)
 			{
 				mytank->Tank1_Move(rect);
 				if (!isonline_game)
@@ -390,19 +388,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	//		//DrawText(pDI->hDC, szText, wcslen(szText), &pDI->rcItem, dwStyle);
 	//	}
 	//	break;
-
 	//}
 
 	case WM_KILLFOCUS:
 	{
-		//KillTimer(hWnd, tank);
-		//KillTimer(hWnd, bullet);
+		if (!isonline_game)
+		{
+			KillTimer(hWnd, _tank);
+			KillTimer(hWnd, _bullet);
+		}
 		break;
 	}
 	case WM_SETFOCUS:
 	{
-		//SetTimer(hWnd, tank, 100, NULL);
-		//SetTimer(hWnd, bullet, 100, NULL);
+		if (!isonline_game)
+		{
+			SetTimer(hWnd, _tank, 100, NULL);
+			SetTimer(hWnd, _bullet, 100, NULL);
+		}
 		break;
 	}
 	case WM_COMMAND:
@@ -443,8 +446,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				UpdateWindow(hWnd);
 				break;
 			}
-
-
 						  // 设置
 			case IDB_FOUR: {break; }
 			case IDB_FIVE:// 退出游戏
@@ -555,11 +556,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				break;
 			}
 
+			case FAIL:
+			{
+				CurScene = SFailGame;
+				break;
+			}
+
 			case ReturnInEndGame:
 			{
 				isstart = false;
 				isonline_game = true;
 				ShowWindow(Room, SW_SHOW);
+				KillTimer(_hwnd, _tank);
+				KillTimer(_hwnd, _bullet);
+				KillTimer(_hwnd, _online);
 				CurScene = SRoom;
 				break;
 			}
@@ -576,7 +586,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				break;
 			case IDM_EXIT:
 				SafeRelease(pRenderTarget);
-				//SafeRelease(pBrush);
 				SafeRelease(pD2DFactory);
 				DestroyWindow(hWnd);
 				break;
@@ -618,17 +627,35 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			if (isstart)
 			{
-				if (reverse_in)
+				if (isonline_game)
 				{
-					if (mytank->isalive)
-						mytank->Addbullet();
-					break;
+					if (host)
+					{
+						if (!reverse_in)
+							mytank->Addbullet();
+						break;
+					}
+					else {
+						if (reverse_in)
+						{
+							mytank->Addbullet();
+							break;
+						}
+					}
 				}
-				else if (!isonline_game)
-				{
-					if (optank->isalive)
-						optank->Addbullet();
-					break;
+				else {
+					if (!reverse_in)
+					{
+						if (mytank->isalive)
+							mytank->Addbullet();
+						break;
+					}
+					else
+					{
+						if (optank->isalive)
+							optank->Addbullet();
+						break;
+					}
 				}
 			}
 		}
@@ -636,20 +663,35 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			if (isstart)
 			{
-				if (reverse_in)
+				if (isonline_game)
 				{
-					if (!isonline_game)
+					if (!host)
+					{
+						if (!reverse_in)
+							mytank->Addbullet();
+						break;
+					}
+					else {
+						if (reverse_in)
+						{
+							mytank->Addbullet();
+							break;
+						}
+					}
+				}
+				else {
+					if (!reverse_in)
 					{
 						if (optank->isalive)
 							optank->Addbullet();
 						break;
 					}
-				}
-				else
-				{
-					if (mytank->isalive)
-						mytank->Addbullet();
-					break;
+					else
+					{
+						if (mytank->isalive)
+							mytank->Addbullet();
+						break;
+					}
 				}
 			}
 		}
@@ -725,9 +767,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			if (status == Game_Status)
 			{
 				if (tank1.isalive)
-					tank1.DrawTank(pRenderTarget, Tank_pBitmap);
+					tank1.DrawTank(pRenderTarget, P1_CurTank_Form);
 				if (tank2.isalive)
-					tank2.DrawTank(pRenderTarget, Tank_pBitmap);
+					tank2.DrawTank(pRenderTarget, P2_CurTank_Form);
 
 				if (tank1.bullet_head)
 					(*(tank1.bullet_head)).Drawbullet(pRenderTarget, NULL);
@@ -1240,7 +1282,7 @@ INT_PTR CALLBACK ROOM(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 			Hide_Main_UI();
 			SetTimer(_hwnd, _tank, 100, NULL);
 			SetTimer(_hwnd, _bullet, 100, NULL);
-			SetTimer(_hwnd, online, 40, NULL);
+			SetTimer(_hwnd, _online, 200, NULL);
 			//ShowWindow(hwndButton1, SW_SHOW);
 
 			//Game_hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);

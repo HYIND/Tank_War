@@ -1,6 +1,7 @@
 #pragma once
 #define WIN32_LEAN_AND_MEAN
 
+#include "WindowsProject1.h"
 #include "framework.h"
 #include <comdef.h>
 // WinSocket

@@ -1,7 +1,4 @@
-#include "Scene.h"
-
-extern HWND _hwnd;
-
+#include "D2D_Scene.h"
 
 ID2D1Factory* pD2DFactory;
 ID2D1HwndRenderTarget* pRenderTarget;
@@ -19,6 +16,14 @@ ID2D1SolidColorBrush* pMain_ClickBrush;
 IDWriteTextFormat* pMain_Format;
 IDWriteTextFormat* pHall_Format;
 IDWriteTextFormat* pPing_Format;
+
+ID2D1Bitmap* OP_pBitmap;
+ID2D1Bitmap* TEXT_pBitmap;
+
+ID2D1Bitmap* P1_CurTank_Form;
+ID2D1Bitmap* P2_CurTank_Form;
+ID2D1Bitmap* DefTank_pBitmap;
+
 
 D2D1_RECT_F DelayRect;	//	延迟显示位
 
@@ -104,6 +109,7 @@ D2D_Bitmap* Scene::Loadbitmap(int loc1, int loc2, int loc3, int loc4, LPCTSTR ps
 			&(Bitmap->pBitmap)
 		);
 	}
+
 	if (SUCCEEDED(hr))
 	{
 		Bitmap_list.emplace_back(Bitmap);
@@ -116,6 +122,129 @@ D2D_Bitmap* Scene::Loadbitmap(int loc1, int loc2, int loc3, int loc4, LPCTSTR ps
 	SafeRelease(pScaler);
 
 	return Bitmap;
+}
+
+D2D_Bitmap* Scene::LoadResourceBitmap(int loc1, int loc2, int loc3, int loc4,
+	LPCWSTR resourceType, LPCWSTR resourceName, float opacity, HINSTANCE hinstance
+)
+{
+	D2D_Bitmap* Bitmap = new D2D_Bitmap(loc1, loc2, loc3, loc4, NULL, opacity);
+	if (NULL == pIWICFactory)
+	{
+		CoInitialize(NULL);
+		CoCreateInstance(
+			CLSID_WICImagingFactory,
+			NULL,
+			CLSCTX_INPROC_SERVER,
+			IID_PPV_ARGS(&pIWICFactory)
+		);
+	}
+	IWICBitmapDecoder* pDecoder = NULL;
+	IWICBitmapFrameDecode* pSource = NULL;
+	IWICStream* pStream = NULL;
+	IWICFormatConverter* pConverter = NULL;
+	IWICBitmapScaler* pScaler = NULL;
+
+	HRSRC imageResHandle = NULL;
+	HGLOBAL imageResDataHandle = NULL;
+
+	void* pImageFile = NULL;
+	DWORD imageFileSize = 0;
+
+	// Locate the resource.
+	imageResHandle = FindResource((HMODULE)hinstance, resourceName, resourceType);;
+	HRESULT hr = imageResHandle ? S_OK : E_FAIL;
+	if (SUCCEEDED(hr))
+	{
+		// Load the resource.
+		imageResDataHandle = LoadResource(hinstance, imageResHandle);
+
+		hr = imageResDataHandle ? S_OK : E_FAIL;
+	}
+	if (SUCCEEDED(hr))
+	{
+		// Lock it to get a system memory pointer.
+		pImageFile = LockResource(imageResDataHandle);
+
+		hr = pImageFile ? S_OK : E_FAIL;
+	}
+	if (SUCCEEDED(hr))
+	{
+		// Calculate the size.
+		imageFileSize = SizeofResource(hinstance, imageResHandle);
+
+		hr = imageFileSize ? S_OK : E_FAIL;
+
+	}
+	if (SUCCEEDED(hr))
+	{
+		// Create a WIC stream to map onto the memory.
+		hr = pIWICFactory->CreateStream(&pStream);
+	}
+	if (SUCCEEDED(hr))
+	{
+		// Initialize the stream with the memory pointer and size.
+		hr = pStream->InitializeFromMemory(
+			reinterpret_cast<BYTE*>(pImageFile),
+			imageFileSize
+		);
+	}
+	if (SUCCEEDED(hr))
+	{
+		// Create a decoder for the stream.
+		hr = pIWICFactory->CreateDecoderFromStream(
+			pStream,
+			NULL,
+			WICDecodeMetadataCacheOnLoad,
+			&pDecoder
+		);
+	}
+	if (SUCCEEDED(hr))
+	{
+		// Create the initial frame.
+		hr = pDecoder->GetFrame(0, &pSource);
+	}
+	if (SUCCEEDED(hr))
+	{
+		// Convert the image format to 32bppPBGRA
+		// (DXGI_FORMAT_B8G8R8A8_UNORM + D2D1_ALPHA_MODE_PREMULTIPLIED).
+		hr = pIWICFactory->CreateFormatConverter(&pConverter);
+	}
+
+	if (SUCCEEDED(hr))
+	{
+		hr = pConverter->Initialize(
+			pSource,
+			GUID_WICPixelFormat32bppPBGRA,
+			WICBitmapDitherTypeNone,
+			NULL,
+			0.f,
+			WICBitmapPaletteTypeMedianCut
+		);
+		if (SUCCEEDED(hr))
+		{
+			//create a Direct2D bitmap from the WIC bitmap.
+			hr = pRenderTarget->CreateBitmapFromWicBitmap(
+				pConverter,
+				NULL,
+				&(Bitmap->pBitmap)
+			);
+
+		}
+
+		if (SUCCEEDED(hr))
+		{
+			Bitmap_list.emplace_back(Bitmap);
+		}
+
+		SafeRelease(pDecoder);
+		SafeRelease(pSource);
+		SafeRelease(pStream);
+		SafeRelease(pConverter);
+		SafeRelease(pScaler);
+
+		return Bitmap;
+	}
 }
 
 D2D_Text* Scene::LoadText(int loc1, int loc2, int loc3, int loc4, const wchar_t* pwch, ID2D1SolidColorBrush* pDefaultBrush, ID2D1SolidColorBrush* pClickBrush, IDWriteTextFormat* pTextFormat)
@@ -213,6 +342,198 @@ void Scene::Click()
 	else if (Bitmap_changed) {};
 }
 
+HRESULT Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget,
+	LPCTSTR pszResource, ID2D1Bitmap** ppBitmap)
+{
+	if (NULL == pIWICFactory)
+	{
+		CoInitialize(NULL);
+		CoCreateInstance(
+			CLSID_WICImagingFactory,
+			NULL,
+			CLSCTX_INPROC_SERVER,
+			IID_PPV_ARGS(&pIWICFactory)
+		);
+	}
+	HRESULT hr = S_OK;
+	IWICStream* pStream = NULL;
+	IWICBitmapScaler* pScaler = NULL;
+	IWICBitmapDecoder* pDecoder = NULL;
+	IWICBitmapFrameDecode* pSource = NULL;
+	IWICFormatConverter* pConverter = NULL;
+
+	hr = pIWICFactory->CreateDecoderFromFilename(
+		pszResource,
+		NULL,
+		GENERIC_READ,
+		WICDecodeMetadataCacheOnLoad,
+		&pDecoder
+	);
+
+	if (SUCCEEDED(hr))
+	{
+		// Create the initial frame.
+		hr = pDecoder->GetFrame(0, &pSource);
+	}
+
+	if (SUCCEEDED(hr))
+	{
+		hr = pIWICFactory->CreateFormatConverter(&pConverter);
+	}
+
+	if (SUCCEEDED(hr))
+	{
+		hr = pConverter->Initialize(
+			pSource,
+			GUID_WICPixelFormat32bppPBGRA,
+			WICBitmapDitherTypeNone,
+			NULL,
+			0.f,
+			WICBitmapPaletteTypeMedianCut
+		);
+	}
+
+	if (SUCCEEDED(hr))
+	{
+		// Create a Direct2D bitmap from the WIC bitmap.
+		hr = pRenderTarget->CreateBitmapFromWicBitmap(
+			pConverter,
+			NULL,
+			ppBitmap
+		);
+	}
+
+	SafeRelease(pDecoder);
+	SafeRelease(pSource);
+	SafeRelease(pStream);
+	SafeRelease(pConverter);
+	SafeRelease(pScaler);
+
+	return hr;
+}
+
+HRESULT LoadResourceBitmap(
+	HINSTANCE hinstance,
+	IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget,
+	LPCWSTR resourceType, LPCWSTR resourceName, ID2D1Bitmap** ppBitmap
+)
+{
+	if (NULL == pIWICFactory)
+	{
+		CoInitialize(NULL);
+		CoCreateInstance(
+			CLSID_WICImagingFactory,
+			NULL,
+			CLSCTX_INPROC_SERVER,
+			IID_PPV_ARGS(&pIWICFactory)
+		);
+	}
+	IWICBitmapDecoder* pDecoder = NULL;
+	IWICBitmapFrameDecode* pSource = NULL;
+	IWICStream* pStream = NULL;
+	IWICFormatConverter* pConverter = NULL;
+	IWICBitmapScaler* pScaler = NULL;
+
+	HRSRC imageResHandle = NULL;
+	HGLOBAL imageResDataHandle = NULL;
+
+	void* pImageFile = NULL;
+	DWORD imageFileSize = 0;
+
+	// Locate the resource.
+	DWORD k = GetLastError();
+	imageResHandle = FindResource((HMODULE)hinstance, resourceName, resourceType);
+	k = GetLastError();
+	HRESULT hr = imageResHandle ? S_OK : E_FAIL;
+	if (SUCCEEDED(hr))
+	{
+		// Load the resource.
+		imageResDataHandle = LoadResource(hinstance, imageResHandle);
+
+		hr = imageResDataHandle ? S_OK : E_FAIL;
+	}
+	if (SUCCEEDED(hr))
+	{
+		// Lock it to get a system memory pointer.
+		pImageFile = LockResource(imageResDataHandle);
+
+		hr = pImageFile ? S_OK : E_FAIL;
+	}
+	if (SUCCEEDED(hr))
+	{
+		// Calculate the size.
+		imageFileSize = SizeofResource(hinstance, imageResHandle);
+
+		hr = imageFileSize ? S_OK : E_FAIL;
+
+	}
+	if (SUCCEEDED(hr))
+	{
+		// Create a WIC stream to map onto the memory.
+		hr = pIWICFactory->CreateStream(&pStream);
+	}
+	if (SUCCEEDED(hr))
+	{
+		// Initialize the stream with the memory pointer and size.
+		hr = pStream->InitializeFromMemory(
+			reinterpret_cast<BYTE*>(pImageFile),
+			imageFileSize
+		);
+	}
+	if (SUCCEEDED(hr))
+	{
+		// Create a decoder for the stream.
+		hr = pIWICFactory->CreateDecoderFromStream(
+			pStream,
+			NULL,
+			WICDecodeMetadataCacheOnLoad,
+			&pDecoder
+		);
+	}
+	if (SUCCEEDED(hr))
+	{
+		// Create the initial frame.
+		hr = pDecoder->GetFrame(0, &pSource);
+	}
+	if (SUCCEEDED(hr))
+	{
+		// Convert the image format to 32bppPBGRA
+		// (DXGI_FORMAT_B8G8R8A8_UNORM + D2D1_ALPHA_MODE_PREMULTIPLIED).
+		hr = pIWICFactory->CreateFormatConverter(&pConverter);
+	}
+
+	if (SUCCEEDED(hr))
+	{
+		hr = pConverter->Initialize(
+			pSource,
+			GUID_WICPixelFormat32bppPBGRA,
+			WICBitmapDitherTypeNone,
+			NULL,
+			0.f,
+			WICBitmapPaletteTypeMedianCut
+		);
+		if (SUCCEEDED(hr))
+		{
+			//create a Direct2D bitmap from the WIC bitmap.
+			hr = pRenderTarget->CreateBitmapFromWicBitmap(
+				pConverter,
+				NULL,
+				ppBitmap
+			);
+
+		}
+
+		SafeRelease(pDecoder);
+		SafeRelease(pSource);
+		SafeRelease(pStream);
+		SafeRelease(pConverter);
+		SafeRelease(pScaler);
+
+		return hr;
+	}
+}
+
+
 void InitScene(ID2D1Factory*& pD2DFactory, ID2D1HwndRenderTarget*& pRenderTarget, IWICImagingFactory*& pIWICFactory, IDWriteFactory*& pDWriteFactory)
 {
 	try {
@@ -224,22 +545,6 @@ void InitScene(ID2D1Factory*& pD2DFactory, ID2D1HwndRenderTarget*& pRenderTarget
 		::SOption = new Scene(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
 	}
 	catch (exception& e)
-	{
-		return;
-	}
-}
-
-void Load_SWinGame(RECT& rect)
-{
-	try
-	{
-		::SWinGame->LoadButton(300, 300, 500, 400,
-			ReturnInEndGame,
-			::SWinGame->LoadText(300, 300, 500, 400, L"返回"));
-		::SWinGame->Loadbitmap(300, 100, 500, 300, L"C:\\Users\\H\\Desktop\\WindowsProject1\\x64\\Debug\\Resource\\Win.png");
-
-	}
-	catch (std::exception& e)
 	{
 		return;
 	}
@@ -274,7 +579,7 @@ void Load_SHall(RECT& rect)
 	int broder4 = rect.bottom - 30;
 	int len_x = (broder3 - broder1) / 10;
 	int len_y = (broder4 - broder2) / 10;
-	SHall->Loadbitmap(broder1, broder2, broder3, broder4, TEXT_Resource, 0.6f);
+	SHall->LoadResourceBitmap(broder1, broder2, broder3, broder4, L"PNG", MAKEINTRESOURCE(TEXTBK_PNG), 0.6f);
 
 	SHall->LoadButton(broder1 + len_x * 6 + 10, broder2 + len_y * 5 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 6,
 		IDB_ENTERROOM,
@@ -325,11 +630,52 @@ void Load_SHall(RECT& rect)
 
 }
 
-void Load_D2DResource(RECT& rect)
+void Load_SWinGame(RECT& rect)
 {
-	Load_SWinGame(rect);
+	int middle = rect.left + (rect.right - rect.left) / 2;
+	try
+	{
+		::SWinGame->LoadButton(middle - 100, 250, middle + 100, 350,
+			ReturnInEndGame,
+			::SWinGame->LoadText(middle - 100, 250, middle + 100, 350, L"返回"));
+		::SWinGame->LoadResourceBitmap(middle - 120, 30, middle + 120, 230, L"PNG", MAKEINTRESOURCE(WIN_PNG));
+
+	}
+	catch (std::exception& e)
+	{
+		return;
+	}
+}
+
+void Load_SRoom(RECT& rect)
+{
+
+}
+
+void Load_SFailGame(RECT& rect)
+{
+	int middle = rect.left + (rect.right - rect.left) / 2;
+	try
+	{
+		::SFailGame->LoadButton(middle - 100, 250, middle + 100, 350,
+			ReturnInEndGame,
+			::SFailGame->LoadText(middle - 100, 250, middle + 100, 350, L"返回"));
+		::SFailGame->LoadResourceBitmap(middle - 100, 100, middle + 100, 190, L"PNG", MAKEINTRESOURCE(FAIL_PNG));
+
+	}
+	catch (std::exception& e)
+	{
+		return;
+	}
+}
+
+void Load_D2DUI(RECT& rect)
+{
 	Load_SMain(rect);
 	Load_SHall(rect);
+	Load_SRoom(rect);
+	Load_SWinGame(rect);
+	Load_SFailGame(rect);
 }
 
 void Init_D2DTool(RECT& rect)
@@ -398,11 +744,20 @@ void Init_D2DTool(RECT& rect)
 	DelayRect = RectF(rect.right - 60, rect.top + 5, rect.right - 5, rect.top + 30);
 }
 
-void InitResource()
+void Init_D2DResource()
 {
 	RECT rect;
 	GetClientRect(_hwnd, &rect);
 	Init_D2DTool(rect);
 	InitScene(pD2DFactory, pRenderTarget, pIWICFactory, pIDWriteFactory);
-	Load_D2DResource(rect);
+	Load_D2DUI(rect);
+}
+
+void Init_GameResource()
+{
+	HRESULT hr = S_OK;
+	hr = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"JPG", MAKEINTRESOURCE(OPBK_JPG), &OP_pBitmap);
+	hr = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(TANK_PNG), &DefTank_pBitmap);
+	P1_CurTank_Form = DefTank_pBitmap;
+	P2_CurTank_Form = DefTank_pBitmap;
 }
