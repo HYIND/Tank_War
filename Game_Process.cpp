@@ -18,7 +18,7 @@ Game_Process::Game_Process(int socket1, int socket2, room_info *roominfo)
     addfd(recv_epoll, socket1);
     addfd(recv_epoll, socket2);
 
-    // memset(buffer, '\0', 1024);
+    memset(buffer, '\0', 1024);
 
     bool stop1 = false;
     bool stop2 = false;
@@ -29,7 +29,7 @@ void Game_Process::run()
 {
     // thread send_thread(send_process);
     // thread game_thread(game_process);
-    thread recv_thread(&Game_Process::recv_process,this);
+    thread recv_thread(&Game_Process::recv_process, this);
     recv_thread.join();
     // game_thread.join();
     // send_thread.join();
@@ -126,11 +126,11 @@ void Game_Process::recv_process()
             }
             else if (events->events & EPOLLIN)
             {
-                char buffer[1024] = {'\0'};
                 int re_num = recv(socket, buffer, 1023, 0);
                 if (re_num > 0)
                 {
                     recv_queue.emplace(mysocket, buffer);
+                    memset(buffer, '\0', 1024);
                 }
                 else if (re_num == 0)
                 {

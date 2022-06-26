@@ -30,7 +30,7 @@ public:
 
     int recv_pipe[2];
 
-    // char buffer[1024];
+    char buffer[1024];
 
     int recv_epoll = epoll_create(50);
     epoll_event events[100];

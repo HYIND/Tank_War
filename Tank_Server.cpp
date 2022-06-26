@@ -175,7 +175,8 @@ void Start_Game(int &user1)
                 roominfo = &v;
         }
         Game_Process *GP = new Game_Process(user1, user2, roominfo);
-
+        GP->run();
+        
         // thread T(game, user1, user2, roominfo);
         // T.detach();
     }
