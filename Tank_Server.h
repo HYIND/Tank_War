@@ -1,19 +1,6 @@
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <string.h>
-#include <unistd.h>
-#include <signal.h>
-#include <regex>
-#include <thread>
-#include <vector>
-#include <algorithm>
-#include <fcntl.h>
-#include <sys/epoll.h>
-#include <signal.h>
-#include <iostream>
-#include <assert.h>
-#include <unordered_map>
+#pragma once
+
+#include "header.h"
 
 using namespace std;
 
@@ -58,6 +45,29 @@ public:
     // void *bullet_head=NULL;
 };
 
+
+extern vector<sock_info> user_list;
+extern vector<room_info> room_list;
+extern vector<int> room_user;
+extern vector<int> game_pipe_list;
+ 
+extern unordered_map<int, int> two_user1;
+extern unordered_map<int, int> two_user2;
+extern unordered_map<int, Tank *> Tank_info;
+
+extern int listen_epoll;
+extern int hall_epoll;
+extern int game_epoll;
+
+extern epoll_event listen_events[100];
+extern epoll_event hall_events[200];
+extern epoll_event game_events[100];
+
+extern int listen_pipe[2];
+extern int con_pipe[2];
+extern int game_pipe[2];
+
+
 void setnonblocking(int fd);
 
 void addfd(int epollfd, int fd);
@@ -85,9 +95,5 @@ void Quit_Room(int &user);
 void Start_Game(int &user1);
 
 string return_class(int &sock_accept, string &s);
-
-void return_game_class(int mysocket, int opsocket, string& option,char buf[]);
-
-void game(int socket1, int socket2, room_info* roominfo);
 
 void Tank_destroy(int scoket);

@@ -1,28 +1,28 @@
+#include "header.h"
 #include "Tank_Server.h"
 
 using namespace std;
 
-vector<sock_info> user_list;
-vector<room_info> room_list;
-vector<int> room_user;
-vector<int> game_pipe_list;
+extern vector<sock_info> user_list;
+extern vector<room_info> room_list;
+extern vector<int> room_user;
+extern vector<int> game_pipe_list;
+ 
+extern unordered_map<int, int> two_user1;
+extern unordered_map<int, int> two_user2;
+extern unordered_map<int, Tank *> Tank_info;
 
-unordered_map<int, int> two_user1;
-unordered_map<int, int> two_user2;
-unordered_map<int, Tank *> Tank_info;
+extern int listen_epoll;
+extern int hall_epoll;
+extern int game_epoll;
 
-int listen_epoll = epoll_create(100);
-epoll_event listen_events[100];
+extern epoll_event listen_events[100];
+extern epoll_event hall_events[200];
+extern epoll_event game_events[100];
 
-int hall_epoll = epoll_create(100);
-epoll_event hall_events[200];
-
-int game_epoll = epoll_create(100);
-epoll_event game_events[100];
-
-int listen_pipe[2];
-int con_pipe[2];
-int game_pipe[2];
+extern int listen_pipe[2];
+extern int con_pipe[2];
+extern int game_pipe[2];
 
 unordered_map<int, int> Room;
 
@@ -159,6 +159,7 @@ void server_listen(int mysocket)
                 int socket = accept(mysocket, (struct sockaddr *)&client, &length);
                 if (socket != -1)
                 {
+                    setnonblocking(socket);
                     user_list.emplace_back(sock_info(socket, client));
                     addfd(hall_epoll, socket);
                     // thread T(server_hall, socket);
@@ -172,52 +173,51 @@ void server_listen(int mysocket)
     close(mysocket);
 }
 
-void server_game()
-{
-    char buffer[1024];
-    memset(buffer, '\0', 1024);
-    bool stop = false;
-    while (!stop)
-    {
-        int num = epoll_wait(game_epoll, game_events, 100, -1);
-        if (num < 0 && (errno != EINTR))
-        {
-            cout << "game_epoll failed!";
-            break;
-        }
+// void server_game()
+// {
+//     char buffer[1024];
+//     memset(buffer, '\0', 1024);
+//     bool stop = false;
+//     while (!stop)
+//     {
+//         int num = epoll_wait(game_epoll, game_events, 100, -1);
+//         if (num < 0 && (errno != EINTR))
+//         {
+//             cout << "game_epoll failed!";
+//             break;
+//         }
 
-        for (int i = 0; i < num; i++)
-        {
-            int socket = game_events[i].data.fd;
-            if ((socket == game_pipe[0]) && (game_events->events & EPOLLIN))
-            {
-                int sig;
-                char signals[1024];
-                int ret = recv(game_pipe[0], signals, 1023, 0);
-                if (ret == -1 || ret == 0)
-                    continue;
-                else
-                {
-                    for (i = 0; i < ret; i++)
-                    {
-                        switch (signals[i])
-                        {
-                        case SIGINT:
-                        case SIGTERM:
-                        {
-                            stop = true;
-                        }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
+//         for (int i = 0; i < num; i++)
+//         {
+//             int socket = game_events[i].data.fd;
+//             if ((socket == game_pipe[0]) && (game_events->events & EPOLLIN))
+//             {
+//                 int sig;
+//                 char signals[1024];
+//                 int ret = recv(game_pipe[0], signals, 1023, 0);
+//                 if (ret == -1 || ret == 0)
+//                     continue;
+//                 else
+//                 {
+//                     for (i = 0; i < ret; i++)
+//                     {
+//                         switch (signals[i])
+//                         {
+//                         case SIGINT:
+//                         case SIGTERM:
+//                         {
+//                             stop = true;
+//                         }
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
 
 int main()
 {
-
     sockaddr_in sock_addr;
     bzero(&sock_addr, sizeof(sock_addr));
     sock_addr.sin_family = AF_INET;
@@ -249,12 +249,12 @@ int main()
 
     thread T2(server_hall);
 
-    thread T3(server_game);
+    // thread T3(server_game);
     // T1.detach();
     // T2.detach();
     // T3.detach();
 
-    T3.join();
+    // T3.join();
     T2.join();
     T1.join();
     close(listen_pipe[0]);
