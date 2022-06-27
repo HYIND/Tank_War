@@ -33,6 +33,8 @@ void Game_Process::run()
     recv_thread.join();
     game_thread.join();
     send_thread.join();
+
+    delete (this);
 }
 
 void Game_Process::recv_process()
@@ -130,7 +132,9 @@ void Game_Process::recv_process()
                 if (re_num > 0)
                 {
                     socket_messageinfo *pinfo = new socket_messageinfo(mysocket, buffer);
+                    unique_lock rlck(recvqueue_mtx);
                     recv_queue.emplace(pinfo);
+                    rlck.unlock();
                     memset(buffer, '\0', 1024);
                     process_cv.notify_one();
                 }
@@ -217,8 +221,10 @@ void Game_Process::game_process()
         process_cv.wait(lck);
         while (!recv_queue.empty())
         {
+            unique_lock qlck(recvqueue_mtx);
             info = recv_queue.front();
             recv_queue.pop();
+            qlck.unlock();
 
             mysocket = info->socket;
             opsocket = (mysocket == socket1) ? socket2 : socket1;
@@ -284,7 +290,9 @@ void Game_Process::game_process()
             }
             else if (option == "ping")
             {
+                unique_lock slck(sendqueue_mtx);
                 send_queue.emplace(info);
+                sendqueue_mtx.unlock();
                 // string s = buf;
                 // send(mysocket, (const char *)buf, 1023, 0);
             }
@@ -301,7 +309,9 @@ void Game_Process::game_process()
                         buf[0] = 'o';
                         buf[1] = 'p';
                         info->socket = opsocket;
+                        unique_lock slck(sendqueue_mtx);
                         send_queue.emplace(info);
+                        sendqueue_mtx.unlock();
                         // send(opsocket, (const char *)&(buf[0]), 1023, 0);
                         // memset(buf, '\0', 1024);
                     }
@@ -318,7 +328,9 @@ void Game_Process::game_process()
                 buf[0] = 'o';
                 buf[1] = 'p';
                 info->socket = opsocket;
+                unique_lock slck(sendqueue_mtx);
                 send_queue.emplace(info);
+                sendqueue_mtx.unlock();
                 // send(opsocket, (const char *)&(buf[0]), 1023, 0);
             }
             // destory:{111,222}
@@ -350,6 +362,7 @@ void Game_Process::game_process()
                             char ch1[1024] = {'\0'};
                             strcpy(ch1, str.c_str());
                             socket_messageinfo *info1 = new socket_messageinfo(opsocket, ch1);
+                            unique_lock slck(sendqueue_mtx);
                             send_queue.emplace(info1);
 
                             str = "opdestroy";
@@ -357,6 +370,7 @@ void Game_Process::game_process()
                             strcpy(ch2, str.c_str());
                             socket_messageinfo *info2 = new socket_messageinfo(mysocket, ch2);
                             send_queue.emplace(info2);
+                            sendqueue_mtx.unlock();
 
                             release = true;
 
@@ -376,6 +390,7 @@ void Game_Process::game_process()
             {
                 delete (info);
             }
+            info = NULL;
         }
         lck.unlock();
     }
@@ -390,8 +405,10 @@ void Game_Process::send_process()
         send_cv.wait(lck);
         while (!send_queue.empty())
         {
+            unique_lock slck(sendqueue_mtx);
             info = send_queue.front();
             send_queue.pop();
+            sendqueue_mtx.unlock();
             send(info->socket, (const char *)info->ch, 1023, 0);
 
             delete (info);

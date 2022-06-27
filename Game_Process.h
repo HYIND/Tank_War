@@ -52,6 +52,9 @@ public:
     mutex send_mtx;             //处理线程唤醒发送线程的锁
     condition_variable send_cv; //处理线程唤醒发送线程的条件变量
 
+    mutex recvqueue_mtx;    //接收队列的锁
+    mutex sendqueue_mtx;    //发送队列的锁
+
 public:
     //析构函数，初始化；
     Game_Process(int socket1, int socket2, room_info *roominfo);
