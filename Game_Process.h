@@ -11,7 +11,7 @@ struct socket_messageinfo
     socket_messageinfo(int socket, char ch[])
     {
         this->socket = socket;
-        memcpy(this->ch,ch,1024);
+        memcpy(this->ch, ch, 1024);
     }
     // : socket(socket), ch(ch) {}
 };
@@ -41,11 +41,16 @@ public:
 
     bool stop = false; //控制epoll循环
 
-    queue<socket_messageinfo> recv_queue;
-    queue<socket_messageinfo> send_queue;
+    queue<socket_messageinfo *> recv_queue;
+    queue<socket_messageinfo *> send_queue;
+
+    // mutex
 
     mutex process_mtx;             //接收线程唤醒处理线程的锁
     condition_variable process_cv; //接收线程唤醒处理线程的条件变量
+
+    mutex send_mtx;             //处理线程唤醒发送线程的锁
+    condition_variable send_cv; //处理线程唤醒发送线程的条件变量
 
 public:
     //析构函数，初始化；
