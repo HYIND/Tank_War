@@ -34,6 +34,16 @@ string get_IP(int socket)
     return "";
 }
 
+string get_userid(int socket)
+{
+    for (auto &v : user_list)
+    {
+        if (v.accept == socket)
+            return v.userid;
+    }
+    return "";
+}
+
 void sig_handler(int sig)
 {
     int save_errno = errno;
@@ -76,7 +86,7 @@ void Send_Message(int sock_accept, string &send_str)
     }
 }
 
-// 3user:172.11.33.55,123.44.33.22,888.9.3.4;
+// 3user:aaa,bbb,ccc;
 string Get_hall_user(int sock_accept, string &s)
 {
     string re = "user:";
@@ -84,7 +94,8 @@ string Get_hall_user(int sock_accept, string &s)
     {
         if (v.accept == sock_accept)
             continue;
-        re += inet_ntoa(v.addr.sin_addr);
+        re += "#";
+        re += v.userid;
         re += ";";
     }
     return re;
@@ -103,7 +114,8 @@ void Get_hall_room(int sock_accept, string &s)
     {
         if (v == sock_accept)
             continue;
-        re += get_IP(v);
+        re += "#";
+        re += get_userid(v);
         re += ";";
     }
     send(sock_accept, (const char *)&(re[0]), 1023, 0);
@@ -221,6 +233,17 @@ void Quit_Room(int &user)
     }
 }
 
+void setuserid(int &socket, string &userid)
+{
+    for (auto &v : user_list)
+    {
+        if (v.accept == socket)
+        {
+            v.userid = userid;
+        }
+    }
+}
+
 string return_class(int &sock_accept, string &s)
 {
     string::const_iterator iterStart = s.begin();
@@ -233,6 +256,11 @@ string return_class(int &sock_accept, string &s)
     if (temp == "ping")
     {
         send(sock_accept, (const char *)&(s[0]), 1023, 0);
+    }
+    if (temp == "myuserid")
+    {
+        string id_str(m[0].second + 1, iterEnd);
+        setuserid(sock_accept, id_str);
     }
     else if (temp == "Getroom")
         Get_hall_room(sock_accept, s);

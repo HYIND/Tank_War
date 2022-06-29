@@ -7,7 +7,7 @@ extern vector<sock_info> user_list;
 extern vector<room_info> room_list;
 extern vector<int> room_user;
 extern vector<int> game_pipe_list;
- 
+
 extern unordered_map<int, int> two_user1;
 extern unordered_map<int, int> two_user2;
 extern unordered_map<int, Tank *> Tank_info;
@@ -83,14 +83,15 @@ void server_hall()
             if (hall_events->events & EPOLLIN)
             {
                 int re_num = recv(socket, buffer, 1023, 0);
-                if (re_num > 0)
+                while (re_num > 0)
                 {
                     string re = buffer;
                     string ret = return_class(socket, re);
                     if (ret != "NULL")
                         send(socket, (const char *)&(ret[0]), 1023, 0);
+                    re_num = recv(socket, buffer, 1023, 0);
                 }
-                else if (re_num == 0)
+                if (re_num == 0)
                 {
                     for (auto it = user_list.begin(); it != user_list.end(); it++)
                     {
@@ -129,7 +130,6 @@ void server_listen(int mysocket)
         {
             if ((listen_events[i].data.fd == listen_pipe[0]) && (listen_events->events & EPOLLIN))
             {
-
                 {
                     int sig;
                     char signals[1024];
@@ -161,7 +161,15 @@ void server_listen(int mysocket)
                 {
                     setnonblocking(socket);
                     user_list.emplace_back(sock_info(socket, client));
+                    int flag = 1;
+                    setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, (void *)&flag, sizeof(flag));
+
                     addfd(hall_epoll, socket);
+
+                    // int i = 0;
+                    // socklen_t j = sizeof(i);
+                    // getsockopt(mysocket, SOL_SOCKET, SO_RCVBUF, (char *)&i, &j);
+
                     // thread T(server_hall, socket);
                     // T.detach();
                 }
@@ -244,6 +252,12 @@ int main()
     addfd(game_epoll, game_pipe[0]);
     addsig(SIGINT);
     addsig(SIGTERM);
+
+    // int SendBuf = 1024 * 1024;
+    // int RecvBuf = 1024 * 1024;
+    // getsockopt(socket, SOL_SOCKET, SO_SNDBUF, &i, &j);
+    // setsockopt(mysocket, SOL_SOCKET, SO_SNDBUF, (const char *)&SendBuf, sizeof(int));
+    // setsockopt(mysocket, SOL_SOCKET, SO_RCVBUF, (const char *)&RecvBuf, sizeof(int));
 
     thread T1(server_listen, mysocket);
 

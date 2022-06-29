@@ -15,12 +15,14 @@ struct sock_info
 {
     int accept;
     sockaddr_in addr;
+    string userid;
+    int states = hall;
     sock_info(int acc, sockaddr_in add)
     {
         accept = acc;
         addr = add;
+        userid="player"+to_string(acc);
     }
-    int states = hall;
 };
 
 struct room_info
@@ -30,27 +32,32 @@ struct room_info
     int user2 = 0;
 };
 
-enum{UP,DOWN,LEFT,RIGHT};
+enum
+{
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT
+};
 class Tank
 {
 public:
-	int locationX = 0;
-	int locationY = 0;
-	int width = 0;
-	int height = 0;
-	int direction = UP;
+    int locationX = 0;
+    int locationY = 0;
+    int width = 0;
+    int height = 0;
+    int direction = UP;
 
-	bool isalive = true;
-	bool isregister = false;
+    bool isalive = true;
+    bool isregister = false;
     // void *bullet_head=NULL;
 };
-
 
 extern vector<sock_info> user_list;
 extern vector<room_info> room_list;
 extern vector<int> room_user;
 extern vector<int> game_pipe_list;
- 
+
 extern unordered_map<int, int> two_user1;
 extern unordered_map<int, int> two_user2;
 extern unordered_map<int, Tank *> Tank_info;
@@ -66,7 +73,6 @@ extern epoll_event game_events[100];
 extern int listen_pipe[2];
 extern int con_pipe[2];
 extern int game_pipe[2];
-
 
 void setnonblocking(int fd);
 

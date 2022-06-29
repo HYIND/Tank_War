@@ -39,9 +39,12 @@ void Game_Process::run()
 
 void Game_Process::recv_process()
 {
+    int re_num = 0;
     while (!stop)
     {
         int num = epoll_wait(recv_epoll, events, 100, -1);
+        if (stop)
+            break;
         if (num < 0 && (errno != EINTR))
         {
             cout << "epoll for game failed!";
@@ -128,17 +131,18 @@ void Game_Process::recv_process()
             }
             else if (events->events & EPOLLIN)
             {
-                int re_num = recv(socket, buffer, 1023, 0);
-                if (re_num > 0)
+                re_num = recv(socket, buffer, 1023, 0);
+                while (re_num > 0)
                 {
                     socket_messageinfo *pinfo = new socket_messageinfo(mysocket, buffer);
-                    unique_lock rlck(recvqueue_mtx);
+                    unique_lock<mutex> rlck(recvqueue_mtx);
                     recv_queue.emplace(pinfo);
                     rlck.unlock();
                     memset(buffer, '\0', 1024);
                     process_cv.notify_one();
+                    re_num = recv(socket, buffer, 1023, 0);
                 }
-                else if (re_num == 0)
+                if (re_num == 0)
                 {
                     for (auto &v : user_list)
                     {
@@ -199,6 +203,8 @@ void Game_Process::recv_process()
             break;
         }
     }
+    process_cv.notify_one();
+    send_cv.notify_one();
     close(recv_pipe[0]);
     close(recv_pipe[1]);
     Tank_info[socket1] == NULL;
@@ -221,7 +227,11 @@ void Game_Process::game_process()
         process_cv.wait(lck);
         while (!recv_queue.empty())
         {
-            unique_lock qlck(recvqueue_mtx);
+            if (stop)
+            {
+                break;
+            }
+            unique_lock<mutex> qlck(recvqueue_mtx);
             info = recv_queue.front();
             recv_queue.pop();
             qlck.unlock();
@@ -250,10 +260,11 @@ void Game_Process::game_process()
                             {
                                 v.states = room;
                             }
-                            if (stop2)
-                            {
-                                stop = true;
-                            }
+                        }
+                        stop1 = true;
+                        if (stop2)
+                        {
+                            stop = true;
                         }
                     }
                     else if (mysocket == socket2)
@@ -265,19 +276,19 @@ void Game_Process::game_process()
                                 if (roominfo)
                                 {
                                     v.states = room;
-                                    if (stop1)
-                                    {
-                                        stop = true;
-                                    }
                                 }
                                 else
                                 {
                                     v.states = hall;
                                     string str = "disband";
                                     send(socket2, (const char *)&(str[0]), 1023, 0);
-                                    stop = true;
                                 }
                             }
+                        }
+                        stop2 = true;
+                        if (stop1)
+                        {
+                            stop = true;
                         }
                     }
                     addfd(hall_epoll, mysocket);
@@ -290,7 +301,7 @@ void Game_Process::game_process()
             }
             else if (option == "ping")
             {
-                unique_lock slck(sendqueue_mtx);
+                unique_lock<mutex> slck(sendqueue_mtx);
                 send_queue.emplace(info);
                 sendqueue_mtx.unlock();
                 // string s = buf;
@@ -309,7 +320,7 @@ void Game_Process::game_process()
                         buf[0] = 'o';
                         buf[1] = 'p';
                         info->socket = opsocket;
-                        unique_lock slck(sendqueue_mtx);
+                        unique_lock<mutex> slck(sendqueue_mtx);
                         send_queue.emplace(info);
                         sendqueue_mtx.unlock();
                         // send(opsocket, (const char *)&(buf[0]), 1023, 0);
@@ -328,7 +339,7 @@ void Game_Process::game_process()
                 buf[0] = 'o';
                 buf[1] = 'p';
                 info->socket = opsocket;
-                unique_lock slck(sendqueue_mtx);
+                unique_lock<mutex> slck(sendqueue_mtx);
                 send_queue.emplace(info);
                 sendqueue_mtx.unlock();
                 // send(opsocket, (const char *)&(buf[0]), 1023, 0);
@@ -362,7 +373,7 @@ void Game_Process::game_process()
                             char ch1[1024] = {'\0'};
                             strcpy(ch1, str.c_str());
                             socket_messageinfo *info1 = new socket_messageinfo(opsocket, ch1);
-                            unique_lock slck(sendqueue_mtx);
+                            unique_lock<mutex> slck(sendqueue_mtx);
                             send_queue.emplace(info1);
 
                             str = "opdestroy";
@@ -405,7 +416,11 @@ void Game_Process::send_process()
         send_cv.wait(lck);
         while (!send_queue.empty())
         {
-            unique_lock slck(sendqueue_mtx);
+            if (stop)
+            {
+                break;
+            }
+            unique_lock<mutex> slck(sendqueue_mtx);
             info = send_queue.front();
             send_queue.pop();
             sendqueue_mtx.unlock();
@@ -415,6 +430,7 @@ void Game_Process::send_process()
         }
         lck.unlock();
     }
+    int i = 0;
 }
 
 // void return_game_class(int mysocket, int opsocket, string &option, char buf[])
