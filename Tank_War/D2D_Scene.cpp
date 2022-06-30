@@ -32,20 +32,33 @@ Scene* CurScene;
 Scene* SMain;
 Scene* SHall;
 Scene* SOption;
-Scene* SRoom;
-Scene* SPause;
-Scene* SGaming;
+Scene* SRoom_host;
+Scene* SRoom_nothost;
+Scene* SGaming_local;
+Scene* SGaming_online;
 Scene* SWinGame;
 Scene* SFailGame;
+Scene* SPause;
 
 extern LPCTSTR OP_Resource;
 extern LPCTSTR Tank_Resource;
 extern LPCTSTR TEXT_Resource;
 
-extern HWND room_list;
-extern HWND user_list;
-extern HWND edit_hall;
-extern HWND edit_in;
+
+HWND userid_in;
+HWND Hall;
+HWND Hall_room_list;
+HWND Hall_user_list;
+HWND Hall_edit_in;
+HWND edit_hall;
+
+
+HWND Room_user_list;
+HWND Room_edit_in;
+HWND edit_room;
+
+HWND Room;
+
 
 int MoveX, MoveY, ClickX, ClickY;
 
@@ -291,7 +304,9 @@ void Scene::DrawScene()
 	}
 	for (auto& v : Bitmap_list)
 	{
-		pRenderTarget->DrawBitmap(v->pBitmap, RectF(v->Bitmap_location1, v->Bitmap_location2, v->Bitmap_location3, v->Bitmap_location4), v->opacity);
+		pRenderTarget->DrawBitmap(v->pBitmap,
+			RectF(v->Bitmap_location1, v->Bitmap_location2, v->Bitmap_location3, v->Bitmap_location4),
+			v->opacity);
 	}
 }
 
@@ -308,7 +323,19 @@ void Scene::Move()
 		}
 		return;
 	}
-	else if (Bitmap_changed) {}
+	else if (Bitmap_changed) {
+		D2D_Button* Button = Bitmap_changed->pButton;
+		if (MoveX < Button->Button_location1 || MoveX > Button->Button_location3 ||
+			MoveY < Button->Button_location2 || MoveY > Button->Button_location4)
+		{
+			Bitmap_changed->Bitmap_location1 += 10;
+			Bitmap_changed->Bitmap_location2 += 10;
+			Bitmap_changed->Bitmap_location3 -= 10;
+			Bitmap_changed->Bitmap_location4 -= 10;
+			Bitmap_changed = NULL;
+		}
+		return;
+	}
 	else
 	{
 		for (auto& v : Button_list)
@@ -322,7 +349,13 @@ void Scene::Move()
 					Text_changed = v->Text;
 					return;
 				}
-				else {}
+				else {
+					v->Bitmap->Bitmap_location1 -= 10;
+					v->Bitmap->Bitmap_location2 -= 10;
+					v->Bitmap->Bitmap_location3 += 10;
+					v->Bitmap->Bitmap_location4 += 10;
+					Bitmap_changed = v->Bitmap;
+				}
 			}
 		}
 	}
@@ -339,7 +372,14 @@ void Scene::Click()
 			SendMessage(_hwnd, WM_COMMAND, Button->id, (LPARAM)_hwnd);
 		}
 	}
-	else if (Bitmap_changed) {};
+	else if (Bitmap_changed) {
+		D2D_Button* Button = Bitmap_changed->pButton;
+		if (ClickX > Button->Button_location1 && ClickX < Button->Button_location3 &&
+			ClickY > Button->Button_location2 && ClickY < Button->Button_location4)
+		{
+			SendMessage(_hwnd, WM_COMMAND, Button->id, (LPARAM)_hwnd);
+		}
+	};
 }
 
 HRESULT Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget,
@@ -537,12 +577,16 @@ HRESULT LoadResourceBitmap(
 void InitScene(ID2D1Factory*& pD2DFactory, ID2D1HwndRenderTarget*& pRenderTarget, IWICImagingFactory*& pIWICFactory, IDWriteFactory*& pDWriteFactory)
 {
 	try {
-		::SWinGame = new Scene(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
-		::SFailGame = new Scene(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
 		::SMain = new Scene(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
 		::SHall = new Scene(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
-		::SRoom = new Scene(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
 		::SOption = new Scene(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
+		::SRoom_host = new Scene(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
+		::SRoom_nothost = new Scene(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
+		::SGaming_local = new Scene(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
+		::SGaming_online = new Scene(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
+		::SWinGame = new Scene(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
+		::SFailGame = new Scene(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
+		::SPause = new Scene(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
 	}
 	catch (exception& e)
 	{
@@ -555,19 +599,19 @@ void Load_SMain(RECT& rect)
 	int loc1 = (rect.left + rect.right) / 2 - 120;
 	int loc3 = (rect.left + rect.right) / 2 + 120;
 	SMain->LoadButton(loc1, 80, loc3, 130,
-		IDB_TWO,
+		IDB_LOCALGAME,
 		SMain->LoadText(loc1, 80, loc3, 130, L"开始游戏"));
 
 	SMain->LoadButton(loc1, 180, loc3, 230,
-		IDB_THREE,
+		IDB_ENTERHALL,
 		SMain->LoadText(loc1, 180, loc3, 230, L"联机大厅"));
 
 	SMain->LoadButton(loc1, 280, loc3, 330,
-		IDB_FOUR,
+		IDB_OPTION,
 		SMain->LoadText(loc1, 280, loc3, 330, L"设置"));
 
 	SMain->LoadButton(loc1, 380, loc3, 430,
-		IDB_FIVE,
+		IDB_QUITGAME,
 		SMain->LoadText(loc1, 380, loc3, 430, L"退出游戏"));
 }
 
@@ -581,52 +625,65 @@ void Load_SHall(RECT& rect)
 	int len_y = (broder4 - broder2) / 10;
 	SHall->LoadResourceBitmap(broder1, broder2, broder3, broder4, L"PNG", MAKEINTRESOURCE(TEXTBK_PNG), 0.6f);
 
-	SHall->LoadButton(broder1 + len_x * 6 + 10, broder2 + len_y * 5 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 6,
-		IDB_ENTERROOM,
-		SHall->LoadText(broder1 + len_x * 6 + 10, broder2 + len_y * 5 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 6,
-			L"加入房间", pHall_Brush, pHall_ClickBrush, pHall_Format));
+	{
+		SHall->LoadButton(rect.left, rect.top, rect.left + 144, rect.top + 87,
+			IDB_EXITHALL,
+			SHall->LoadResourceBitmap(rect.left, rect.top, rect.left + 144, rect.top + 87, L"PNG", MAKEINTRESOURCE(RETURN_PNG)));
+	}
 
-	SHall->LoadButton(broder1 + len_x * 8, broder2 + len_y * 5 + 10, broder3 - 10, broder2 + len_y * 6 - 10,
-		IDB_CREATEROOM,
-		SHall->LoadText(broder1 + len_x * 8, broder2 + len_y * 5 + 10, broder3 - 10, broder2 + len_y * 6 - 10,
-			L"创建房间", pHall_Brush, pHall_ClickBrush, pHall_Format));
+	{
+		SHall->LoadText(broder1 + len_x, broder2,
+			broder1 + len_x * 4, broder2 + len_y - 3,
+			L"房间列表", pHall_Brush, pHall_Brush, pHall_Format);
+		SHall->LoadText(broder1 + len_x * 7 - 5, broder2 + 5,
+			broder1 + len_x * 9 + 5, broder2 + len_y + 3,
+			L"大厅用户列表", pHall_Brush, pHall_Brush, pHall_Format);
+	}
 
-	SHall->LoadButton(broder1 + len_x * 6 + 10, broder2 + len_y * 6 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 7,
-		IDB_REFRESH,
-		SHall->LoadText(broder1 + len_x * 6 + 10, broder2 + len_y * 6 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 7,
-			L"刷新", pHall_Brush, pHall_ClickBrush, pHall_Format));
+	{
+		SHall->LoadButton(broder1 + len_x * 6 + 10, broder2 + len_y * 5 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 6,
+			IDB_ENTERROOM,
+			SHall->LoadText(broder1 + len_x * 6 + 10, broder2 + len_y * 5 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 6,
+				L"加入房间", pHall_Brush, pHall_ClickBrush, pHall_Format));
 
+		SHall->LoadButton(broder1 + len_x * 8, broder2 + len_y * 5 + 10, broder3 - 10, broder2 + len_y * 6,
+			IDB_CREATEROOM,
+			SHall->LoadText(broder1 + len_x * 8, broder2 + len_y * 5 + 10, broder3 - 10, broder2 + len_y * 6,
+				L"创建房间", pHall_Brush, pHall_ClickBrush, pHall_Format));
 
-	SHall->LoadButton(broder1 + len_x * 8, broder2 + len_y * 6 + 10, broder3 - 10, broder2 + len_y * 7,
-		IDB_EXITHALL,
-		SHall->LoadText(broder1 + len_x * 8, broder2 + len_y * 6 + 10, broder3 - 10, broder2 + len_y * 7,
-			L"退出大厅", pHall_Brush, pHall_ClickBrush, pHall_Format));
+		SHall->LoadButton(broder1 + len_x * 6 + 10, broder2 + len_y * 6 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 7,
+			IDB_REFRESH,
+			SHall->LoadText(broder1 + len_x * 6 + 10, broder2 + len_y * 6 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 7,
+				L"刷新", pHall_Brush, pHall_ClickBrush, pHall_Format));
 
-	SHall->LoadButton(broder1 + len_x * 6 + 10, broder2 + len_y * 8 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 9,
-		IDB_SEND,
-		SHall->LoadText(broder1 + len_x * 6 + 10, broder2 + len_y * 8 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 9,
-			L"发送", pHall_Brush, pHall_ClickBrush, pHall_Format));
+		SHall->LoadButton(broder1 + len_x * 6 + 10, broder2 + len_y * 8 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 9,
+			IDB_HALL_SEND,
+			SHall->LoadText(broder1 + len_x * 6 + 10, broder2 + len_y * 8 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 9,
+				L"发送", pHall_Brush, pHall_ClickBrush, pHall_Format));
+	}
 
-	room_list = CreateWindowW(L"LISTBOX", L"",
-		WS_CHILD,
-		broder1 + len_x, broder2 + len_y - 10,
-		len_x * 4, len_y * 4,
-		_hwnd, (HMENU)ROOM_LIST, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
-	user_list = CreateWindowW(L"LISTBOX", L"",
-		WS_CHILD,
-		broder1 + len_x * 7, broder2 + len_y,
-		len_x * 2, len_y * 3,
-		_hwnd, (HMENU)USER_LIST, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
-	edit_hall = CreateWindowW(L"EDIT", L"",
-		WS_CHILD | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | ES_LEFT | WS_VSCROLL | ES_READONLY,
-		broder1 + len_x, broder2 + len_y * 5,
-		len_x * 5, len_y * 3 - 10,
-		_hwnd, (HMENU)EDIT_HALL, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
-	edit_in = CreateWindowW(L"EDIT", L"",
-		WS_CHILD | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | ES_LEFT | WS_VSCROLL,
-		broder1 + len_x, broder2 + len_y * 8,
-		len_x * 5, len_y * 2 - 10,
-		_hwnd, (HMENU)EDIT_IN, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
+	{
+		Hall_room_list = CreateWindowW(L"LISTBOX", L"",
+			WS_CHILD,
+			broder1 + len_x, broder2 + len_y - 5,
+			len_x * 4, len_y * 4,
+			_hwnd, (HMENU)HALL_ROOM_LIST, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
+		Hall_user_list = CreateWindowW(L"LISTBOX", L"",
+			WS_CHILD,
+			broder1 + len_x * 7, broder2 + len_y + 5,
+			len_x * 2, len_y * 3,
+			_hwnd, (HMENU)HALL_USER_LIST, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
+		edit_hall = CreateWindowW(L"EDIT", L"",
+			WS_CHILD | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | ES_LEFT | WS_VSCROLL | ES_READONLY,
+			broder1 + len_x, broder2 + len_y * 5,
+			len_x * 5, len_y * 3 - 10,
+			_hwnd, (HMENU)EDIT_HALL, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
+		Hall_edit_in = CreateWindowW(L"EDIT", L"",
+			WS_CHILD | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | ES_LEFT | WS_VSCROLL,
+			broder1 + len_x, broder2 + len_y * 8,
+			len_x * 5, len_y * 2 - 10,
+			_hwnd, (HMENU)HALL_EDIT_IN, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
+	}
 
 }
 
@@ -649,7 +706,90 @@ void Load_SWinGame(RECT& rect)
 
 void Load_SRoom(RECT& rect)
 {
+	int broder1 = rect.left + 70;
+	int broder2 = rect.top + 30;
+	int broder3 = rect.right - 70;
+	int broder4 = rect.bottom - 30;
+	int len_x = (broder3 - broder1) / 10;
+	int len_y = (broder4 - broder2) / 10;
 
+	{
+		SRoom_host->LoadResourceBitmap(broder1, broder2, broder3, broder4, L"PNG", MAKEINTRESOURCE(TEXTBK_PNG), 0.6f);
+
+		{
+			SRoom_host->LoadButton(rect.left, rect.top, rect.left + 144, rect.top + 87,
+				IDB_EXITROOM,
+				SRoom_host->LoadResourceBitmap(rect.left, rect.top, rect.left + 144, rect.top + 87, L"PNG", MAKEINTRESOURCE(RETURN_PNG)));
+		}
+
+		{
+			SRoom_host->LoadText(broder1 + len_x, broder2,
+				broder1 + len_x * 4, broder2 + len_y - 3,
+				L"当前房间内玩家情况", pHall_Brush, pHall_Brush, pHall_Format);
+		}
+
+		{
+			SRoom_host->LoadButton(broder1 + len_x * 6 + 10, broder2 + len_y * 5 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 6,
+				IDB_STARTGAME,
+				SRoom_host->LoadText(broder1 + len_x * 6 + 10, broder2 + len_y * 5 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 6,
+					L"开始游戏", pHall_Brush, pHall_ClickBrush, pHall_Format));
+
+			SRoom_host->LoadButton(broder1 + len_x * 6 + 10, broder2 + len_y * 8 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 9,
+				IDB_ROOM_SEND,
+				SRoom_host->LoadText(broder1 + len_x * 6 + 10, broder2 + len_y * 8 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 9,
+					L"发送", pHall_Brush, pHall_ClickBrush, pHall_Format));
+		}
+	}
+
+
+	{
+		SRoom_nothost->LoadResourceBitmap(broder1, broder2, broder3, broder4, L"PNG", MAKEINTRESOURCE(TEXTBK_PNG), 0.6f);
+
+		{
+			SRoom_nothost->LoadText(broder1 + len_x, broder2,
+				broder1+len_x * 4, broder2 + len_y - 3,
+				L"当前房间内玩家情况", pHall_Brush, pHall_Brush, pHall_Format);
+		}
+		{
+			SRoom_nothost->LoadButton(rect.left, rect.top, rect.left + 144, rect.top + 87,
+				IDB_EXITROOM,
+				SRoom_nothost->LoadResourceBitmap(rect.left, rect.top, rect.left + 144, rect.top + 87, L"PNG", MAKEINTRESOURCE(RETURN_PNG)));
+		}
+
+		{
+			SRoom_nothost->LoadButton(broder1 + len_x * 7 + 10, broder2 + len_y * 5 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 6,
+				IDB_READY,
+				SRoom_nothost->LoadText(broder1 + len_x * 7 + 10, broder2 + len_y * 5 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 6,
+					L"准备", pHall_Brush, pHall_ClickBrush, pHall_Format));
+
+			SRoom_nothost->LoadButton(broder1 + len_x * 6 + 10, broder2 + len_y * 8 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 9,
+				IDB_ROOM_SEND,
+				SRoom_nothost->LoadText(broder1 + len_x * 6 + 10, broder2 + len_y * 8 + 10, broder1 + len_x * 8 - 10, broder2 + len_y * 9,
+					L"发送", pHall_Brush, pHall_ClickBrush, pHall_Format));
+		}
+	}
+
+
+	{
+
+		Room_user_list = CreateWindowW(L"LISTBOX", L"",
+			WS_CHILD | LBS_MULTICOLUMN,
+			broder1 + len_x, broder2 + len_y - 5,
+			len_x * 4, len_y * 4,
+			_hwnd, (HMENU)ROOM_USER_LIST, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
+		
+
+		edit_room = CreateWindowW(L"EDIT", L"",
+			WS_CHILD | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | ES_LEFT | WS_VSCROLL | ES_READONLY,
+			broder1 + len_x, broder2 + len_y * 5,
+			len_x * 5, len_y * 3 - 10,
+			_hwnd, (HMENU)EDIT_HALL, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
+		Room_edit_in = CreateWindowW(L"EDIT", L"",
+			WS_CHILD | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | ES_LEFT | WS_VSCROLL,
+			broder1 + len_x, broder2 + len_y * 8,
+			len_x * 5, len_y * 2 - 10,
+			_hwnd, (HMENU)ROOM_EDIT_IN, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
+	}
 }
 
 void Load_SFailGame(RECT& rect)
@@ -669,6 +809,22 @@ void Load_SFailGame(RECT& rect)
 	}
 }
 
+void Load_SGaming(RECT& rect)
+{
+	{
+		SGaming_local->LoadButton(rect.left, rect.top, rect.left + 100, rect.top + 67,
+			IDB_PAUSE,
+			SGaming_local->LoadResourceBitmap(rect.left, rect.top, rect.left + 100, rect.top + 67, L"PNG", MAKEINTRESOURCE(PAUSE_PNG)));
+	}
+
+
+	{
+		SGaming_online->LoadButton(rect.left, rect.top, rect.left + 144, rect.top + 87,
+			IDB_RETURN,
+			SGaming_online->LoadResourceBitmap(rect.left, rect.top, rect.left + 144, rect.top + 87, L"PNG", MAKEINTRESOURCE(RETURN_PNG)));
+	}
+}
+
 void Load_D2DUI(RECT& rect)
 {
 	Load_SMain(rect);
@@ -676,6 +832,7 @@ void Load_D2DUI(RECT& rect)
 	Load_SRoom(rect);
 	Load_SWinGame(rect);
 	Load_SFailGame(rect);
+	Load_SGaming(rect);
 }
 
 void Init_D2DTool(RECT& rect)

@@ -15,30 +15,40 @@
 
 #include "header.h"
 
-//3-主菜单,4-Hall,5-Room,6-Game
+//首位：3-主菜单,4-Hall,5-Room,6-Game
+//次位：3-按钮，4-控件
 
-#define IDB_TWO     3302  
-#define IDB_THREE   3303  
-#define IDB_FOUR	3304  
-#define IDB_FIVE	3305
+#define IDB_LOCALGAME     3301
+#define IDB_ENTERHALL   3302
+#define IDB_OPTION	3303
+#define IDB_QUITGAME	3304
 
-#define IDB_ONE     3301  
-#define IDB_SIX		3306
-#define IDB_SEVEN	3307
+
 
 #define IDB_REFRESH 4301
-#define IDB_SEND 4302
+#define IDB_HALL_SEND 4302
 #define IDB_ENTERROOM 4303
 #define IDB_CREATEROOM 4304
 #define IDB_EXITHALL 4305
 
-#define EDIT_IN 4401
+#define HALL_EDIT_IN 4401
 #define EDIT_HALL 4402
-#define ROOM_LIST 4403
-#define USER_LIST 4404
+#define HALL_ROOM_LIST 4403
+#define HALL_USER_LIST 4404
+
+#define IDB_READY 5301
+#define IDB_STARTGAME	5302
+#define IDB_EXITROOM		5303
+#define IDB_ROOM_SEND 5304
+
+#define ROOM_EDIT_IN 5401
+#define EDIT_ROOM 5402
+#define ROOM_USER_LIST 5403
 
 #define IDB_PAUSE 6301
-#define ReturnInEndGame 6302
+#define IDB_RETURN 6302
+
+#define ReturnInEndGame 6303
 
 using namespace std;
 using namespace D2D1;
@@ -81,15 +91,31 @@ extern Scene* CurScene;
 extern Scene* SMain;
 extern Scene* SHall;
 extern Scene* SOption;
-extern Scene* SRoom;
+extern Scene* SRoom_host;
+extern Scene* SRoom_nothost;
 extern Scene* SPause;
-extern Scene* SGaming;
+extern Scene* SGaming_online;
+extern Scene* SGaming_local;
 extern Scene* SWinGame;
 extern Scene* SFailGame;
 
 
 extern HWND _hwnd;
 extern HINSTANCE hInst;
+
+
+extern HWND userid_in;
+
+extern HWND Hall;
+extern HWND Hall_room_list;
+extern HWND Hall_user_list;
+extern HWND Hall_edit_in;
+extern HWND edit_hall;
+
+extern HWND Room_user_list;
+extern HWND Room_edit_in;
+extern HWND edit_room;
+extern HWND Room;
 
 extern int MoveX, MoveY, ClickX, ClickY;
 
@@ -103,6 +129,8 @@ public:
 	int Bitmap_location4 = 0;
 
 	float opacity = 1.0f;
+
+	//int status = 0;
 
 	D2D_Button* pButton = NULL;
 
@@ -120,6 +148,7 @@ public:
 	int Text_location3 = 0;
 	int Text_location4 = 0;
 	wstring str;
+	//int status = 0;
 	ID2D1SolidColorBrush* pDefaultBrush = NULL;
 	ID2D1SolidColorBrush* pClickBrush = NULL;
 	IDWriteTextFormat* pTextFormat = NULL;
@@ -140,6 +169,7 @@ public:
 	int Button_location3 = 0;
 	int Button_location4 = 0;
 	int id = 0;
+	//int status = 0;
 	D2D_Bitmap* Bitmap = NULL;
 	D2D_Text* Text = NULL;
 	D2D_Button(int loc1, int loc2, int loc3, int loc4, int id) :
@@ -172,7 +202,7 @@ public:
 		pD2DFactory(pD2DFactory), pRenderTarget(pRenderTarget), pIWICFactory(pIWICFactory), pIDWriteFactory(pIDWriteFactory) {};
 
 	// 添加位图
-	D2D_Bitmap* Loadbitmap(int loc1, int loc2, int loc3, int loc4, 
+	D2D_Bitmap* Loadbitmap(int loc1, int loc2, int loc3, int loc4,
 		LPCTSTR pszResource, float opicaty = 1.0f);
 	D2D_Bitmap* LoadResourceBitmap(int loc1, int loc2, int loc3, int loc4,
 		LPCWSTR resourceType, LPCWSTR resourceName, float opacity = 1.0f, HINSTANCE hinstance = hInst

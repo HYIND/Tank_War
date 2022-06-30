@@ -4,16 +4,23 @@ extern bool isstart;
 
 extern int status;
 
+extern wstring my_userid;
+
 extern HWND hwndButton1;
 extern HWND hwndButton2;
 extern HWND hwndButton3;
 extern HWND hwndButton4;
 extern HWND hwndButton5;
 extern HWND hwndButton6;
-extern HWND room_list;
-extern HWND user_list;
+
+extern HWND Hall_room_list;
+extern HWND Hall_user_list;
 extern HWND edit_hall;
-extern HWND edit_in;
+extern HWND Hall_edit_in;
+
+extern HWND Room_user_list;
+extern HWND Room_edit_in;
+extern HWND edit_room;
 
 extern HWND _hwnd;
 extern HDC hdc;
@@ -45,6 +52,10 @@ extern void op_destory();
 queue<Ping_info> ping_queue;
 int delay = 0;
 int ping_id = 0;
+
+queue<socket_messageinfo*> message_queue;
+mutex messagequeue_mutex;
+bool Process_Stop = false;
 
 //void START(HWND hWnd) {}
 
@@ -102,7 +113,7 @@ string wstring2string(wstring wstr)
 //			80,        // button width
 //			30,        // button height
 //			hWnd,       // parent window
-//			(HMENU)IDB_ONE,       // No menu
+//			(HMENU)IDB_PAUSE,       // No menu
 //			(HINSTANCE)GetWindowLong(hWnd, GWLP_HINSTANCE),
 //			NULL);      // pointer not needed
 //		ShowWindow(hwndButton1, SW_HIDE);
@@ -120,7 +131,7 @@ string wstring2string(wstring wstr)
 //			180,        // button width
 //			50,        // button height
 //			hWnd,       // parent window
-//			(HMENU)IDB_TWO,       // No menu
+//			(HMENU)IDB_LOCALGAME,       // No menu
 //			(HINSTANCE)GetWindowLong(hWnd, GWLP_HINSTANCE),
 //			NULL);      // pointer not needed
 //	}
@@ -137,7 +148,7 @@ string wstring2string(wstring wstr)
 //			180,        // button width
 //			50,        // button height
 //			hWnd,       // parent window
-//			(HMENU)IDB_THREE,       // No menu
+//			(HMENU)IDB_ENTERHALL,       // No menu
 //			(HINSTANCE)GetWindowLong(hWnd, GWLP_HINSTANCE),
 //			NULL);      // pointer not needed
 //	}
@@ -154,7 +165,7 @@ string wstring2string(wstring wstr)
 //			180,        // button width
 //			50,        // button height
 //			hWnd,       // parent window
-//			(HMENU)IDB_FOUR,       // No menu
+//			(HMENU)IDB_OPTION,       // No menu
 //			(HINSTANCE)GetWindowLong(hWnd, GWLP_HINSTANCE),
 //			NULL);      // pointer not needed
 //	}
@@ -171,7 +182,7 @@ string wstring2string(wstring wstr)
 //			180,        // button width
 //			50,        // button height
 //			hWnd,       // parent window
-//			(HMENU)IDB_FIVE,       // No menu
+//			(HMENU)IDB_QUITGAME,       // No menu
 //			(HINSTANCE)GetWindowLong(hWnd, GWLP_HINSTANCE),
 //			NULL);      // pointer not needed
 //	}
@@ -195,21 +206,7 @@ void Hide_Main_UI() {
 }
 
 void Return_To_Mune() {
-	RECT rect;
-	GetClientRect(_hwnd, &rect);
-	hdc = GetDC(_hwnd);
-	SelectObject(hdc, WHITE_BRUSH);
-	Rectangle(hdc, -10, -10, rect.right, rect.bottom);
-	InvalidateRect(_hwnd, NULL, TRUE);
-
-	ShowWindow(hwndButton1, SW_HIDE);
-
 	isstart = false;
-	ShowWindow(hwndButton2, SW_SHOW);
-	ShowWindow(hwndButton3, SW_SHOW);
-	ShowWindow(hwndButton4, SW_SHOW);
-	ShowWindow(hwndButton5, SW_SHOW);
-
 }
 
 void SIG_IO(int sig) {
@@ -226,8 +223,8 @@ bool isconnecting() {
 }
 
 void send_socket(string s) {
-	const char* send_buf = &(s[0]);
-	send(mysocket, send_buf, 1023, 0);
+	char* send_buf = &(s[0]);
+	int i = send(mysocket, send_buf, 1023, 0);
 }
 
 void Return_Class(char buf[]) {
@@ -278,11 +275,11 @@ void Return_Class(char buf[]) {
 		{
 			if (temp == "Start")
 			{
-				SendMessage(Room, WM_COMMAND, START, (LPARAM)_hwnd);
+				SendMessage(_hwnd, WM_COMMAND, START, (LPARAM)_hwnd);
 			}
 			if (temp == "QuitRoom")
 			{
-				SendMessage(Room, WM_COMMAND, QUITROOM, (LPARAM)_hwnd);
+				SendMessage(_hwnd, WM_COMMAND, QUITROOM, (LPARAM)_hwnd);
 			}
 		}
 	}
@@ -351,24 +348,24 @@ void Get_Hallinfo() {
 }
 
 void Return_Get_Hallinfo_User(string& re) {
-	(int)SendMessage(user_list, LB_RESETCONTENT, 0, 0);
-	wstring wtemp = L"unname(您)";
-	(int)SendMessage(user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
+	(int)SendMessage(Hall_user_list, LB_RESETCONTENT, 0, 0);
+	wstring wtemp = my_userid + L"(您)";
+	(int)SendMessage(Hall_user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
 	{
-		regex user_reg("[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+");
+		regex user_reg("(#)[^;]*");
 		string temp;
 		sregex_iterator end;
 		for (sregex_iterator iter(re.begin(), re.end(), user_reg); iter != end; iter++) {
 			wtemp = string2wstring((*iter)[0]);
-			(int)SendMessage(user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
+			(int)SendMessage(Hall_user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[1]));
 		}
 	}
 }
 
 void Return_Get_Hallinfo_Room(string re) {
-	(int)SendMessage(room_list, LB_RESETCONTENT, 0, 0);
+	(int)SendMessage(Hall_room_list, LB_RESETCONTENT, 0, 0);
 	{
-		regex user_reg("[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+");
+		regex user_reg("(#)[^;]*");
 		string temp;
 		wstring wtemp;
 		sregex_iterator end;
@@ -377,7 +374,7 @@ void Return_Get_Hallinfo_Room(string re) {
 			string s = (*iter)[0];
 			s += "的房间";
 			wtemp = string2wstring(s);
-			(int)SendMessage(room_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
+			(int)SendMessage(Hall_room_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[1]));
 		}
 	}
 }
@@ -413,7 +410,7 @@ void Send_Message(wstring& w_content) {
 
 	wstring w_user_head = string2wstring(user_head);
 	//清空输入文本框
-	SendMessage(edit_in, WM_SETTEXT, 0, (LPARAM)L"");
+	SendMessage(Hall_edit_in, WM_SETTEXT, 0, (LPARAM)L"");
 	//发送消息到文本框
 	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_head[0]));
 	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_content[0]));
@@ -425,17 +422,38 @@ void Send_Message(wstring& w_content) {
 	send(mysocket, &(s[0]), 1023, 0);
 }
 
+mutex process_mtx;
+condition_variable process_cv;
+DWORD WINAPI Process_Thread() {
+	while (!Process_Stop)
+	{
+		unique_lock<mutex> lck(process_mtx);
+		process_cv.wait(lck);
+		while (!message_queue.empty())
+		{
+			unique_lock<mutex> qlck(messagequeue_mutex);
+			socket_messageinfo* pinfo = message_queue.front();
+			message_queue.pop();
+			qlck.unlock();
+			Return_Class(pinfo->ch);
+		}
+		lck.unlock();
+	}
+	return 0;
+}
+
 DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam) {
+	thread T2(Process_Thread);
 	HANDLE hIOCP = (HANDLE)lpParam;
 	DWORD dwBytesTranfered = 0;
-	int pPerHandle;
+	long long pPerHandle;
 	while (true) {
 		bool bl = ::GetQueuedCompletionStatus(hIOCP, &dwBytesTranfered, (PULONG_PTR)&pPerHandle, (LPOVERLAPPED*)&pPerIO, WSA_INFINITE);
 		if (!bl)
 		{
 			closesocket(mysocket);
 			GlobalFree(pPerIO);
-			continue;
+			break;
 		}
 		if (dwBytesTranfered == 0 && (pPerIO->nOperationType == OP_READ || pPerIO->nOperationType == OP_WRITE)) {
 			closesocket(mysocket);
@@ -447,7 +465,11 @@ DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam) {
 		case OP_READ:  //完成一个接收请求
 		{
 			//pPerIO->buf[dwBytesTranfered] = '\0';
-			Return_Class(pPerIO->buf);
+			socket_messageinfo* pinfo = new socket_messageinfo(pPerIO->buf);
+			unique_lock<mutex> qlck(messagequeue_mutex);
+			message_queue.push(pinfo);
+			qlck.unlock();
+			process_cv.notify_one();
 			WSABUF buf;
 			buf.buf = pPerIO->buf;
 			buf.len = 1023;
@@ -459,6 +481,9 @@ DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam) {
 		case OP_WRITE:break;
 		}
 	}
+	Process_Stop = true;
+	process_cv.notify_one();
+	T2.join();
 	return 0;
 }
 
@@ -485,7 +510,7 @@ HBRUSH OnCtlColorEdit(WPARAM wParam, LPARAM lParam)
 {
 	HWND hEdit1, hedit2;
 	hEdit1 = ::GetDlgItem(_hwnd, 1017);
-	HDC hDc = GetDC(room_list);
+	HDC hDc = GetDC(Hall_room_list);
 
 	if (hEdit1 == (HWND)lParam)
 	{
@@ -510,17 +535,40 @@ void Show_Hall(bool flag)
 {
 	if (flag)
 	{
+		(int)SendMessage(Hall_room_list, LB_RESETCONTENT, 0, 0);
+		(int)SendMessage(Hall_user_list, LB_RESETCONTENT, 0, 0);
+		(int)SendMessage(edit_hall, WM_SETTEXT, 0, (LPARAM)L"");
+		(int)SendMessage(Hall_edit_in, WM_SETTEXT, 0, (LPARAM)L"");
 		ShowWindow(edit_hall, SW_SHOW);
-		ShowWindow(edit_in, SW_SHOW);
-		ShowWindow(room_list, SW_SHOW);
-		ShowWindow(user_list, SW_SHOW);
+		ShowWindow(Hall_edit_in, SW_SHOW);
+		ShowWindow(Hall_room_list, SW_SHOW);
+		ShowWindow(Hall_user_list, SW_SHOW);
 	}
 	else
 	{
 		ShowWindow(edit_hall, SW_HIDE);
-		ShowWindow(edit_in, SW_HIDE);
-		ShowWindow(room_list, SW_HIDE);
-		ShowWindow(user_list, SW_HIDE);
+		ShowWindow(Hall_edit_in, SW_HIDE);
+		ShowWindow(Hall_room_list, SW_HIDE);
+		ShowWindow(Hall_user_list, SW_HIDE);
+	}
+}
+
+void Show_Room(bool flag)
+{
+	if (flag)
+	{
+		(int)SendMessage(Room_user_list, LB_RESETCONTENT, 0, 0);
+		(int)SendMessage(edit_room, WM_SETTEXT, 0, (LPARAM)L"");
+		(int)SendMessage(Room_edit_in, WM_SETTEXT, 0, (LPARAM)L"");
+		ShowWindow(edit_room, SW_SHOW);
+		ShowWindow(Room_edit_in, SW_SHOW);
+		ShowWindow(Room_user_list, SW_SHOW);
+	}
+	else
+	{
+		ShowWindow(edit_room, SW_HIDE);
+		ShowWindow(Room_edit_in, SW_HIDE);
+		ShowWindow(Room_user_list, SW_HIDE);
 	}
 }
 
@@ -534,6 +582,15 @@ bool Init_Hall()
 
 	memset(buffer, '\0', 1024);
 	mysocket = WSASocket(addr_info.sin_family, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+
+	int RecvBuf = 1024 * 1024;
+	int SendBuf = 1024 * 1024;
+
+	//setsockopt(mysocket, SOL_SOCKET, SO_SNDBUF, (const char*)&SendBuf, sizeof(int));
+	//setsockopt(mysocket, SOL_SOCKET, SO_RCVBUF, (const char*)&RecvBuf, sizeof(int));
+	int flag = 1;
+	setsockopt(mysocket, IPPROTO_TCP, TCP_NODELAY, (const char*)&flag, sizeof(flag));
+
 	if (-1 == connect(mysocket, (struct sockaddr*)&addr_info, sizeof(struct sockaddr)))
 	{
 		MessageBoxW(_hwnd, L"无法连接服务器，请检查网络设置", L"网络连接错误", NULL);
@@ -552,8 +609,9 @@ bool Init_Hall()
 	DWORD dwRecv;
 	DWORD dwFlags = 0;
 	WSARecv(mysocket, &buf, 1, &dwRecv, &dwFlags, &Hall_pPerIO->ol, NULL);
-	thread T(Recv_Thread, Hall_pPerIO, LPVOID(Hall_hIOCP));
-	T.detach();
+	Process_Stop = false;
+	thread T1(Recv_Thread, Hall_pPerIO, LPVOID(Hall_hIOCP));
+	T1.detach();
 	return true;
 }
 
@@ -575,6 +633,7 @@ void Ping_Count(string& str)
 			else if (ping_queue.front().id == recv_id)
 			{
 				delay = min((recv_time - ping_queue.front().send_time) / 2, 999);
+				//delay = recv_id;
 				ping_queue.pop();
 				return;
 			}
@@ -603,6 +662,8 @@ void send_pingmessage()
 	ping_queue.push(ping_info);
 
 	send_socket("ping:" + to_string(ping_id));
+	//delay = ping_id;
+
 	if (ping_id != INT32_MAX)
 	{
 		ping_id++;
@@ -617,3 +678,13 @@ void send_pingmessage()
 	}
 }
 
+void ReturnToRoom()
+{
+	send_socket("returntoroom");
+}
+
+void setmyuserid()
+{
+	string str = "myuserid:" + wstring2string(my_userid);
+	send_socket(str);
+}

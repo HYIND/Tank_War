@@ -24,7 +24,7 @@
     <ClInclude Include="Resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="WindowsProject1.h">
+    <ClInclude Include="Tank_War.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Tank.h">
@@ -44,7 +44,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="WindowsProject1.cpp">
+    <ClCompile Include="Tank_War.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Tank.cpp">
@@ -61,15 +61,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="WindowsProject1.rc">
+    <ResourceCompile Include="Tank_War.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="small.ico">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="WindowsProject1.ico">
+    <Image Include="Tank_War.ico">
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="..\x64\Debug\Resource\Tank2.bmp">
@@ -111,21 +108,21 @@
     <Image Include="..\x64\Debug\Resource\Tank2.png">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="..\x64\Debug\Resource\Pause.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\x64\Debug\Resource\Return.png">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\x64\debug\resource\myresour.bin">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="myresour.bin">
-      <Filter>资源文件</Filter>
-    </None>
     <None Include="..\x64\debug\resource\jpg1.bin">
       <Filter>资源文件</Filter>
     </None>
     <None Include="..\x64\Debug\Resource\Cursor.cur">
       <Filter>资源文件</Filter>
     </None>
-    <None Include="..\x64\debug\resource\cursor1.cur">
+    <None Include="..\x64\debug\resource\jpg2.bin">
       <Filter>资源文件</Filter>
     </None>
   </ItemGroup>

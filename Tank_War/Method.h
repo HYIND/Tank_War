@@ -25,6 +25,16 @@ struct Ping_info
 	int send_time;
 };
 
+
+struct socket_messageinfo
+{
+	char ch[1024];
+	socket_messageinfo(char ch[])
+	{
+		memcpy(this->ch, ch, 1024);
+	}
+};
+
 //按钮、位图及事件标识符
 
 
@@ -54,30 +64,40 @@ void Show_Main_UI();
 void Hide_Main_UI();
 void Return_To_Mune();
 void SIG_IO();
-void Get_Hallinfo();
-void Return_Get_Hallinfo_User(string& re);
-void Return_Get_Hallinfo_Room(string re);
-void Return_Get_Hallinfo_Roomid(string re);
-void Return_Hallinfo_Message(string& recv_str);
 wstring string2wstring(string str);
 string wstring2string(wstring wstr);
+
 bool isconnecting();
+void send_socket(string s);
+void Get_Hallinfo();
 void Send_Message(wstring& w_content);
-void Return_Class(char buf[]);
-DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam);
 void Create_Room();
 void Enter_Room(int index);
 void win_game();
 void lost_game();
+void send_pingmessage();
+void ReturnToRoom();
+
+void Return_Get_Hallinfo_User(string& re);
+void Return_Get_Hallinfo_Room(string re);
+void Return_Get_Hallinfo_Roomid(string re);
+void Return_Hallinfo_Message(string& recv_str);
+void Return_Class(char buf[]);
+void Ping_Count(string&);
+
+DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam);
+DWORD WINAPI Process_Thread();
+
 
 HRESULT Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget, LPCTSTR pszResource, ID2D1Bitmap** ppBitmap);
-HRESULT LoadResourceBitmap(HINSTANCE hinstance,IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget, LPCWSTR resourceType, LPCWSTR resourceName, ID2D1Bitmap** ppBitmap);
+HRESULT LoadResourceBitmap(HINSTANCE hinstance, IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget, LPCWSTR resourceType, LPCWSTR resourceName, ID2D1Bitmap** ppBitmap);
 HBRUSH OnCtlColorEdit(WPARAM wParam, LPARAM lParam);
 
 void Show_Hall(bool flag);
+void Show_Room(bool flag);
+
 bool Init_Hall();
 
-void Ping_Count(string&);
-void send_pingmessage();
-
 void Init_GameResource();
+
+void setmyuserid();

@@ -24,6 +24,8 @@ using namespace D2D1;
 //ID2D1BitmapBrush* pBitmapBrush;
 
 // 全局变量:
+wstring my_userid = L"unname";
+
 Tank tank1(60, 60);
 Tank tank2(60, 60);
 Tank* mytank = &tank1;
@@ -40,7 +42,7 @@ Tank* op_in = &tank2;
 
 HRESULT hr = S_OK;
 
-HDC hdcmem, hdc, tdc;
+HDC hdc;
 bool isstart = false;
 bool host = false;
 bool isonline_game = false;
@@ -76,14 +78,6 @@ HWND hwndButton4;
 HWND hwndButton5;
 HWND hwndButton6;
 
-HWND Hall;
-HWND room_list;
-HWND user_list;
-HWND edit_in;
-HWND edit_hall;
-
-HWND Room;
-
 HPEN tank_Pen = CreatePen(PS_SOLID, 0, RGB(100, 100, 200));
 HBRUSH tank_Brush = CreateSolidBrush(RGB(255, 238, 114));
 HPEN bullet_Pen = CreatePen(PS_SOLID, 4, RGB(255, 0, 0));
@@ -101,9 +95,9 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    Pause(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK    HALL(HWND, UINT, WPARAM, LPARAM);
+//INT_PTR CALLBACK    HALL(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    ROOM(HWND, UINT, WPARAM, LPARAM);
-
+BOOL CALLBACK GetID_Proc(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
@@ -163,12 +157,12 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 	wcex.cbClsExtra = 0;
 	wcex.cbWndExtra = 0;
 	wcex.hInstance = hInstance;
-	wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WINDOWSPROJECT1));
+	wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_Tank_War));
 	wcex.hCursor = LoadCursor(hInstance, MAKEINTRESOURCE(MYCURSOR));
 	wcex.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
 	wcex.lpszMenuName = NULL;
 	wcex.lpszClassName = szWindowClass;
-	wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+	wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_Tank_War));
 
 	return RegisterClassExW(&wcex);
 }
@@ -186,9 +180,10 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
 	hInst = hInstance; // 将实例句柄存储在全局变量中
-
-	HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_VISIBLE | WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME | WS_CLIPCHILDREN | WS_EX_COMPOSITED | WS_EX_LAYERED,
-		CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+	HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_VISIBLE | WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX | WS_CLIPCHILDREN | WS_EX_COMPOSITED | WS_EX_LAYERED,
+		CW_USEDEFAULT, 0, 1200, 675, nullptr, nullptr, hInstance, nullptr);
+	/*HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_VISIBLE | WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX | WS_CLIPCHILDREN | WS_EX_COMPOSITED | WS_EX_LAYERED,
+		0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), nullptr, nullptr, hInstance, nullptr);*/
 
 	//op_bitmap = LoadBitmap(hInstance, MAKEINTRESOURCE(BITMAP_BK));
 
@@ -213,6 +208,59 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_DESTROY  - 发送退出消息并返回
 //
 //
+
+
+DWORD WINAPI Render_Thread()
+{
+	while (true)
+	{
+		PAINTSTRUCT ps;
+		RECT rect;
+		GetClientRect(_hwnd, &rect);
+		hdc = BeginPaint(_hwnd, &ps);
+		// TODO: 在此处添加使用 hdc 的任何绘图代码...
+		{
+			pRenderTarget->BeginDraw();
+			pRenderTarget->Clear(ColorF(1, 1, 1, 1));
+			if (status != Game_Status) {
+				pRenderTarget->DrawBitmap(OP_pBitmap, D2D1::RectF(0, 0, rect.right, rect.bottom));
+				if (FAILED(hr))
+				{
+					MessageBox(NULL, L"Draw failed!", L"Error", 0);
+				}
+			}
+			if (status == Game_Status)
+			{
+				if (tank1.isalive)
+					tank1.DrawTank(pRenderTarget, P1_CurTank_Form);
+				if (tank2.isalive)
+					tank2.DrawTank(pRenderTarget, P2_CurTank_Form);
+
+				if (tank1.bullet_head)
+					(*(tank1.bullet_head)).Drawbullet(pRenderTarget, NULL);
+				if (tank2.bullet_head)
+					(*(tank2.bullet_head)).Drawbullet(pRenderTarget, NULL);
+			}
+			if (CurScene)
+				CurScene->DrawScene();
+			if (status == Hall_Status || status == Room_Status || (status == Game_Status && isonline_game))
+			{
+				wstring ws = to_wstring(delay) + L"ms";
+				const wchar_t* delay_ch = ws.c_str();
+				pRenderTarget->DrawText(
+					delay_ch,
+					wcslen(delay_ch),
+					pPing_Format,
+					DelayRect,
+					pMain_Brush
+				);
+			}
+			hr = pRenderTarget->EndDraw();
+		}
+		EndPaint(_hwnd, &ps); \
+	}
+}
+
 enum { _tank, _bullet, _online, refrash, reconnect, ping };	//定时器ID
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -271,25 +319,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		CurScene = SMain;
 
-		thread T(destory_bulletinfo);
+		thread T(Render_Thread);
 		T.detach();
 
 		//RECT rect_t;
-		//GetClientRect(edit_in,&rect_t);
+		//GetClientRect(Hall_edit_in,&rect_t);
 		//	hr = pD2DFactory->CreateHwndRenderTarget(
 		//		RenderTargetProperties(),
-		//		HwndRenderTargetProperties(edit_in, SizeU(rect_t.right - rect_t.left, rect_t.bottom - rect_t.top)),
+		//		HwndRenderTargetProperties(Hall_edit_in, SizeU(rect_t.right - rect_t.left, rect_t.bottom - rect_t.top)),
 		//		&pRenderTarget_t
 		//	);
 		//	hr = Loadbitmap(pIWICFactory, pRenderTarget_t, TEXT_Resource, &TEXT_pBitmap);
 
-		//StaticWndProc = (WNDPROC)::SetWindowLong(room_list, GWLP_WNDPROC, (LPARAM)MyStaticWndProc);
-		//SetWindowLong(room_list, GWL_STYLE, GetWindowLong(room_list, GWL_STYLE) | WS_EX_TRANSPARENT);
-		//SendMessage(room_list, LB_ADDSTRING, 0, L"1213213"[0]);
-		//SendMessage(room_list, LB_ADDSTRING, 0, L"1213213"[0]);
-		//SendMessage(room_list, LB_ADDSTRING, 0, L"1213213"[0]);
-		//SendMessage(room_list, LB_ADDSTRING, 0, L"1213213"[0]);
-		//room_list = CreateWindow(L"EDIT", L"",
+		//StaticWndProc = (WNDPROC)::SetWindowLong(Hall_room_list, GWLP_WNDPROC, (LPARAM)MyStaticWndProc);
+		//SetWindowLong(Hall_room_list, GWL_STYLE, GetWindowLong(Hall_room_list, GWL_STYLE) | WS_EX_TRANSPARENT);
+		//SendMessage(Hall_room_list, LB_ADDSTRING, 0, L"1213213"[0]);
+		//SendMessage(Hall_room_list, LB_ADDSTRING, 0, L"1213213"[0]);
+		//SendMessage(Hall_room_list, LB_ADDSTRING, 0, L"1213213"[0]);
+		//SendMessage(Hall_room_list, LB_ADDSTRING, 0, L"1213213"[0]);
+		//Hall_room_list = CreateWindow(L"EDIT", L"",
 		//	WS_VISIBLE | WS_CHILD | WS_VSCROLL | WS_BORDER | WS_TABSTOP | LBS_NOTIFY |OWNERDRA,//如果不设定LBS_HASSTRINGS，那么GetText取得的将是乱码
 		//	20, 300, 360, 440, hWnd, (HMENU)IDC_LIST1, GetModuleHandle(nullptr), nullptr);
 		break;
@@ -344,8 +392,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			//if (!isconnecting())			
 			//	if (connect(mysocket, (struct sockaddr*)&addr_info, sizeof(struct sockaddr)) == -1)
 			//	{
-			//		(int)SendMessage(user_list, LB_RESETCONTENT, 0, 0);
-			//		(int)SendMessage(user_list, LB_ADDSTRING, 0, (LPARAM) L"已断开连接，检查网络！");
+			//		(int)SendMessage(Hall_user_list, LB_RESETCONTENT, 0, 0);
+			//		(int)SendMessage(Hall_user_list, LB_ADDSTRING, 0, (LPARAM) L"已断开连接，检查网络！");
 			//	}
 		case ping:
 			send_pingmessage();
@@ -354,11 +402,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		InvalidateRect(hWnd, NULL, TRUE);
 		break;
 	}
+
 	case WM_ERASEBKGND:
 	{
 		return true;
 		break;
 	}
+
 	//case WM_ACTIVATE:
 	//{
 	//}
@@ -377,13 +427,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	//		LPDRAWITEMSTRUCT pDI = (LPDRAWITEMSTRUCT)lParam;
 	//		HBRUSH brsh = CreateSolidBrush(RGB(0, 0, 0));
 	//		RECT rect;
-	//		GetClientRect(room_list, &rect);
+	//		GetClientRect(Hall_room_list, &rect);
 	//		FillRect(pDI->hDC, &rect, brsh);
 	//		DeleteObject(brsh);
 	//		// text 
 	//		SetBkMode(pDI->hDC, TRANSPARENT);
 	//		//wchar_t szText[260];
-	//		//SendMessage(room_list, LB_GETTEXT, pDI->itemID, (LPARAM)szText);
+	//		//SendMessage(Hall_room_list, LB_GETTEXT, pDI->itemID, (LPARAM)szText);
 	//		//const DWORD dwStyle = DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS;
 	//		//DrawText(pDI->hDC, szText, wcslen(szText), &pDI->rcItem, dwStyle);
 	//	}
@@ -392,22 +442,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_KILLFOCUS:
 	{
-		if (!isonline_game)
+		if (status == Game_Status && !isonline_game)
 		{
 			KillTimer(hWnd, _tank);
 			KillTimer(hWnd, _bullet);
 		}
 		break;
 	}
+
 	case WM_SETFOCUS:
 	{
-		if (!isonline_game)
+		if (status == Game_Status && !isonline_game)
 		{
-			SetTimer(hWnd, _tank, 100, NULL);
-			SetTimer(hWnd, _bullet, 100, NULL);
+			SetTimer(hWnd, _tank, 20, NULL);
+			SetTimer(hWnd, _bullet, 20, NULL);
 		}
 		break;
 	}
+
 	case WM_COMMAND:
 	{
 		int wmId = LOWORD(wParam);
@@ -419,36 +471,39 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			switch (wmId)
 			{
 				// 开始游戏
-			case IDB_TWO: {
+			case IDB_LOCALGAME: {
 				Init_all();
 				//Hide_Main_UI();
 				//ShowWindow(hwndButton1, SW_SHOW);
-				SetTimer(hWnd, _tank, 50, NULL);
-				SetTimer(hWnd, _bullet, 50, NULL);
-				CurScene = SGaming;
+				SetTimer(hWnd, _tank, 20, NULL);
+				SetTimer(hWnd, _bullet, 20, NULL);
+				CurScene = SGaming_local;
 				isstart = true;
 				status = Game_Status;
 				isonline_game = false;
 				InvalidateRect(hWnd, NULL, TRUE);
 				break;
 			}
-						// 联机大厅
-			case IDB_THREE: {
+							  // 联机大厅
+			case IDB_ENTERHALL: {
+				if (!DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG_Userid), hWnd, (DLGPROC)GetID_Proc))
+					break;
 				if (!Init_Hall())
 					break;
+				setmyuserid();
 				//Hide_Main_UI();
 				Show_Hall(true);
 				CurScene = SHall;
 				status = Hall_Status;
 				SetTimer(hWnd, reconnect, 5000, NULL);
 				SetTimer(hWnd, refrash, 3000, NULL);
-				SetTimer(hWnd, ping, 3000, NULL);
+				SetTimer(hWnd, ping, 2000, NULL);
 				UpdateWindow(hWnd);
 				break;
 			}
-						  // 设置
-			case IDB_FOUR: {break; }
-			case IDB_FIVE:// 退出游戏
+							  // 设置
+			case IDB_OPTION: {break; }
+			case IDB_QUITGAME:// 退出游戏
 			{
 				DestroyWindow(hWnd);
 				break;
@@ -462,11 +517,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 			case Enterroom:
 			{
+				Show_Hall(FALSE);
 				status = Room_Status;
-				ShowWindow(Hall, SW_HIDE);
-				Room = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_ROOM), _hwnd, ROOM);
-				ShowWindow(Room, SW_SHOW);
-				CurScene = SRoom;
+				//ShowWindow(Hall, SW_HIDE);
+				//Room = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_ROOM), _hwnd, ROOM);
+				//ShowWindow(Room, SW_SHOW);
+				CurScene = SRoom_nothost;
+				Show_Room(TRUE);
 				UpdateWindow(_hwnd);
 				break;
 			}
@@ -479,9 +536,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			// 加入房间
 			case IDB_ENTERROOM:
 			{
-				int index = SendMessage(room_list, LB_GETCURSEL, 0, 0);
+				int index = SendMessage(Hall_room_list, LB_GETCURSEL, 0, 0);
 				TCHAR buff[255];
-				SendMessage(room_list, LB_GETTEXT, index, (LPARAM)buff);
+				SendMessage(Hall_room_list, LB_GETTEXT, index, (LPARAM)buff);
 				Enter_Room(index);
 				break;
 			}
@@ -497,23 +554,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				status = NONE;
 				UpdateWindow(_hwnd);
 				break;
-			case IDB_SEND:
+			case IDB_HALL_SEND:
 			{
-				wstring temp;
-				GetWindowTextW(edit_in, &(temp[0]), 1024);
-				Send_Message(temp);
+				wchar_t temp[1024] = { '\0' };
+				GetWindowTextW(Hall_edit_in, temp, 1024);
+				wstring str = temp;
+				Send_Message(str);
 				break;
 			}
 			// 创建房间
 			case IDB_CREATEROOM:
 			{
 				Create_Room();
-				Room = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_ROOM), _hwnd, ROOM);
-				ShowWindow(Hall, SW_HIDE);
-				ShowWindow(Room, SW_SHOW);
-				CurScene = SRoom;
-				host = true;
+				//Room = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_ROOM), _hwnd, ROOM);
+				//ShowWindow(Hall, SW_HIDE);
+				//ShowWindow(Room, SW_SHOW);
+				Show_Hall(FALSE);
 				status = Room_Status;
+				host = true;
+				CurScene = SRoom_host;
+				Show_Room(TRUE);
 				UpdateWindow(_hwnd);
 				break;
 			}
@@ -522,6 +582,65 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		case Room_Status:
 		{
+			switch (wmId)
+			{
+			case IDB_STARTGAME:
+			{
+				if (host == false)
+				{
+					MessageBox(hWnd, L"您不是房主，请等待房主开始游戏", NULL, MB_OK);
+					break;
+				}
+				send(mysocket, "StartGame", 1023, 0);
+				break;
+			}
+			case IDB_READY:
+			{
+				send(mysocket, "READY", 1023, 0);
+				break;
+			}
+			case IDB_EXITROOM:
+			{
+				send(mysocket, "QuitRoom", 1023, 0);
+				Show_Room(FALSE);
+				status = Hall_Status;
+				CurScene = SHall;
+				Show_Hall(TRUE);
+				UpdateWindow(hWnd);
+				break;
+			}
+			case START:
+			{
+				KillTimer(hWnd, reconnect);
+				KillTimer(hWnd, refrash);
+				Init_all();
+				SetTimer(hWnd, _tank, 20, NULL);
+				SetTimer(hWnd, _bullet, 20, NULL);
+				SetTimer(hWnd, _online, 50, NULL);
+
+				isonline_game = true;
+				isstart = true;
+				Show_Room(FALSE);
+				CurScene = SGaming_online;
+				status = Game_Status;
+				if (!host)
+				{
+					reverse_in = false;
+					swap(mytank, optank);
+				}
+				break;
+			}
+			case QUITROOM:
+			{
+				MessageBox(hWnd, L"房主已将房间解散！", NULL, MB_OK);
+				Show_Room(false);
+				status = Hall_Status;
+				CurScene = SHall;
+				Show_Hall(true);
+				UpdateWindow(hWnd);
+				break;
+			}
+			}
 			break;
 		}
 		case Game_Status:
@@ -529,7 +648,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			switch (wmId)
 			{
 				// 暂停
-			case IDB_ONE:
+			case IDB_PAUSE:
 			{
 				KillTimer(hWnd, _tank);
 				KillTimer(hWnd, _bullet);
@@ -538,13 +657,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				case 20:	//重新开始
 					Init_all();
 				case 10:	//回到游戏
-					SetTimer(hWnd, _tank, 100, NULL);
-					SetTimer(hWnd, _bullet, 100, NULL);
+					SetTimer(hWnd, _tank, 20, NULL);
+					SetTimer(hWnd, _bullet, 20, NULL);
 					break;
 				case 30:	//回到主菜单
 					KillTimer(hWnd, _tank);
 					KillTimer(hWnd, _bullet);
-					Return_To_Mune();
+					isstart = false;
+					status = NONE;
+					CurScene = SMain;
 					break;
 				}
 				break;
@@ -566,11 +687,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				isstart = false;
 				isonline_game = true;
-				ShowWindow(Room, SW_SHOW);
+				ReturnToRoom();
 				KillTimer(_hwnd, _tank);
 				KillTimer(_hwnd, _bullet);
 				KillTimer(_hwnd, _online);
-				CurScene = SRoom;
+				SetTimer(hWnd, reconnect, 5000, NULL);
+				//SetTimer(hWnd, refrash, 3000, NULL);
+				CurScene = (host == TRUE) ? SRoom_host : SRoom_nothost;
+				Show_Room(TRUE);
+				status = Room_Status;
 				break;
 			}
 			}
@@ -702,7 +827,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_CTLCOLOREDIT:
 	{
 		HWND t_hwnd = (HWND)lParam;
-		if (t_hwnd == edit_in || t_hwnd == edit_hall || t_hwnd == room_list || t_hwnd == user_list)
+		if (t_hwnd == Hall_edit_in || t_hwnd == edit_hall || t_hwnd == Hall_room_list || t_hwnd == Hall_user_list)
 		{
 			//RECT text_rect;
 			//GetClientRect(t_hwnd, &text_rect);
@@ -734,96 +859,53 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	//	return (INT_PTR)(HBRUSH(GetStockObject(NULL_BRUSH)));//设置控件背景颜色为灰色
 	//	break;
 	//}
-	case WM_PAINT:
-	{
-		RECT rect;
-		GetClientRect(hWnd, &rect);
-		hdc = BeginPaint(hWnd, &ps);
-		// TODO: 在此处添加使用 hdc 的任何绘图代码...
-		{
-			pRenderTarget->BeginDraw();
-			pRenderTarget->Clear(ColorF(1, 1, 1, 1));
-			if (status != Game_Status) {
-				pRenderTarget->DrawBitmap(OP_pBitmap, D2D1::RectF(0, 0, rect.right, rect.bottom));
-				if (FAILED(hr))
-				{
-					MessageBox(NULL, L"Draw failed!", L"Error", 0);
-				}
-			}
-			if (CurScene)
-				CurScene->DrawScene();
-			if (status == Hall_Status || status == Room_Status || (status == Game_Status && isonline_game))
-			{
-				wstring ws = to_wstring(delay) + L"ms";
-				const wchar_t* delay_ch = ws.c_str();
-				pRenderTarget->DrawText(
-					delay_ch,
-					wcslen(delay_ch),
-					pPing_Format,
-					DelayRect,
-					pMain_Brush
-				);
-			}
-			if (status == Game_Status)
-			{
-				if (tank1.isalive)
-					tank1.DrawTank(pRenderTarget, P1_CurTank_Form);
-				if (tank2.isalive)
-					tank2.DrawTank(pRenderTarget, P2_CurTank_Form);
+	//case WM_PAINT:
+	//{
 
-				if (tank1.bullet_head)
-					(*(tank1.bullet_head)).Drawbullet(pRenderTarget, NULL);
-				if (tank2.bullet_head)
-					(*(tank2.bullet_head)).Drawbullet(pRenderTarget, NULL);
+	//	// 
+	//	// 
+	//	//RECT rc;
+	//	//GetClientRect(hWnd, &rc);
 
-			}
-			hr = pRenderTarget->EndDraw();
-		}
-		EndPaint(hWnd, &ps);
-		// 
-		// 
-		//RECT rc;
-		//GetClientRect(hWnd, &rc);
+	//	//// Create a Direct2D render target          
+	//	//ID2D1HwndRenderTarget* pRT = NULL;
+	//	//HRESULT hr = pD2DFactory->CreateHwndRenderTarget(
+	//	//	D2D1::RenderTargetProperties(),
+	//	//	D2D1::HwndRenderTargetProperties(
+	//	//		hWnd,
+	//	//		D2D1::SizeU(
+	//	//			rc.right - rc.left,
+	//	//			rc.bottom - rc.top)
+	//	//	),
+	//	//	&pRT
+	//	//);
 
-		//// Create a Direct2D render target          
-		//ID2D1HwndRenderTarget* pRT = NULL;
-		//HRESULT hr = pD2DFactory->CreateHwndRenderTarget(
-		//	D2D1::RenderTargetProperties(),
-		//	D2D1::HwndRenderTargetProperties(
-		//		hWnd,
-		//		D2D1::SizeU(
-		//			rc.right - rc.left,
-		//			rc.bottom - rc.top)
-		//	),
-		//	&pRT
-		//);
+	//	//ID2D1SolidColorBrush* pBrush = NULL;
+	//	//if (SUCCEEDED(hr))
+	//	//{
 
-		//ID2D1SolidColorBrush* pBrush = NULL;
-		//if (SUCCEEDED(hr))
-		//{
+	//	//	pRT->CreateSolidColorBrush(
+	//	//		D2D1::ColorF(D2D1::ColorF::Blue),
+	//	//		&pBrush
+	//	//	);
+	//	//}
+	//	//pRT->BeginDraw();
+	//	//pRT->DrawRectangle(
+	//	//	D2D1::RectF(
+	//	//		rc.left + 100.0f,
+	//	//		rc.top + 100.0f,
+	//	//		rc.right - 100.0f,
+	//	//		rc.bottom - 100.0f),
+	//	//	pBrush);
+	//	//pRT->CreateSolidColorBrush(
+	//	//	D2D1::ColorF(D2D1::ColorF::White),
+	//	//	&pBrush
+	//	//);
+	//	//pRT->FillRectangle(&RectF,);
 
-		//	pRT->CreateSolidColorBrush(
-		//		D2D1::ColorF(D2D1::ColorF::Blue),
-		//		&pBrush
-		//	);
-		//}
-		//pRT->BeginDraw();
-		//pRT->DrawRectangle(
-		//	D2D1::RectF(
-		//		rc.left + 100.0f,
-		//		rc.top + 100.0f,
-		//		rc.right - 100.0f,
-		//		rc.bottom - 100.0f),
-		//	pBrush);
-		//pRT->CreateSolidColorBrush(
-		//	D2D1::ColorF(D2D1::ColorF::White),
-		//	&pBrush
-		//);
-		//pRT->FillRectangle(&RectF,);
-
-		//hr = pRT->EndDraw();
-		break;
-	}
+	//	//hr = pRT->EndDraw();
+	//	break;
+	//}
 
 	case WM_DESTROY:
 		closesocket(mysocket);
@@ -901,7 +983,7 @@ INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 	return (INT_PTR)FALSE;
 }
 
-//bool edit_in_focus = false;
+//bool Hall_edit_in_focus = false;
 //INT_PTR CALLBACK HALL(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 //	UNREFERENCED_PARAMETER(lParam);
 //	switch (message)
@@ -925,10 +1007,10 @@ INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 //				SWP_NOSIZE
 //			);
 //		}
-//		user_list = GetDlgItem(hDlg, IDC_LIST1);
-//		room_list = GetDlgItem(hDlg, IDC_LIST2);
+//		Hall_user_list = GetDlgItem(hDlg, IDC_LIST1);
+//		Hall_room_list = GetDlgItem(hDlg, IDC_LIST2);
 //		edit_hall = GetDlgItem(hDlg, IDC_EDIT1);
-//		edit_in = GetDlgItem(hDlg, IDC_EDIT2);
+//		Hall_edit_in = GetDlgItem(hDlg, IDC_EDIT2);
 //		{
 //			WSAStartup(MAKEWORD(2, 2), &wsa);
 //			ZeroMemory(&addr_info, sizeof(addr_info));
@@ -954,7 +1036,7 @@ INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 //			T.detach();
 //			Get_Hallinfo();
 //		}
-//		//SetWindowLong(room_list, GWL_STYLE, GetWindowLong(room_list, GWL_STYLE) | LBS_OWNERDRAWFIXED);
+//		//SetWindowLong(Hall_room_list, GWL_STYLE, GetWindowLong(Hall_room_list, GWL_STYLE) | LBS_OWNERDRAWFIXED);
 //		break;
 //	}
 //
@@ -981,9 +1063,9 @@ INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 //		// 加入房间
 //		case IDC_BUTTON2:
 //		{
-//			int index = SendMessage(room_list, LB_GETCURSEL, 0, 0);
+//			int index = SendMessage(Hall_room_list, LB_GETCURSEL, 0, 0);
 //			//TCHAR buff[255];
-//			//SendMessage(room_list,LB_GETTEXT, index, (LPARAM)buff);
+//			//SendMessage(Hall_room_list,LB_GETTEXT, index, (LPARAM)buff);
 //			//wstring wtemp = string2wstring(to_string(index));
 //			//MessageBox(hDlg, buff, &wtemp[0], MB_OK);
 //			Enter_Room(index);
@@ -1000,7 +1082,7 @@ INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 //		case IDC_BUTTON4:
 //		{
 //			wstring temp;
-//			GetWindowTextW(edit_in, &(temp[0]), 1024);
+//			GetWindowTextW(Hall_edit_in, &(temp[0]), 1024);
 //			Send_Message(temp);
 //			break;
 //		}
@@ -1018,14 +1100,14 @@ INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 //		}
 //		if (HIWORD(wParam) == EN_SETFOCUS)
 //		{
-//			if ((HWND)lParam == edit_in) {
-//				edit_in_focus = true;
+//			if ((HWND)lParam == Hall_edit_in) {
+//				Hall_edit_in_focus = true;
 //			}
 //		}
 //		if (HIWORD(wParam) == EN_KILLFOCUS)
 //		{
-//			if ((HWND)lParam == edit_in) {
-//				edit_in_focus = true;
+//			if ((HWND)lParam == Hall_edit_in) {
+//				Hall_edit_in_focus = true;
 //			}
 //		}
 //		default: return DefWindowProc(hDlg, message, wParam, lParam);
@@ -1043,8 +1125,8 @@ INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 //			//if (!isconnecting())			
 //			//	if (connect(mysocket, (struct sockaddr*)&addr_info, sizeof(struct sockaddr)) == -1)
 //			//	{
-//			//		(int)SendMessage(user_list, LB_RESETCONTENT, 0, 0);
-//			//		(int)SendMessage(user_list, LB_ADDSTRING, 0, (LPARAM) L"已断开连接，检查网络！");
+//			//		(int)SendMessage(Hall_user_list, LB_RESETCONTENT, 0, 0);
+//			//		(int)SendMessage(Hall_user_list, LB_ADDSTRING, 0, (LPARAM) L"已断开连接，检查网络！");
 //			//	}
 //			break;
 //		}
@@ -1068,7 +1150,7 @@ INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 //	//		// text 
 //	//		SetBkMode(pDI->hDC, TRANSPARENT);
 //	//		wchar_t szText[260];
-//	//		SendMessage(room_list, LB_GETTEXT, pDI->itemID, (LPARAM)szText);
+//	//		SendMessage(Hall_room_list, LB_GETTEXT, pDI->itemID, (LPARAM)szText);
 //	//		const DWORD dwStyle = DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS;
 //	//		DrawText(pDI->hDC, szText, wcslen(szText), &pDI->rcItem, dwStyle);
 //	//	}
@@ -1080,9 +1162,9 @@ INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 //		switch (wParam)
 //		{
 //		case VK_RETURN:
-//			if (edit_in_focus) {
+//			if (Hall_edit_in_focus) {
 //				wstring temp;
-//				GetWindowTextW(edit_in, &(temp[0]), 1024);
+//				GetWindowTextW(Hall_edit_in, &(temp[0]), 1024);
 //				Send_Message(temp);
 //				break;
 //			}
@@ -1092,7 +1174,7 @@ INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 //	case WM_CTLCOLOREDIT:
 //	{
 //		HWND t_hwnd = (HWND)lParam;
-//		//if (t_hwnd == room_list)
+//		//if (t_hwnd == Hall_room_list)
 //		//{
 //		HDC t_hdc = (HDC)wParam;
 //		SetTextColor(t_hdc, RGB(0, 0, 255));   //设置文字颜色
@@ -1118,208 +1200,163 @@ INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 //	return (INT_PTR)FALSE;
 //}
 
-INT_PTR CALLBACK ROOM(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-	UNREFERENCED_PARAMETER(lParam);
+//INT_PTR CALLBACK ROOM(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
+//	UNREFERENCED_PARAMETER(lParam);
+//	switch (message)
+//	{
+//	case WM_INITDIALOG: {
+//		{
+//			RECT Father_rect;
+//			RECT My_rect;
+//			GetClientRect(_hwnd, &Father_rect);
+//			GetClientRect(hDlg, &My_rect);
+//			status = Room_Status;
+//			SetWindowPos(
+//				hDlg,
+//				NULL,
+//				Father_rect.left + (Father_rect.right - Father_rect.left) / 2 - My_rect.right / 2,
+//				Father_rect.top + (Father_rect.bottom - Father_rect.top) / 2 - My_rect.bottom / 2,
+//				100, 200,
+//				SWP_NOSIZE
+//			);
+//
+//			{
+//				CreateWindow(
+//					L"BUTTON",	// predefined class    不区分大小写
+//					L"开始游戏",       // button text
+//					WS_CHILD | WS_VISIBLE,  // styles     注意 如果样式写错了 Button 将不会正常显示
+//
+//				   // Size and position values are given explicitly, because
+//				   // the CW_USEDEFAULT constant gives zero values for buttons.
+//					My_rect.right - 270,         // starting x position
+//					My_rect.bottom - 70,         // starting y position
+//					80,        // button width
+//					30,        // button height
+//					hDlg,       // parent window
+//					(HMENU)IDB_STARTGAME,       // No menu
+//					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
+//					NULL);      // pointer not needed
+//			}
+//			{
+//				CreateWindow(
+//					L"BUTTON",	// predefined class    不区分大小写
+//					L"退出房间",       // button text
+//					WS_CHILD | WS_VISIBLE,  // styles     注意 如果样式写错了 Button 将不会正常显示
+//
+//				   // Size and position values are given explicitly, because
+//				   // the CW_USEDEFAULT constant gives zero values for buttons.
+//					My_rect.right - 160,         // starting x position
+//					My_rect.bottom - 70,         // starting y position
+//					80,        // button width
+//					30,        // button height
+//					hDlg,       // parent window
+//					(HMENU)IDB_EXITROOM,       // No menu
+//					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
+//					NULL);      // pointer not needed
+//			}
+//		}
+//	case WM_COMMAND:
+//	{
+//		switch (wParam)
+//		{
+//		case IDB_STARTGAME:
+//		{
+//			if (host == false)
+//			{
+//				MessageBox(hDlg, L"您不是房主，请等待房主开始游戏", NULL, MB_OK);
+//				break;
+//			}
+//			send(mysocket, "StartGame", 1023, 0);
+//			break;
+//		}
+//		case IDB_EXITROOM:
+//		{
+//			send(mysocket, "QuitRoom", 1023, 0);
+//			DestroyWindow(hDlg);
+//			status = Hall_Status;
+//			ShowWindow(Hall, SW_SHOW);
+//			UpdateWindow(_hwnd);
+//			break;
+//		}
+//		case START:
+//		{
+//			KillTimer(_hwnd, reconnect);
+//			KillTimer(_hwnd, refrash);
+//			//KillTimer(Hall, refrash);
+//			Init_all();
+//			Hide_Main_UI();
+//			SetTimer(_hwnd, _tank, 20, NULL);
+//			SetTimer(_hwnd, _bullet, 20, NULL);
+//			SetTimer(_hwnd, _online, 25, NULL);
+//			//ShowWindow(hwndButton1, SW_SHOW);
+//
+//			//Game_hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
+//			//CreateIoCompletionPort((HANDLE)mysocket, Game_hIOCP, NULL, 0);
+//			//Game_pPerIO = (PPER_IO_DATA)::GlobalAlloc(GPTR, sizeof(PER_IO_DATA));
+//			//Game_pPerIO->nOperationType = OP_READ;
+//			//WSABUF buf;
+//			//buf.buf = Game_pPerIO->buf;
+//			//buf.len = 1024;
+//			//DWORD dwRecv;
+//			//DWORD dwFlags = 0;
+//			//WSARecv(mysocket, &buf, 1, &dwRecv, &dwFlags, &Game_pPerIO->ol, NULL);
+//			//thread T(Recv_Thread, Game_pPerIO, LPVOID(Game_hIOCP),Game_IOCP_flag);
+//			//T.detach();
+//			isonline_game = true;
+//			isstart = true;
+//			Show_Hall(0);
+//			status = Game_Status;
+//			if (!host)
+//			{
+//				reverse_in = false;
+//				swap(mytank, optank);
+//			}
+//			break;
+//		}
+//		case QUITROOM:
+//		{
+//			MessageBox(hDlg, L"房主已将房间解散！", NULL, MB_OK);
+//			DestroyWindow(hDlg);
+//			status = Hall_Status;
+//			Show_Hall(true);
+//			UpdateWindow(_hwnd);
+//			break;
+//		}
+//		}
+//	}
+//	}
+//	}
+//	return (INT_PTR)FALSE;
+//}
+
+BOOL CALLBACK GetID_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
 	switch (message)
 	{
-	case WM_INITDIALOG: {
-		{
-			RECT Father_rect;
-			RECT My_rect;
-			GetClientRect(_hwnd, &Father_rect);
-			GetClientRect(hDlg, &My_rect);
-			status = Room_Status;
-			SetWindowPos(
-				hDlg,
-				NULL,
-				Father_rect.left + (Father_rect.right - Father_rect.left) / 2 - My_rect.right / 2,
-				Father_rect.top + (Father_rect.bottom - Father_rect.top) / 2 - My_rect.bottom / 2,
-				100, 200,
-				SWP_NOSIZE
-			);
-			{
-				CreateWindow(L"STATIC", L"#101", WS_CHILD | WS_VISIBLE | WS_BORDER | SS_BITMAP,
-					My_rect.left + (My_rect.right - My_rect.left) / 8, My_rect.top + (My_rect.bottom - My_rect.top) / 6,
-					(My_rect.right - My_rect.left) / 4, (My_rect.right - My_rect.left) / 4,
-					hDlg,       // parent window
-					(HMENU)IDB_Bitmap1,       // No menu
-					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
-					NULL);
-				CreateWindow(L"STATIC", L"#102", WS_CHILD | WS_VISIBLE | WS_BORDER | SS_BITMAP,
-					My_rect.left + ((My_rect.right - My_rect.left) / 8) * 5, My_rect.top + (My_rect.bottom - My_rect.top) / 6,
-					(My_rect.right - My_rect.left) / 4, (My_rect.right - My_rect.left) / 4,
-					hDlg,       // parent window
-					(HMENU)IDB_Bitmap2,       // No menu
-					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
-					NULL);
-			}
-
-			{
-				CreateWindow(
-					L"BUTTON",	// predefined class    不区分大小写
-					L"<",       // button text
-					WS_CHILD | WS_VISIBLE,  // styles     注意 如果样式写错了 Button 将不会正常显示
-
-				   // Size and position values are given explicitly, because
-				   // the CW_USEDEFAULT constant gives zero values for buttons.
-					My_rect.left + (My_rect.right - My_rect.left) / 8,         // starting x position
-					My_rect.top + (My_rect.bottom - My_rect.top) / 6 + (My_rect.right - My_rect.left) / 4 + 20,         // starting y position
-					40,        // button width
-					30,        // button height
-					hDlg,       // parent window
-					(HMENU)IDB_ONE,       // No menu
-					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
-					NULL);      // pointer not needed
-				CreateWindow(
-					L"BUTTON",	// predefined class    不区分大小写
-					L">",       // button text
-					WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
-
-				   // Size and position values are given explicitly, because
-				   // the CW_USEDEFAULT constant gives zero values for buttons.
-					My_rect.left + (My_rect.right - My_rect.left) / 8 + (My_rect.right - My_rect.left) / 4 - 40,         // starting x position
-					My_rect.top + (My_rect.bottom - My_rect.top) / 6 + (My_rect.right - My_rect.left) / 4 + 20,         // starting y position
-					40,        // button width
-					30,        // button height
-					hDlg,       // parent window
-					(HMENU)IDB_TWO,       // No menu
-					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
-					NULL);      // pointer not needed
-				CreateWindow(
-					L"BUTTON",	// predefined class    不区分大小写
-					L"<",       // button text
-					WS_CHILD | WS_VISIBLE,  // styles     注意 如果样式写错了 Button 将不会正常显示
-
-				   // Size and position values are given explicitly, because
-				   // the CW_USEDEFAULT constant gives zero values for buttons.
-					My_rect.left + (My_rect.right - My_rect.left) / 8 * 5,         // starting x position
-					My_rect.top + (My_rect.bottom - My_rect.top) / 6 + (My_rect.right - My_rect.left) / 4 + 20,         // starting y position
-					40,        // button width
-					30,        // button height
-					hDlg,       // parent window
-					(HMENU)IDB_THREE,       // No menu
-					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
-					NULL);      // pointer not needed
-				CreateWindow(
-					L"BUTTON",	// predefined class    不区分大小写
-					L">",       // button text
-					WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
-
-				   // Size and position values are given explicitly, because
-				   // the CW_USEDEFAULT constant gives zero values for buttons.
-					My_rect.left + (My_rect.right - My_rect.left) / 8 * 5 + (My_rect.right - My_rect.left) / 4 - 40,         // starting x position
-					My_rect.top + (My_rect.bottom - My_rect.top) / 6 + (My_rect.right - My_rect.left) / 4 + 20,         // starting y position
-					40,        // button width
-					30,        // button height
-					hDlg,       // parent window
-					(HMENU)IDB_FOUR,       // No menu
-					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
-					NULL);      // pointer not needed
-			}
-
-			{
-				CreateWindow(
-					L"BUTTON",	// predefined class    不区分大小写
-					L"开始游戏",       // button text
-					WS_CHILD | WS_VISIBLE,  // styles     注意 如果样式写错了 Button 将不会正常显示
-
-				   // Size and position values are given explicitly, because
-				   // the CW_USEDEFAULT constant gives zero values for buttons.
-					My_rect.right - 270,         // starting x position
-					My_rect.bottom - 70,         // starting y position
-					80,        // button width
-					30,        // button height
-					hDlg,       // parent window
-					(HMENU)IDB_FIVE,       // No menu
-					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
-					NULL);      // pointer not needed
-			}
-			{
-				CreateWindow(
-					L"BUTTON",	// predefined class    不区分大小写
-					L"退出房间",       // button text
-					WS_CHILD | WS_VISIBLE,  // styles     注意 如果样式写错了 Button 将不会正常显示
-
-				   // Size and position values are given explicitly, because
-				   // the CW_USEDEFAULT constant gives zero values for buttons.
-					My_rect.right - 160,         // starting x position
-					My_rect.bottom - 70,         // starting y position
-					80,        // button width
-					30,        // button height
-					hDlg,       // parent window
-					(HMENU)IDB_SIX,       // No menu
-					(HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE),
-					NULL);      // pointer not needed
-			}
-		}
+	case WM_INITDIALOG:
+	{
+		userid_in = GetDlgItem(hDlg, Userid_in);
+		SetWindowTextW(userid_in, my_userid.c_str());
+	}
 	case WM_COMMAND:
 	{
-		switch (wParam)
+		switch (LOWORD(wParam))
 		{
-		case IDB_FIVE:
+		case IDOK:
 		{
-			if (host == false)
-			{
-				MessageBox(hDlg, L"您不是房主，请等待房主开始游戏", NULL, MB_OK);
-				break;
-			}
-			send(mysocket, "StartGame", 1023, 0);
-			break;
+			wchar_t temp[17] = { '\0' };
+			GetWindowTextW(userid_in, temp, 17);
+			my_userid = temp;
+			EndDialog(hDlg, TRUE);
+			return TRUE;
 		}
-		case IDB_SIX:
+		case IDCANCEL:
 		{
-			send(mysocket, "QuitRoom", 1023, 0);
-			DestroyWindow(hDlg);
-			status = Hall_Status;
-			ShowWindow(Hall, SW_SHOW);
-			UpdateWindow(_hwnd);
-			break;
-		}
-		case START:
-		{
-			//KillTimer(Hall, refrash);
-			Init_all();
-			Hide_Main_UI();
-			SetTimer(_hwnd, _tank, 100, NULL);
-			SetTimer(_hwnd, _bullet, 100, NULL);
-			SetTimer(_hwnd, _online, 200, NULL);
-			//ShowWindow(hwndButton1, SW_SHOW);
-
-			//Game_hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
-			//CreateIoCompletionPort((HANDLE)mysocket, Game_hIOCP, NULL, 0);
-			//Game_pPerIO = (PPER_IO_DATA)::GlobalAlloc(GPTR, sizeof(PER_IO_DATA));
-			//Game_pPerIO->nOperationType = OP_READ;
-			//WSABUF buf;
-			//buf.buf = Game_pPerIO->buf;
-			//buf.len = 1024;
-			//DWORD dwRecv;
-			//DWORD dwFlags = 0;
-			//WSARecv(mysocket, &buf, 1, &dwRecv, &dwFlags, &Game_pPerIO->ol, NULL);
-			//thread T(Recv_Thread, Game_pPerIO, LPVOID(Game_hIOCP),Game_IOCP_flag);
-			//T.detach();
-			isonline_game = true;
-			isstart = true;
-			Show_Hall(0);
-			status = Game_Status;
-			if (!host)
-			{
-				reverse_in = false;
-				swap(mytank, optank);
-			}
-			break;
-		}
-		case QUITROOM:
-		{
-			MessageBox(hDlg, L"房主已将房间解散！", NULL, MB_OK);
-			DestroyWindow(hDlg);
-			status = Hall_Status;
-			ShowWindow(Hall, SW_SHOW);
-			UpdateWindow(_hwnd);
-			break;
+			EndDialog(hDlg, FALSE);
+			return FALSE;
 		}
 		}
 	}
 	}
-	}
-	return (INT_PTR)FALSE;
+	return FALSE;
 }

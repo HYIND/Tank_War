@@ -22,8 +22,9 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{e7b54356-d875-4bd5-bdbc-3cf5d2caef80}</ProjectGuid>
-    <RootNamespace>WindowsProject1</RootNamespace>
+    <RootNamespace>Tank_War</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Tank_War</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -78,13 +79,13 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\H\Desktop\WindowsProject1\box2d;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\H\Desktop\WindowsProject1\box2d\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\H\Desktop\Tank_War\box2d;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\H\Desktop\Tank_War\box2d\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Users\H\Desktop\WindowsProject1\box2d;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\H\Desktop\WindowsProject1\box2d\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\H\Desktop\Tank_War\box2d;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\H\Desktop\Tank_War\box2d\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -151,7 +152,7 @@
     <ClInclude Include="D2D_Scene.h" />
     <ClInclude Include="Tank.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="WindowsProject1.h" />
+    <ClInclude Include="Tank_War.h" />
     <ClInclude Include="Method.h" />
     <ClInclude Include="header.h" />
   </ItemGroup>
@@ -159,11 +160,11 @@
     <ClCompile Include="collision.cpp" />
     <ClCompile Include="D2D_Scene.cpp" />
     <ClCompile Include="Tank.cpp" />
-    <ClCompile Include="WindowsProject1.cpp" />
+    <ClCompile Include="Tank_War.cpp" />
     <ClCompile Include="Method.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="WindowsProject1.rc" />
+    <ResourceCompile Include="Tank_War.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\x64\Debug\Resource\Bullet.png" />
@@ -175,19 +176,18 @@
     <Image Include="..\x64\Debug\Resource\jiaran.jpg" />
     <Image Include="..\x64\Debug\Resource\liangliang.bmp" />
     <Image Include="..\x64\Debug\Resource\OP_BK.jpg" />
+    <Image Include="..\x64\Debug\Resource\Pause.png" />
+    <Image Include="..\x64\Debug\Resource\Return.png" />
     <Image Include="..\x64\Debug\Resource\Tank2.bmp" />
     <Image Include="..\x64\Debug\Resource\Tank2.png" />
     <Image Include="..\x64\Debug\Resource\Text_BK.png" />
     <Image Include="..\x64\Debug\Resource\Win.png" />
-    <Image Include="small.ico" />
-    <Image Include="WindowsProject1.ico" />
+    <Image Include="Tank_War.ico" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\x64\Debug\Resource\Cursor.cur" />
-    <None Include="..\x64\debug\resource\cursor1.cur" />
     <None Include="..\x64\debug\resource\jpg1.bin" />
-    <None Include="..\x64\debug\resource\myresour.bin" />
-    <None Include="myresour.bin" />
+    <None Include="..\x64\debug\resource\jpg2.bin" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

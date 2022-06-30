@@ -1,5 +1,4 @@
 #include "Tank.h"
-#include <mutex> 
 using namespace std;
 
 extern ID2D1SolidColorBrush* bullet_pBrush;
