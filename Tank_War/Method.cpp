@@ -1,26 +1,17 @@
 #include"Method.h"
 
-extern bool isstart;
-
-extern int status;
+extern STATUS status;
 
 extern wstring my_userid;
 
-extern HWND hwndButton1;
-extern HWND hwndButton2;
-extern HWND hwndButton3;
-extern HWND hwndButton4;
-extern HWND hwndButton5;
-extern HWND hwndButton6;
 
-extern HWND Hall_room_list;
-extern HWND Hall_user_list;
-extern HWND edit_hall;
-extern HWND Hall_edit_in;
+//extern HWND hwndButton1;
+//extern HWND hwndButton2;
+//extern HWND hwndButton3;
+//extern HWND hwndButton4;
+//extern HWND hwndButton5;
+//extern HWND hwndButton6;
 
-extern HWND Room_user_list;
-extern HWND Room_edit_in;
-extern HWND edit_room;
 
 extern HWND _hwnd;
 extern HDC hdc;
@@ -44,10 +35,10 @@ extern SOCKET mysocket;
 extern HANDLE Hall_hIOCP;
 extern PPER_IO_DATA Hall_pPerIO;
 
-extern void Refresh_opTank(char buf[]);
-extern void Refresh_opbullet(string& re);
-extern void my_destroy();
-extern void op_destory();
+//extern void Refresh_opTank(char buf[]);
+//extern void Refresh_opbullet(string& re);
+//extern void my_destroy();
+//extern void op_destory();
 
 queue<Ping_info> ping_queue;
 int delay = 0;
@@ -97,129 +88,37 @@ string wstring2string(wstring wstr)
 	return str;
 }
 
-//void Get_Init_UI(HWND hWnd) {
-//	RECT rect;
-//	GetClientRect(hWnd, &rect);
-//	{
-//		hwndButton1 = CreateWindow(
-//			L"BUTTON",	// predefined class    不区分大小写
-//			L"暂停",       // button text
-//			WS_CHILD | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
-//
-//		   // Size and position values are given explicitly, because
-//		   // the CW_USEDEFAULT constant gives zero values for buttons.
-//			10,         // starting x position
-//			10,         // starting y position
-//			80,        // button width
-//			30,        // button height
-//			hWnd,       // parent window
-//			(HMENU)IDB_PAUSE,       // No menu
-//			(HINSTANCE)GetWindowLong(hWnd, GWLP_HINSTANCE),
-//			NULL);      // pointer not needed
-//		ShowWindow(hwndButton1, SW_HIDE);
-//	}
-//	{
-//		hwndButton2 = CreateWindow(
-//			L"BUTTON",	// predefined class    不区分大小写
-//			L"本地游戏",       // button text
-//			WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
-//
-//		   // Size and position values are given explicitly, because
-//		   // the CW_USEDEFAULT constant gives zero values for buttons.
-//			(rect.left + rect.right) / 2 - 90,         // starting x position
-//			80,         // starting y position
-//			180,        // button width
-//			50,        // button height
-//			hWnd,       // parent window
-//			(HMENU)IDB_LOCALGAME,       // No menu
-//			(HINSTANCE)GetWindowLong(hWnd, GWLP_HINSTANCE),
-//			NULL);      // pointer not needed
-//	}
-//	{
-//		hwndButton3 = CreateWindow(
-//			L"BUTTON",	// predefined class    不区分大小写
-//			L"联机大厅",       // button text
-//			WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
-//
-//		   // Size and position values are given explicitly, because
-//		   // the CW_USEDEFAULT constant gives zero values for buttons.
-//			(rect.left + rect.right) / 2 - 90,         // starting x position
-//			180,         // starting y position
-//			180,        // button width
-//			50,        // button height
-//			hWnd,       // parent window
-//			(HMENU)IDB_ENTERHALL,       // No menu
-//			(HINSTANCE)GetWindowLong(hWnd, GWLP_HINSTANCE),
-//			NULL);      // pointer not needed
-//	}
-//	{
-//		hwndButton4 = CreateWindow(
-//			L"BUTTON",	// predefined class    不区分大小写
-//			L"设置",       // button text
-//			WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
-//
-//		   // Size and position values are given explicitly, because
-//		   // the CW_USEDEFAULT constant gives zero values for buttons.
-//			(rect.left + rect.right) / 2 - 90,         // starting x position
-//			280,         // starting y position
-//			180,        // button width
-//			50,        // button height
-//			hWnd,       // parent window
-//			(HMENU)IDB_OPTION,       // No menu
-//			(HINSTANCE)GetWindowLong(hWnd, GWLP_HINSTANCE),
-//			NULL);      // pointer not needed
-//	}
-//	{
-//		hwndButton5 = CreateWindow(
-//			L"BUTTON",	// predefined class    不区分大小写
-//			L"退出游戏",       // button text
-//			WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // styles     注意 如果样式写错了 Button 将不会正常显示
-//
-//		   // Size and position values are given explicitly, because
-//		   // the CW_USEDEFAULT constant gives zero values for buttons.
-//			(rect.left + rect.right) / 2 - 90,         // starting x position
-//			380,         // starting y position
-//			180,        // button width
-//			50,        // button height
-//			hWnd,       // parent window
-//			(HMENU)IDB_QUITGAME,       // No menu
-//			(HINSTANCE)GetWindowLong(hWnd, GWLP_HINSTANCE),
-//			NULL);      // pointer not needed
-//	}
+//void Show_Main_UI() {
+//	ShowWindow(hwndButton2, SW_SHOW);
+//	ShowWindow(hwndButton3, SW_SHOW);
+//	ShowWindow(hwndButton4, SW_SHOW);
+//	ShowWindow(hwndButton5, SW_SHOW);
+//}
+
+//void Hide_Main_UI() {
+//	ShowWindow(hwndButton2, SW_HIDE);
+//	ShowWindow(hwndButton3, SW_HIDE);
+//	ShowWindow(hwndButton4, SW_HIDE);
+//	ShowWindow(hwndButton5, SW_HIDE);
+//	//ShowWindow(Hall, SW_HIDE);
+//	ShowWindow(Room, SW_HIDE);
+//}
+
+//void SIG_IO(int sig) {
 //
 //}
 
-void Show_Main_UI() {
-	ShowWindow(hwndButton2, SW_SHOW);
-	ShowWindow(hwndButton3, SW_SHOW);
-	ShowWindow(hwndButton4, SW_SHOW);
-	ShowWindow(hwndButton5, SW_SHOW);
-}
-
-void Hide_Main_UI() {
-	ShowWindow(hwndButton2, SW_HIDE);
-	ShowWindow(hwndButton3, SW_HIDE);
-	ShowWindow(hwndButton4, SW_HIDE);
-	ShowWindow(hwndButton5, SW_HIDE);
-	//ShowWindow(Hall, SW_HIDE);
-	ShowWindow(Room, SW_HIDE);
-}
+//bool isconnecting() {
+//	int i = recv(mysocket, buffer, 1023, MSG_PEEK);
+//	if (i == 0)return false;
+//	else if (i == -1) {
+//		return (errno == EINTR);
+//	}
+//	return true;
+//}
 
 void Return_To_Mune() {
 	isstart = false;
-}
-
-void SIG_IO(int sig) {
-
-}
-
-bool isconnecting() {
-	int i = recv(mysocket, buffer, 1023, MSG_PEEK);
-	if (i == 0)return false;
-	else if (i == -1) {
-		return (errno == EINTR);
-	}
-	return true;
 }
 
 void send_socket(string s) {
@@ -244,7 +143,7 @@ void Return_Class(char buf[]) {
 	}
 	if (!isstart)
 	{
-		if (status == Hall_Status)
+		if (status == STATUS::Hall_Status)
 		{
 			if (temp == "user")
 			{
@@ -271,15 +170,25 @@ void Return_Class(char buf[]) {
 				SendMessage(_hwnd, WM_COMMAND, Enterroom, (LPARAM)_hwnd);
 			}
 		}
-		else if (status == Room_Status)
+		else if (status == STATUS::Room_Status)
 		{
 			if (temp == "Start")
 			{
 				SendMessage(_hwnd, WM_COMMAND, START, (LPARAM)_hwnd);
 			}
-			if (temp == "QuitRoom")
+			else if (temp == "disband")
 			{
 				SendMessage(_hwnd, WM_COMMAND, QUITROOM, (LPARAM)_hwnd);
+			}
+			else if (temp == "Roomuser")
+			{
+				string recv_str(m[0].second + 1, iterEnd);
+				Return_Get_Room_User(recv_str);
+			}
+			else if (temp == "RoomMessage")
+			{
+				string recv_str(m[0].second + 1, iterEnd);
+				Return_Room_Message(recv_str);
 			}
 		}
 	}
@@ -287,21 +196,21 @@ void Return_Class(char buf[]) {
 	{
 		if (temp == "oplocation")
 		{
-			Refresh_opTank(buf);
+			//Refresh_opTank(buf);
 		}
 		else if (temp == "opbullet")
 		{
 			string recv_str(m[0].second + 1, iterEnd);
-			Refresh_opbullet(recv_str);
+			//Refresh_opbullet(recv_str);
 		}
 		else if (temp == "destroy")
 		{
-			my_destroy();
+			//my_destroy();
 			lost_game();
 		}
 		else if (temp == "opdestroy")
 		{
-			op_destory();
+			//op_destory();
 			win_game();
 		}
 	}
@@ -343,6 +252,12 @@ void Return_Hallinfo_Message(string& recv_str) {
 }
 
 void Get_Hallinfo() {
+	static clock_t last_refrash = 0;
+	static clock_t now_refrash = 0;
+	now_refrash = clock();
+	if (now_refrash - last_refrash <= 1000)
+		return;
+	last_refrash = now_refrash;
 	send_socket("Getuser");
 	send_socket("Getroom");
 }
@@ -365,11 +280,11 @@ void Return_Get_Hallinfo_User(string& re) {
 void Return_Get_Hallinfo_Room(string re) {
 	(int)SendMessage(Hall_room_list, LB_RESETCONTENT, 0, 0);
 	{
-		regex user_reg("(#)[^;]*");
+		regex room_reg("(#)[^;]*");
 		string temp;
 		wstring wtemp;
 		sregex_iterator end;
-		for (sregex_iterator iter(re.begin(), re.end(), user_reg); iter != end; iter++)
+		for (sregex_iterator iter(re.begin(), re.end(), room_reg); iter != end; iter++)
 		{
 			string s = (*iter)[0];
 			s += "的房间";
@@ -380,10 +295,10 @@ void Return_Get_Hallinfo_Room(string re) {
 }
 
 void Return_Get_Hallinfo_Roomid(string re) {
-	regex user_reg("[0-9]+");
+	regex roomid_reg("[0-9]+");
 	sregex_iterator end;
 	int counter = 0;
-	for (sregex_iterator iter(re.begin(), re.end(), user_reg); iter != end; iter++) {
+	for (sregex_iterator iter(re.begin(), re.end(), roomid_reg); iter != end; iter++) {
 		string str = (*iter)[0];
 		int id = atoi(str.c_str());
 		room_id[counter] = id;
@@ -392,7 +307,7 @@ void Return_Get_Hallinfo_Roomid(string re) {
 	room_count = counter + 1;
 }
 
-void Send_Message(wstring& w_content) {
+void Send_Hall_Message(wstring& w_content) {
 	//获取当前时间并格式化为字符串
 	auto now = std::chrono::system_clock::now();
 	time_t tt = std::chrono::system_clock::to_time_t(now);
@@ -489,6 +404,8 @@ DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam) {
 
 void Create_Room() {
 	send_socket("CreateRoom");
+	host = true;
+	Set_CurScene(STATUS::Room_Status);
 }
 
 void Enter_Room(int index) {
@@ -529,47 +446,6 @@ HBRUSH OnCtlColorEdit(WPARAM wParam, LPARAM lParam)
 	}
 	ReleaseDC(hEdit1, hDc);
 	return 0;
-}
-
-void Show_Hall(bool flag)
-{
-	if (flag)
-	{
-		(int)SendMessage(Hall_room_list, LB_RESETCONTENT, 0, 0);
-		(int)SendMessage(Hall_user_list, LB_RESETCONTENT, 0, 0);
-		(int)SendMessage(edit_hall, WM_SETTEXT, 0, (LPARAM)L"");
-		(int)SendMessage(Hall_edit_in, WM_SETTEXT, 0, (LPARAM)L"");
-		ShowWindow(edit_hall, SW_SHOW);
-		ShowWindow(Hall_edit_in, SW_SHOW);
-		ShowWindow(Hall_room_list, SW_SHOW);
-		ShowWindow(Hall_user_list, SW_SHOW);
-	}
-	else
-	{
-		ShowWindow(edit_hall, SW_HIDE);
-		ShowWindow(Hall_edit_in, SW_HIDE);
-		ShowWindow(Hall_room_list, SW_HIDE);
-		ShowWindow(Hall_user_list, SW_HIDE);
-	}
-}
-
-void Show_Room(bool flag)
-{
-	if (flag)
-	{
-		(int)SendMessage(Room_user_list, LB_RESETCONTENT, 0, 0);
-		(int)SendMessage(edit_room, WM_SETTEXT, 0, (LPARAM)L"");
-		(int)SendMessage(Room_edit_in, WM_SETTEXT, 0, (LPARAM)L"");
-		ShowWindow(edit_room, SW_SHOW);
-		ShowWindow(Room_edit_in, SW_SHOW);
-		ShowWindow(Room_user_list, SW_SHOW);
-	}
-	else
-	{
-		ShowWindow(edit_room, SW_HIDE);
-		ShowWindow(Room_edit_in, SW_HIDE);
-		ShowWindow(Room_user_list, SW_HIDE);
-	}
 }
 
 bool Init_Hall()
@@ -687,4 +563,202 @@ void setmyuserid()
 {
 	string str = "myuserid:" + wstring2string(my_userid);
 	send_socket(str);
+}
+
+void Get_Room_Info()
+{
+	send_socket("GetRoominfo");
+}
+
+void Return_Get_Room_User(string& re)
+{
+	(int)SendMessage(Room_user_list, LB_RESETCONTENT, 0, 0);
+	wstring wtemp = my_userid + L"(您)";
+	if (host)
+	{
+		wtemp += L"（房主）";
+	}
+	else if (isready)
+	{
+		wtemp += L"（已准备）";
+	}
+	(int)SendMessage(Room_user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
+
+	{
+		regex user_reg("(#)[^;]*");
+		string temp;
+		sregex_iterator end;
+		for (sregex_iterator iter(re.begin(), re.end(), user_reg); iter != end; iter++)
+		{
+			string s = (*iter)[0];
+
+			string::const_iterator iterStart = s.begin();
+			string::const_iterator iterEnd = s.end();
+			regex inter_reg("[:]{2}");
+			smatch m;
+			regex_search(iterStart, iterEnd, m, inter_reg);
+			string ready_str(m[0].second, m[0].second + 1);
+			string name_str(iterStart + 1, m[0].first);
+
+			if (ready_str == "1")
+			{
+				name_str += "（已准备）";
+			}
+			else if (ready_str == "2")
+			{
+				name_str += "（房主）";
+			}
+			wstring name = string2wstring(name_str);
+			(int)SendMessage(Room_user_list, LB_ADDSTRING, 0, (LPARAM) & (name[0]));
+		}
+	}
+}
+
+void Room_Ready()
+{
+	send(mysocket, "Ready", 1023, 0);
+	isready = true;
+	SRoom_nothost->ModifyButton_ID(IDB_READY, IDB_CANCELREADY);
+	SRoom_nothost->ModifyText_byButton(IDB_CANCELREADY, L"取消准备");
+}
+void Room_CancelReady()
+{
+	send(mysocket, "CancelReady", 1023, 0);
+	isready = false;
+	SRoom_nothost->ModifyButton_ID(IDB_CANCELREADY, IDB_READY);
+	SRoom_nothost->ModifyText_byButton(IDB_READY, L"准备");
+}
+
+void Set_CurScene(STATUS status_in)
+{
+	Show_Hall(false);
+	Show_Room(false);
+	switch (status_in)
+	{
+	case STATUS::Room_Status:
+	{
+		isonline_game = false;
+		isstart = false;
+		isready = false;
+		status = STATUS::Room_Status;
+		if (!host)
+		{
+			if (isready)
+			{
+				isready = false;
+				SRoom_nothost->ModifyButton_ID(IDB_CANCELREADY, IDB_READY);
+				SRoom_nothost->ModifyText_byButton(IDB_READY, L"准备");
+			}
+			CurScene = SRoom_nothost;
+		}
+		else
+		{
+			CurScene = SRoom_host;
+		}
+		Show_Room(TRUE);
+		break;
+	}
+	case STATUS::Main:
+	{
+		isonline_game = false;
+		isready = false;
+		isstart = false;
+		host = false;
+		status = STATUS::Main;
+		CurScene = SMain;
+		break;
+	}
+	case STATUS::Option:
+	{
+		status = STATUS::Option;
+		CurScene = SOption;
+		break;
+	}
+	case STATUS::Hall_Status:
+	{
+		isonline_game = false;
+		isready = false;
+		isstart = false;
+		host = false;
+		status = STATUS::Hall_Status;
+		CurScene = SHall;
+		Show_Hall(true);
+		break;
+	}
+	case STATUS::Game_Status:
+	{
+		isstart = true;
+		status = STATUS::Game_Status;
+		if (isonline_game)
+			CurScene = SGaming_online;
+		else CurScene = SGaming_local;
+	}
+	default:
+		break;
+	}
+}
+
+void Send_Room_Message(wstring& w_content) {
+	//获取当前时间并格式化为字符串
+	auto now = std::chrono::system_clock::now();
+	time_t tt = std::chrono::system_clock::to_time_t(now);
+	struct tm t;   //tm结构指针
+	auto time_tm = localtime_s(&t, &tt);
+	char charTime[25] = { 0 };
+	sprintf_s(charTime, "%d-%02d-%02d %02d:%02d:%02d", t.tm_year + 1900,
+		t.tm_mon + 1, t.tm_mday, t.tm_hour,
+		t.tm_min, t.tm_sec);
+	string strTime = charTime;
+
+	string user_head = "我  ";
+	user_head += strTime;
+	user_head += ":\r\n";
+
+	wstring w_user_head = string2wstring(user_head);
+	//清空输入文本框
+	SendMessage(Room_edit_in, WM_SETTEXT, 0, (LPARAM)L"");
+	//发送消息到文本框
+	SendMessage(edit_room, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_head[0]));
+	SendMessage(edit_room, EM_REPLACESEL, FALSE, (LPARAM) & (w_content[0]));
+	SendMessage(edit_room, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
+
+	//发送消息
+	string s = wstring2string(w_content);
+	s = "RoomSend:" + s;
+	send(mysocket, &(s[0]), 1023, 0);
+}
+
+void Return_Room_Message(string& recv_str) {
+	string::const_iterator iterStart = recv_str.begin();
+	string::const_iterator iterEnd = recv_str.end();
+	smatch _content;
+	regex message_reg("_content");
+	regex_search(iterStart, iterEnd, _content, message_reg);
+
+	//获取当前时间并格式化为字符串
+	auto now = std::chrono::system_clock::now();
+	time_t tt = std::chrono::system_clock::to_time_t(now);
+	struct tm t;   //tm结构指针
+	auto time_tm = localtime_s(&t, &tt);
+	char charTime[25] = { 0 };
+	sprintf_s(charTime, "%d-%02d-%02d %02d:%02d:%02d", t.tm_year + 1900,
+		t.tm_mon + 1, t.tm_mday, t.tm_hour,
+		t.tm_min, t.tm_sec);
+
+	//消息头(用户ID 时间;)
+	string strTime = charTime;
+	string user_head(iterStart, _content[0].first - 1);
+	user_head += "  ";
+	user_head += strTime;
+	user_head += ";\r\n";
+	wstring w_user_head = string2wstring(user_head);
+
+	//消息内容
+	string content(_content[0].second + 1, iterEnd);
+	wstring w_content = string2wstring(content);
+
+	//发送消息到文本框
+	SendMessage(edit_room, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_head[0]));
+	SendMessage(edit_room, EM_REPLACESEL, FALSE, (LPARAM) & (w_content[0]));
+	SendMessage(edit_room, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
 }

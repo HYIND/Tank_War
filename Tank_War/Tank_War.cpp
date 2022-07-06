@@ -3,7 +3,7 @@
 
 #include "Method.h"
 #include "D2D_Scene.h"
-#include "Tank.h"
+#include "Game.h"
 #include "box2d/box2d.h"
 
 //#include <GdiPlus.h>
@@ -23,16 +23,16 @@ using namespace D2D1;
 //ID2D1BitmapRenderTarget* pBitmapRenderTarget;
 //ID2D1BitmapBrush* pBitmapBrush;
 
+
 // 全局变量:
 wstring my_userid = L"unname";
-
-Tank tank1(60, 60);
-Tank tank2(60, 60);
-Tank* mytank = &tank1;
-Tank* optank = &tank2;
-
-Tank* my_in = &tank1;
-Tank* op_in = &tank2;
+//Tank tank1(60, 60);
+//Tank tank2(60, 60);
+//Tank* mytank = &tank1;
+//Tank* optank = &tank2;
+//
+//Tank* my_in = &tank1;
+//Tank* op_in = &tank2;
 
 //ID2D1SolidColorBrush* pBrush = NULL; // A black brush, reflect the line color
 
@@ -43,14 +43,11 @@ Tank* op_in = &tank2;
 HRESULT hr = S_OK;
 
 HDC hdc;
-bool isstart = false;
-bool host = false;
-bool isonline_game = false;
 bool Hall_IOCP_flag = false;
 bool Game_IOCP_flag = false;
 bool reverse_in = false;
 
-int status = NONE;
+STATUS status = STATUS::Main;
 
 HANDLE Hall_hIOCP;
 PPER_IO_DATA Hall_pPerIO;
@@ -185,7 +182,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	/*HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_VISIBLE | WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX | WS_CLIPCHILDREN | WS_EX_COMPOSITED | WS_EX_LAYERED,
 		0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), nullptr, nullptr, hInstance, nullptr);*/
 
-	//op_bitmap = LoadBitmap(hInstance, MAKEINTRESOURCE(BITMAP_BK));
+		//op_bitmap = LoadBitmap(hInstance, MAKEINTRESOURCE(BITMAP_BK));
 
 	if (!hWnd)
 	{
@@ -209,41 +206,40 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 //
 
-
 DWORD WINAPI Render_Thread()
 {
+	timeInOneFps = 1.0 / Fps; // 每秒60帧，则1帧就是约16毫秒
+	PAINTSTRUCT ps;
+	hdc = BeginPaint(_hwnd, &ps);
+	RECT rect;
+	GetClientRect(_hwnd, &rect);
+
+	_LARGE_INTEGER time_now;
+	_LARGE_INTEGER time_last;
+	double dqFreq;		//计时器频率
+	LARGE_INTEGER f;	//计时器频率
+	QueryPerformanceFrequency(&f);
+	dqFreq = (double)f.QuadPart;
+	QueryPerformanceCounter(&time_last);//获取计时器跳数
 	while (true)
 	{
-		PAINTSTRUCT ps;
-		RECT rect;
-		GetClientRect(_hwnd, &rect);
-		hdc = BeginPaint(_hwnd, &ps);
-		// TODO: 在此处添加使用 hdc 的任何绘图代码...
+		QueryPerformanceCounter(&time_now);
+		while ((time_now.QuadPart - time_last.QuadPart) / dqFreq < timeInOneFps)
+			QueryPerformanceCounter(&time_now);
+		time_last = time_now;
 		{
 			pRenderTarget->BeginDraw();
 			pRenderTarget->Clear(ColorF(1, 1, 1, 1));
-			if (status != Game_Status) {
+			if (status != STATUS::Game_Status) {
 				pRenderTarget->DrawBitmap(OP_pBitmap, D2D1::RectF(0, 0, rect.right, rect.bottom));
 				if (FAILED(hr))
 				{
 					MessageBox(NULL, L"Draw failed!", L"Error", 0);
 				}
 			}
-			if (status == Game_Status)
-			{
-				if (tank1.isalive)
-					tank1.DrawTank(pRenderTarget, P1_CurTank_Form);
-				if (tank2.isalive)
-					tank2.DrawTank(pRenderTarget, P2_CurTank_Form);
-
-				if (tank1.bullet_head)
-					(*(tank1.bullet_head)).Drawbullet(pRenderTarget, NULL);
-				if (tank2.bullet_head)
-					(*(tank2.bullet_head)).Drawbullet(pRenderTarget, NULL);
-			}
 			if (CurScene)
 				CurScene->DrawScene();
-			if (status == Hall_Status || status == Room_Status || (status == Game_Status && isonline_game))
+			if (status == STATUS::Hall_Status || status == STATUS::Room_Status || (status == STATUS::Game_Status && isonline_game))
 			{
 				wstring ws = to_wstring(delay) + L"ms";
 				const wchar_t* delay_ch = ws.c_str();
@@ -255,13 +251,27 @@ DWORD WINAPI Render_Thread()
 					pMain_Brush
 				);
 			}
+			if (status == STATUS::Game_Status)
+			{
+				Cur_Game->Draw();
+				//if (tank1.isalive)
+				//	tank1.DrawTank(pRenderTarget, P1_CurTank_Form);
+				//if (tank2.isalive)
+				//	tank2.DrawTank(pRenderTarget, P2_CurTank_Form);
+
+				//if (tank1.bullet_head)
+				//	(*(tank1.bullet_head)).Drawbullet(pRenderTarget, NULL);
+				//if (tank2.bullet_head)
+				//	(*(tank2.bullet_head)).Drawbullet(pRenderTarget, NULL);
+			}
 			hr = pRenderTarget->EndDraw();
 		}
-		EndPaint(_hwnd, &ps); \
 	}
+	EndPaint(_hwnd, &ps);
+	return 0;
 }
 
-enum { _tank, _bullet, _online, refrash, reconnect, ping };	//定时器ID
+enum { _game, _online, hall_refrash, reconnect, ping, room_refrash };	//定时器ID
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	PAINTSTRUCT ps;
@@ -273,18 +283,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CREATE:
 	{
-
-		mytank->InitTank(rect.left + mytank->width / 2 + 20, (rect.bottom - rect.top) / 2, RIGHT);
-		optank->InitTank(rect.right - optank->width / 2 - 20, (rect.bottom - rect.top) / 2, LEFT);
 		//Get_Init_UI(_hwnd);
-		Get_Initinfo();
-
 
 		Init_D2DResource();
 		//hr = Loadbitmap(pIWICFactory, pRenderTarget, OP_Resource, &OP_pBitmap);
 
-		Init_GameResource();
-
+		Init_Style();
+		Init_Map();
 
 		//hr = pRenderTarget->CreateCompatibleRenderTarget(
 		//	D2D1::SizeF(tank1.width, tank1.height),
@@ -349,43 +354,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 		case _online:
 		{
-			if (isonline_game)
-			{
-				send_location(mytank);
-				send_bullet(mytank->bullet_head);
-			}
-			break;
+			//if (isonline_game)
+			//{
+			//	send_location(mytank);
+			//	send_bullet(mytank->bullet_head);
+			//}
+			//break;
 		}
-		case _tank:
+		case _game:
 		{
 			if (GetFocus() != _hwnd)
 				break;
-			if (!reverse_in)
-			{
-				mytank->Tank1_Move(rect);
-				if (!isonline_game)
-					optank->Tank2_Move(rect);
-				break;
-			}
-			else {
-				mytank->Tank2_Move(rect);
-				if (!isonline_game)
-					optank->Tank1_Move(rect);
-				break;
-			}
-		}
-		case _bullet:
-		{
-			if (mytank->bullet_head)
-				(*(mytank->bullet_head)).Move(rect);
-			if (!isonline_game)
-			{
-				if (optank->bullet_head)
-					(*(optank->bullet_head)).Move(rect);
-			}
+			Cur_Game->Move();
 			break;
 		}
-		case refrash:
+		case hall_refrash:
 			Get_Hallinfo();
 			break;
 			//case reconnect:
@@ -395,6 +378,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			//		(int)SendMessage(Hall_user_list, LB_RESETCONTENT, 0, 0);
 			//		(int)SendMessage(Hall_user_list, LB_ADDSTRING, 0, (LPARAM) L"已断开连接，检查网络！");
 			//	}
+		case room_refrash:
+			Get_Room_Info();
+			break;
 		case ping:
 			send_pingmessage();
 			break;
@@ -442,20 +428,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_KILLFOCUS:
 	{
-		if (status == Game_Status && !isonline_game)
+		if (status == STATUS::Game_Status && !isonline_game)
 		{
-			KillTimer(hWnd, _tank);
-			KillTimer(hWnd, _bullet);
+			KillTimer(hWnd, _game);
 		}
 		break;
 	}
 
 	case WM_SETFOCUS:
 	{
-		if (status == Game_Status && !isonline_game)
+		if (status == STATUS::Game_Status && !isonline_game)
 		{
-			SetTimer(hWnd, _tank, 20, NULL);
-			SetTimer(hWnd, _bullet, 20, NULL);
+			SetTimer(hWnd, _game, 20, NULL);
 		}
 		break;
 	}
@@ -466,20 +450,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		// 分析菜单选择:
 		switch (status)
 		{
-		case NONE:
+		case STATUS::Main:
 		{
 			switch (wmId)
 			{
 				// 开始游戏
 			case IDB_LOCALGAME: {
-				Init_all();
+				//Init_all();
 				//Hide_Main_UI();
 				//ShowWindow(hwndButton1, SW_SHOW);
-				SetTimer(hWnd, _tank, 20, NULL);
-				SetTimer(hWnd, _bullet, 20, NULL);
+				Cur_Game->Init_Game();
+				SetTimer(hWnd, _game, 20, NULL);
 				CurScene = SGaming_local;
 				isstart = true;
-				status = Game_Status;
+				status = STATUS::Game_Status;
 				isonline_game = false;
 				InvalidateRect(hWnd, NULL, TRUE);
 				break;
@@ -494,15 +478,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				//Hide_Main_UI();
 				Show_Hall(true);
 				CurScene = SHall;
-				status = Hall_Status;
+				status = STATUS::Hall_Status;
 				SetTimer(hWnd, reconnect, 5000, NULL);
-				SetTimer(hWnd, refrash, 3000, NULL);
+				SetTimer(hWnd, hall_refrash, 4000, NULL);
 				SetTimer(hWnd, ping, 2000, NULL);
 				UpdateWindow(hWnd);
 				break;
 			}
 							  // 设置
-			case IDB_OPTION: {break; }
+			case IDB_OPTION: {
+				CurScene = SOption;
+				status = STATUS::Option;
+				break;
+			}
 			case IDB_QUITGAME:// 退出游戏
 			{
 				DestroyWindow(hWnd);
@@ -511,19 +499,48 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		}
-		case Hall_Status:
+		case STATUS::Option:
+		{
+			switch (wmId)
+			{
+			case IDB_EXITOPTION:
+			{
+				CurScene = SMain;
+				status = STATUS::Main;
+				break;
+			}
+			case IDB_SETFPS_30:
+			{
+				Set_Fps(30.0);
+				break;
+			}
+			case IDB_SETFPS_60:
+			{
+				Set_Fps(60.0);
+				break;
+			}
+			case IDB_SETFPS_144:
+			{
+				Set_Fps(144.0);
+				break;
+			}
+			default:
+				break;
+			}
+
+		}
+		case STATUS::Hall_Status:
 		{
 			switch (wmId)
 			{
 			case Enterroom:
 			{
-				Show_Hall(FALSE);
-				status = Room_Status;
 				//ShowWindow(Hall, SW_HIDE);
 				//Room = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_ROOM), _hwnd, ROOM);
 				//ShowWindow(Room, SW_SHOW);
-				CurScene = SRoom_nothost;
-				Show_Room(TRUE);
+				KillTimer(hWnd, hall_refrash);
+				SetTimer(hWnd, room_refrash, 1000, NULL);
+				Set_CurScene(STATUS::Room_Status);
 				UpdateWindow(_hwnd);
 				break;
 			}
@@ -545,13 +562,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			// 离开大厅
 			case IDB_EXITHALL:
 				closesocket(mysocket);
-				Show_Hall(false);
-				CurScene = SMain;
 				//Show_Main_UI();
 				KillTimer(hWnd, reconnect);
-				KillTimer(hWnd, refrash);
+				KillTimer(hWnd, hall_refrash);
 				KillTimer(hWnd, ping);
-				status = NONE;
+				Set_CurScene(STATUS::Main);
 				UpdateWindow(_hwnd);
 				break;
 			case IDB_HALL_SEND:
@@ -559,28 +574,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				wchar_t temp[1024] = { '\0' };
 				GetWindowTextW(Hall_edit_in, temp, 1024);
 				wstring str = temp;
-				Send_Message(str);
+				Send_Hall_Message(str);
 				break;
 			}
 			// 创建房间
 			case IDB_CREATEROOM:
 			{
+				KillTimer(hWnd, hall_refrash);
+				SetTimer(hWnd, room_refrash, 1000, NULL);
 				Create_Room();
 				//Room = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_ROOM), _hwnd, ROOM);
 				//ShowWindow(Hall, SW_HIDE);
 				//ShowWindow(Room, SW_SHOW);
-				Show_Hall(FALSE);
-				status = Room_Status;
-				host = true;
-				CurScene = SRoom_host;
-				Show_Room(TRUE);
 				UpdateWindow(_hwnd);
 				break;
 			}
 			}
 			break;
 		}
-		case Room_Status:
+		case STATUS::Room_Status:
 		{
 			switch (wmId)
 			{
@@ -596,75 +608,80 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			case IDB_READY:
 			{
-				send(mysocket, "READY", 1023, 0);
+				Room_Ready();
+				break;
+			}
+			case IDB_CANCELREADY:
+			{
+				Room_CancelReady();
+				break;
+			}
+			case QUITROOM:
+			{
+				KillTimer(hWnd, room_refrash);
+				MessageBox(hWnd, L"房主已将房间解散！", NULL, MB_OK);
+				Set_CurScene(STATUS::Hall_Status);
+				SetTimer(hWnd, hall_refrash, 4000, NULL);
+				UpdateWindow(hWnd);
 				break;
 			}
 			case IDB_EXITROOM:
 			{
+				KillTimer(hWnd, room_refrash);
 				send(mysocket, "QuitRoom", 1023, 0);
-				Show_Room(FALSE);
-				status = Hall_Status;
-				CurScene = SHall;
-				Show_Hall(TRUE);
+				Set_CurScene(STATUS::Hall_Status);
+				SetTimer(hWnd, hall_refrash, 4000, NULL);
 				UpdateWindow(hWnd);
 				break;
 			}
 			case START:
 			{
-				KillTimer(hWnd, reconnect);
-				KillTimer(hWnd, refrash);
-				Init_all();
-				SetTimer(hWnd, _tank, 20, NULL);
-				SetTimer(hWnd, _bullet, 20, NULL);
+				KillTimer(hWnd, room_refrash);
+				//Init_all();
+				SetTimer(hWnd, _game, 20, NULL);
 				SetTimer(hWnd, _online, 50, NULL);
 
 				isonline_game = true;
 				isstart = true;
-				Show_Room(FALSE);
-				CurScene = SGaming_online;
-				status = Game_Status;
-				if (!host)
-				{
-					reverse_in = false;
-					swap(mytank, optank);
-				}
+				Set_CurScene(STATUS::Game_Status);
+				//if (!host)
+				//{
+				//	reverse_in = false;
+				//	swap(mytank, optank);
+				//}
 				break;
 			}
-			case QUITROOM:
+			case IDB_ROOM_SEND:
 			{
-				MessageBox(hWnd, L"房主已将房间解散！", NULL, MB_OK);
-				Show_Room(false);
-				status = Hall_Status;
-				CurScene = SHall;
-				Show_Hall(true);
-				UpdateWindow(hWnd);
+				wchar_t temp[1024] = { '\0' };
+				GetWindowTextW(Room_edit_in, temp, 1024);
+				wstring str = temp;
+				if (!str.empty())
+					Send_Room_Message(str);
 				break;
 			}
 			}
 			break;
 		}
-		case Game_Status:
+		case STATUS::Game_Status:
 		{
 			switch (wmId)
 			{
 				// 暂停
 			case IDB_PAUSE:
 			{
-				KillTimer(hWnd, _tank);
-				KillTimer(hWnd, _bullet);
+				KillTimer(hWnd, _game);
 				int i = DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG_PAUSE), hWnd, Pause);
 				switch (i) {
 				case 20:	//重新开始
-					Init_all();
+					//Init_all();
 				case 10:	//回到游戏
-					SetTimer(hWnd, _tank, 20, NULL);
-					SetTimer(hWnd, _bullet, 20, NULL);
+					SetTimer(hWnd, _game, 20, NULL);
 					break;
 				case 30:	//回到主菜单
-					KillTimer(hWnd, _tank);
-					KillTimer(hWnd, _bullet);
+					KillTimer(hWnd, _game);
 					isstart = false;
-					status = NONE;
+					status = STATUS::Main;
 					CurScene = SMain;
 					break;
 				}
@@ -688,14 +705,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				isstart = false;
 				isonline_game = true;
 				ReturnToRoom();
-				KillTimer(_hwnd, _tank);
-				KillTimer(_hwnd, _bullet);
+				KillTimer(_hwnd, _game);
 				KillTimer(_hwnd, _online);
 				SetTimer(hWnd, reconnect, 5000, NULL);
-				//SetTimer(hWnd, refrash, 3000, NULL);
-				CurScene = (host == TRUE) ? SRoom_host : SRoom_nothost;
+				//SetTimer(hWnd, hall_refrash, 4000, NULL);
+				Set_CurScene(STATUS::Room_Status);
 				Show_Room(TRUE);
-				status = Room_Status;
 				break;
 			}
 			}
@@ -748,78 +763,78 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		GetClientRect(hWnd, &rect);
 		switch (wParam)
 		{
-		case VK_SPACE:
-		{
-			if (isstart)
-			{
-				if (isonline_game)
-				{
-					if (host)
-					{
-						if (!reverse_in)
-							mytank->Addbullet();
-						break;
-					}
-					else {
-						if (reverse_in)
-						{
-							mytank->Addbullet();
-							break;
-						}
-					}
-				}
-				else {
-					if (!reverse_in)
-					{
-						if (mytank->isalive)
-							mytank->Addbullet();
-						break;
-					}
-					else
-					{
-						if (optank->isalive)
-							optank->Addbullet();
-						break;
-					}
-				}
-			}
-		}
-		case VK_OEM_2:
-		{
-			if (isstart)
-			{
-				if (isonline_game)
-				{
-					if (!host)
-					{
-						if (!reverse_in)
-							mytank->Addbullet();
-						break;
-					}
-					else {
-						if (reverse_in)
-						{
-							mytank->Addbullet();
-							break;
-						}
-					}
-				}
-				else {
-					if (!reverse_in)
-					{
-						if (optank->isalive)
-							optank->Addbullet();
-						break;
-					}
-					else
-					{
-						if (mytank->isalive)
-							mytank->Addbullet();
-						break;
-					}
-				}
-			}
-		}
+		//case VK_SPACE:
+		//{
+		//	if (isstart)
+		//	{
+		//		if (isonline_game)
+		//		{
+		//			if (host)
+		//			{
+		//				if (!reverse_in)
+		//					mytank->Addbullet();
+		//				break;
+		//			}
+		//			else {
+		//				if (reverse_in)
+		//				{
+		//					mytank->Addbullet();
+		//					break;
+		//				}
+		//			}
+		//		}
+		//		else {
+		//			if (!reverse_in)
+		//			{
+		//				if (mytank->isalive)
+		//					mytank->Addbullet();
+		//				break;
+		//			}
+		//			else
+		//			{
+		//				if (optank->isalive)
+		//					optank->Addbullet();
+		//				break;
+		//			}
+		//		}
+		//	}
+		//}
+		//case VK_OEM_2:
+		//{
+		//	if (isstart)
+		//	{
+		//		if (isonline_game)
+		//		{
+		//			if (!host)
+		//			{
+		//				if (!reverse_in)
+		//					mytank->Addbullet();
+		//				break;
+		//			}
+		//			else {
+		//				if (reverse_in)
+		//				{
+		//					mytank->Addbullet();
+		//					break;
+		//				}
+		//			}
+		//		}
+		//		else {
+		//			if (!reverse_in)
+		//			{
+		//				if (optank->isalive)
+		//					optank->Addbullet();
+		//				break;
+		//			}
+		//			else
+		//			{
+		//				if (mytank->isalive)
+		//					mytank->Addbullet();
+		//				break;
+		//			}
+		//		}
+		//	}
+		//}
 		//InvalidateRect(hWnd, NULL, TRUE);
 		}
 	}
@@ -990,7 +1005,7 @@ INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 //	{
 //	case WM_INITDIALOG:
 //	{
-//		status = Hall_Status;
+//		status = STATUS::Hall_Status;
 //		SetTimer(hDlg, reconnect, 5000, NULL);
 //		SetTimer(hDlg, refrash, 3000, NULL);
 //		{
@@ -1047,7 +1062,7 @@ INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 //		{
 //		case Enterroom:
 //		{
-//			status = Room_Status;
+//			status = STATUS::Room_Status;
 //			ShowWindow(Hall, SW_HIDE);
 //			Room = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_ROOM), _hwnd, ROOM);
 //			ShowWindow(Room, SW_SHOW);
@@ -1094,7 +1109,7 @@ INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 //			host = true;
 //			ShowWindow(Room, SW_SHOW);
 //			UpdateWindow(_hwnd);
-//			status = Room_Status;
+//			status = STATUS::Room_Status;
 //			Create_Room();
 //			break;
 //		}
@@ -1210,7 +1225,7 @@ INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 //			RECT My_rect;
 //			GetClientRect(_hwnd, &Father_rect);
 //			GetClientRect(hDlg, &My_rect);
-//			status = Room_Status;
+//			status = STATUS::Room_Status;
 //			SetWindowPos(
 //				hDlg,
 //				NULL,
@@ -1273,7 +1288,7 @@ INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 //		{
 //			send(mysocket, "QuitRoom", 1023, 0);
 //			DestroyWindow(hDlg);
-//			status = Hall_Status;
+//			status = STATUS::Hall_Status;
 //			ShowWindow(Hall, SW_SHOW);
 //			UpdateWindow(_hwnd);
 //			break;
@@ -1305,7 +1320,7 @@ INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 //			isonline_game = true;
 //			isstart = true;
 //			Show_Hall(0);
-//			status = Game_Status;
+//			status = STATUS::Game_Status;
 //			if (!host)
 //			{
 //				reverse_in = false;
@@ -1317,7 +1332,7 @@ INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 //		{
 //			MessageBox(hDlg, L"房主已将房间解散！", NULL, MB_OK);
 //			DestroyWindow(hDlg);
-//			status = Hall_Status;
+//			status = STATUS::Hall_Status;
 //			Show_Hall(true);
 //			UpdateWindow(_hwnd);
 //			break;

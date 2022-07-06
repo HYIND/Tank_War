@@ -31,3 +31,10 @@
 #include <string>
 #include <queue>
 #include <mutex> 
+
+#include <map>
+
+extern bool isstart;
+extern bool isready;
+extern bool host;
+extern bool isonline_game;

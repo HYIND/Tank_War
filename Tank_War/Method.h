@@ -4,6 +4,7 @@
 //#include <regex>
 //#include <thread>
 #include "header.h"
+#include"D2D_Scene.h"
 
 using namespace std;
 
@@ -35,6 +36,18 @@ struct socket_messageinfo
 	}
 };
 
+
+//struct player_info
+//{
+//
+//};
+//
+//class Room_info
+//{
+//	vector<>
+//};
+
+
 //按钮、位图及事件标识符
 
 
@@ -56,7 +69,7 @@ extern int delay;
 
 
 //status 枚举
-enum { NONE, Hall_Status, Room_Status, Game_Status };
+enum class STATUS { Main, Option, Hall_Status, Room_Status, Game_Status };
 
 //void START(HWND hWnd);
 //void Get_Init_UI(HWND hWnd);
@@ -69,19 +82,27 @@ string wstring2string(wstring wstr);
 
 bool isconnecting();
 void send_socket(string s);
+
 void Get_Hallinfo();
-void Send_Message(wstring& w_content);
+void Send_Hall_Message(wstring& w_content);
 void Create_Room();
 void Enter_Room(int index);
+
+void Get_Room_Info();
+void Send_Room_Message(wstring& w_content);
+
 void win_game();
 void lost_game();
-void send_pingmessage();
 void ReturnToRoom();
+
+void send_pingmessage();
 
 void Return_Get_Hallinfo_User(string& re);
 void Return_Get_Hallinfo_Room(string re);
 void Return_Get_Hallinfo_Roomid(string re);
 void Return_Hallinfo_Message(string& recv_str);
+void Return_Get_Room_User(string& re);
+void Return_Room_Message(string& recv_str);
 void Return_Class(char buf[]);
 void Ping_Count(string&);
 
@@ -98,6 +119,8 @@ void Show_Room(bool flag);
 
 bool Init_Hall();
 
-void Init_GameResource();
-
 void setmyuserid();
+
+void Room_Ready();
+void Room_CancelReady();
+void Set_CurScene(STATUS status_in);

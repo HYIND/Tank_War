@@ -14,56 +14,61 @@
 //#include <string>
 
 #include "header.h"
+#include "D2D.h"
 
-//首位：3-主菜单,4-Hall,5-Room,6-Game
-//次位：3-按钮，4-控件
+/*
+ 各场景按钮和控件的编号
+ 首位：3-Main,4-Hall,5-Room,6-Game,7-Option
+ 次位：3-按钮，4-控件
+*/
 
 #define IDB_LOCALGAME     3301
 #define IDB_ENTERHALL   3302
 #define IDB_OPTION	3303
 #define IDB_QUITGAME	3304
 
-
-
 #define IDB_REFRESH 4301
 #define IDB_HALL_SEND 4302
 #define IDB_ENTERROOM 4303
 #define IDB_CREATEROOM 4304
 #define IDB_EXITHALL 4305
-
 #define HALL_EDIT_IN 4401
 #define EDIT_HALL 4402
 #define HALL_ROOM_LIST 4403
 #define HALL_USER_LIST 4404
 
 #define IDB_READY 5301
-#define IDB_STARTGAME	5302
-#define IDB_EXITROOM		5303
-#define IDB_ROOM_SEND 5304
-
+#define IDB_CANCELREADY 5302
+#define IDB_STARTGAME	5303
+#define IDB_EXITROOM	5304
+#define IDB_ROOM_SEND 5305
 #define ROOM_EDIT_IN 5401
 #define EDIT_ROOM 5402
 #define ROOM_USER_LIST 5403
 
 #define IDB_PAUSE 6301
 #define IDB_RETURN 6302
-
 #define ReturnInEndGame 6303
+
+#define IDB_SETFPS_30 7301
+#define IDB_SETFPS_60 7302
+#define IDB_SETFPS_144 7303
+#define IDB_EXITOPTION 7304
 
 using namespace std;
 using namespace D2D1;
 
-class Scene;
+//位图类，文字类、按钮类和场景基类
 class D2D_Bitmap;
 class D2D_Text;
 class D2D_Button;
+class Scene;
 
-extern ID2D1Factory* pD2DFactory;
-extern ID2D1HwndRenderTarget* pRenderTarget;
-extern IWICImagingFactory* pIWICFactory;
-extern IDWriteFactory* pIDWriteFactory;
+//场景派生类
+class Scene_Option;
 
-extern ID2D1SolidColorBrush* bullet_pBrush;
+/* 以下为内部变量的声明 */
+extern ID2D1SolidColorBrush* pbullet_Brush;
 
 extern ID2D1SolidColorBrush* pHall_Brush;
 extern ID2D1SolidColorBrush* pHall_ClickBrush;
@@ -79,18 +84,13 @@ extern IDWriteTextFormat* pPing_Format;
 extern ID2D1Bitmap* OP_pBitmap;
 extern ID2D1Bitmap* TEXT_pBitmap;
 
-extern ID2D1Bitmap* P1_CurTank_Form;
-extern ID2D1Bitmap* P2_CurTank_Form;
-extern ID2D1Bitmap* DefTank_pBitmap;
-
-
 extern D2D1_RECT_F DelayRect;
 
 extern Scene* CurScene;
 
 extern Scene* SMain;
 extern Scene* SHall;
-extern Scene* SOption;
+extern Scene_Option* SOption;
 extern Scene* SRoom_host;
 extern Scene* SRoom_nothost;
 extern Scene* SPause;
@@ -98,11 +98,6 @@ extern Scene* SGaming_online;
 extern Scene* SGaming_local;
 extern Scene* SWinGame;
 extern Scene* SFailGame;
-
-
-extern HWND _hwnd;
-extern HINSTANCE hInst;
-
 
 extern HWND userid_in;
 
@@ -117,6 +112,9 @@ extern HWND Room_edit_in;
 extern HWND edit_room;
 extern HWND Room;
 
+/* 以下为外部变量的声明 */
+extern HINSTANCE hInst;
+extern HWND _hwnd;
 extern int MoveX, MoveY, ClickX, ClickY;
 
 //D2D 贴图
@@ -169,7 +167,7 @@ public:
 	int Button_location3 = 0;
 	int Button_location4 = 0;
 	int id = 0;
-	//int status = 0;
+
 	D2D_Bitmap* Bitmap = NULL;
 	D2D_Text* Text = NULL;
 	D2D_Button(int loc1, int loc2, int loc3, int loc4, int id) :
@@ -214,19 +212,43 @@ public:
 	D2D_Button* LoadButton(int loc1, int loc2, int loc3, int loc4, int id, D2D_Bitmap* Bitmap);
 	D2D_Button* LoadButton(int loc1, int loc2, int loc3, int loc4, int id, D2D_Text* Text);
 
+	// 修改按钮
+	bool ModifyButton_Location(int id, int loc1, int loc2, int loc3, int loc4, bool offset);
+	bool ModifyButton_ID(int oldid, int newid);
+	//修改文字
+	bool ModifyText_byButton(int id, wstring newstr);
+	//修改位图信息
+	bool ModifyBitmap_byButton(int id, int loc1, int loc2, int loc3, int loc4, bool offset, float opcaity);
+
+	//删除按钮 
+	bool DeleteButton(int id);
+
 	// 绘制函数
-	void DrawScene();
+	virtual void DrawScene();
 	// 鼠标移动消息反馈函数
 	void Move();
 	// 点击消息反馈函数
 	void Click();
-private:
+protected:
 	ID2D1Factory* pD2DFactory = NULL; // Direct2D factory
 	ID2D1HwndRenderTarget* pRenderTarget = NULL;
 	IWICImagingFactory* pIWICFactory;
 	IDWriteFactory* pIDWriteFactory = NULL;
 };
 
-void InitScene(ID2D1Factory*& pD2DFactory, ID2D1HwndRenderTarget*& pRenderTarget, IWICImagingFactory*& pIWICFactory, IDWriteFactory*& pDWriteFactory);
-void Load_D2DUI(RECT& rect);
+
+class Scene_Option :public Scene
+{
+public:
+	using Scene::Scene;
+	virtual void DrawScene();
+};
+
+//class Scene_Room :public Scene
+//{
+//public:
+//	using Scene::Scene;
+//	virtual void DrawScene();
+//};
+
 void Init_D2DResource();
