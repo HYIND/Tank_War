@@ -49,6 +49,7 @@
 #define IDB_PAUSE 6301
 #define IDB_RETURN 6302
 #define ReturnInEndGame 6303
+#define ReturnToHall 6304
 
 #define IDB_SETFPS_30 7301
 #define IDB_SETFPS_60 7302
@@ -112,10 +113,15 @@ extern HWND Room_edit_in;
 extern HWND edit_room;
 extern HWND Room;
 
+//status 枚举
+enum class STATUS { Main, Option, Hall_Status, Room_Status, Game_Status };
+extern STATUS status;
+
 /* 以下为外部变量的声明 */
 extern HINSTANCE hInst;
 extern HWND _hwnd;
 extern int MoveX, MoveY, ClickX, ClickY;
+
 
 //D2D 贴图
 class D2D_Bitmap

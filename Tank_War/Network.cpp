@@ -1,17 +1,9 @@
-#include"Method.h"
+#include"Network.h"
+#include"Game.h"
 
 extern STATUS status;
 
 extern wstring my_userid;
-
-
-//extern HWND hwndButton1;
-//extern HWND hwndButton2;
-//extern HWND hwndButton3;
-//extern HWND hwndButton4;
-//extern HWND hwndButton5;
-//extern HWND hwndButton6;
-
 
 extern HWND _hwnd;
 extern HDC hdc;
@@ -48,61 +40,6 @@ queue<socket_messageinfo*> message_queue;
 mutex messagequeue_mutex;
 bool Process_Stop = false;
 
-//void START(HWND hWnd) {}
-
-wstring string2wstring(string str)
-{
-	LPCSTR pszSrc = str.c_str();
-	int nLen = MultiByteToWideChar(CP_ACP, 0, pszSrc, -1, NULL, 0);
-	if (nLen == 0)
-		return std::wstring(L"");
-
-	wchar_t* pwszDst = new wchar_t[nLen];
-	if (!pwszDst)
-		return std::wstring(L"");
-
-	MultiByteToWideChar(CP_ACP, 0, pszSrc, -1, pwszDst, nLen);
-	std::wstring wstr(pwszDst);
-	delete[] pwszDst;
-	pwszDst = NULL;
-
-	return wstr;
-}
-
-string wstring2string(wstring wstr)
-{
-	LPCWSTR pwszSrc = wstr.c_str();
-	int nLen = WideCharToMultiByte(CP_ACP, 0, pwszSrc, -1, NULL, 0, NULL, NULL);
-	if (nLen == 0)
-		return std::string("");
-
-	char* pszDst = new char[nLen];
-	if (!pszDst)
-		return std::string("");
-
-	WideCharToMultiByte(CP_ACP, 0, pwszSrc, -1, pszDst, nLen, NULL, NULL);
-	std::string str(pszDst);
-	delete[] pszDst;
-	pszDst = NULL;
-
-	return str;
-}
-
-//void Show_Main_UI() {
-//	ShowWindow(hwndButton2, SW_SHOW);
-//	ShowWindow(hwndButton3, SW_SHOW);
-//	ShowWindow(hwndButton4, SW_SHOW);
-//	ShowWindow(hwndButton5, SW_SHOW);
-//}
-
-//void Hide_Main_UI() {
-//	ShowWindow(hwndButton2, SW_HIDE);
-//	ShowWindow(hwndButton3, SW_HIDE);
-//	ShowWindow(hwndButton4, SW_HIDE);
-//	ShowWindow(hwndButton5, SW_HIDE);
-//	//ShowWindow(Hall, SW_HIDE);
-//	ShowWindow(Room, SW_HIDE);
-//}
 
 //void SIG_IO(int sig) {
 //
@@ -117,13 +54,23 @@ string wstring2string(wstring wstr)
 //	return true;
 //}
 
-void Return_To_Mune() {
-	isstart = false;
-}
 
 void send_socket(string s) {
 	char* send_buf = &(s[0]);
 	int i = send(mysocket, send_buf, 1023, 0);
+}
+
+void set_tankid(string& s)
+{
+	string::const_iterator iterStart = s.begin();
+	string::const_iterator iterEnd = s.end();
+	smatch m;
+	regex reg("[0-9]+");
+	regex_search(iterStart, iterEnd, m, reg);
+	string temp;
+	temp = m[0];
+	int id = atoi(temp.c_str());
+	set_My_id(id);
 }
 
 void Return_Class(char buf[]) {
@@ -178,7 +125,7 @@ void Return_Class(char buf[]) {
 			}
 			else if (temp == "disband")
 			{
-				SendMessage(_hwnd, WM_COMMAND, QUITROOM, (LPARAM)_hwnd);
+				SendMessage(_hwnd, WM_COMMAND, DISBANDINROOM, (LPARAM)_hwnd);
 			}
 			else if (temp == "Roomuser")
 			{
@@ -190,28 +137,42 @@ void Return_Class(char buf[]) {
 				string recv_str(m[0].second + 1, iterEnd);
 				Return_Room_Message(recv_str);
 			}
+			else if (temp == "tankid")
+			{
+				string recv_str(m[0].second + 1, iterEnd);
+				set_tankid(recv_str);
+			}
 		}
 	}
 	else
 	{
-		if (temp == "oplocation")
+		if (temp == "tankinfo")
 		{
-			//Refresh_opTank(buf);
+			Cur_Game->refrash_tankinfo(buf);
 		}
-		else if (temp == "opbullet")
+		else if (temp == "bulletinfo")
 		{
-			string recv_str(m[0].second + 1, iterEnd);
-			//Refresh_opbullet(recv_str);
+			Cur_Game->refrash_bullet(buf);
 		}
-		else if (temp == "destroy")
+		else if (temp == "destroyed")
 		{
-			//my_destroy();
-			lost_game();
+			Cur_Game->destoryed(buf);
 		}
-		else if (temp == "opdestroy")
+		else if (temp == "youdestroyed")
 		{
-			//op_destory();
-			win_game();
+			Cur_Game->mydestoryed();
+		}
+		else if (temp == "wingame")
+		{
+			SendMessage(_hwnd, WM_COMMAND, WIN, (LPARAM)_hwnd);
+		}
+		else if (temp == "failgame")
+		{
+			SendMessage(_hwnd, WM_COMMAND, FAIL, (LPARAM)_hwnd);
+		}
+		else if (temp == "disband")
+		{
+			SendMessage(_hwnd, WM_COMMAND, DISBANDINEND, (LPARAM)_hwnd);
 		}
 	}
 }
@@ -423,31 +384,6 @@ void lost_game()
 	SendMessage(_hwnd, WM_COMMAND, FAIL, (LPARAM)_hwnd);
 }
 
-HBRUSH OnCtlColorEdit(WPARAM wParam, LPARAM lParam)
-{
-	HWND hEdit1, hedit2;
-	hEdit1 = ::GetDlgItem(_hwnd, 1017);
-	HDC hDc = GetDC(Hall_room_list);
-
-	if (hEdit1 == (HWND)lParam)
-	{
-		::SetTextColor(hDc, RGB(0, 0, 255)); //RGB(0, 0, 255)
-		::SetBkMode(hDc, TRANSPARENT);
-		//SetBkColor(RGB(125, 255, 0)); //文字背景
-		HBRUSH hbr = (HBRUSH)::GetStockObject(NULL_BRUSH); //编辑框背景。注意：和文字背景不是一个意思。
-		//TRANSPARENT,OPAQUE
-
-		//说明:TRANSPARENT是设置背景透明,但是控件多行滚动时有重影,
-
-		//还没弄明白,所以用的OPAOUE,这也不明白是啥玩意,但能达到目的就OK,
-
-		//::SetBkColor(hDc,RGB(255,0,0));
-		return hbr;//返回背景色的画刷
-	}
-	ReleaseDC(hEdit1, hDc);
-	return 0;
-}
-
 bool Init_Hall()
 {
 	WSAStartup(MAKEWORD(2, 2), &wsa);
@@ -462,8 +398,6 @@ bool Init_Hall()
 	int RecvBuf = 1024 * 1024;
 	int SendBuf = 1024 * 1024;
 
-	//setsockopt(mysocket, SOL_SOCKET, SO_SNDBUF, (const char*)&SendBuf, sizeof(int));
-	//setsockopt(mysocket, SOL_SOCKET, SO_RCVBUF, (const char*)&RecvBuf, sizeof(int));
 	int flag = 1;
 	setsockopt(mysocket, IPPROTO_TCP, TCP_NODELAY, (const char*)&flag, sizeof(flag));
 
@@ -538,7 +472,6 @@ void send_pingmessage()
 	ping_queue.push(ping_info);
 
 	send_socket("ping:" + to_string(ping_id));
-	//delay = ping_id;
 
 	if (ping_id != INT32_MAX)
 	{
@@ -552,11 +485,6 @@ void send_pingmessage()
 			ping_queue.pop();
 		}
 	}
-}
-
-void ReturnToRoom()
-{
-	send_socket("returntoroom");
 }
 
 void setmyuserid()
@@ -627,75 +555,6 @@ void Room_CancelReady()
 	isready = false;
 	SRoom_nothost->ModifyButton_ID(IDB_CANCELREADY, IDB_READY);
 	SRoom_nothost->ModifyText_byButton(IDB_READY, L"准备");
-}
-
-void Set_CurScene(STATUS status_in)
-{
-	Show_Hall(false);
-	Show_Room(false);
-	switch (status_in)
-	{
-	case STATUS::Room_Status:
-	{
-		isonline_game = false;
-		isstart = false;
-		isready = false;
-		status = STATUS::Room_Status;
-		if (!host)
-		{
-			if (isready)
-			{
-				isready = false;
-				SRoom_nothost->ModifyButton_ID(IDB_CANCELREADY, IDB_READY);
-				SRoom_nothost->ModifyText_byButton(IDB_READY, L"准备");
-			}
-			CurScene = SRoom_nothost;
-		}
-		else
-		{
-			CurScene = SRoom_host;
-		}
-		Show_Room(TRUE);
-		break;
-	}
-	case STATUS::Main:
-	{
-		isonline_game = false;
-		isready = false;
-		isstart = false;
-		host = false;
-		status = STATUS::Main;
-		CurScene = SMain;
-		break;
-	}
-	case STATUS::Option:
-	{
-		status = STATUS::Option;
-		CurScene = SOption;
-		break;
-	}
-	case STATUS::Hall_Status:
-	{
-		isonline_game = false;
-		isready = false;
-		isstart = false;
-		host = false;
-		status = STATUS::Hall_Status;
-		CurScene = SHall;
-		Show_Hall(true);
-		break;
-	}
-	case STATUS::Game_Status:
-	{
-		isstart = true;
-		status = STATUS::Game_Status;
-		if (isonline_game)
-			CurScene = SGaming_online;
-		else CurScene = SGaming_local;
-	}
-	default:
-		break;
-	}
 }
 
 void Send_Room_Message(wstring& w_content) {

@@ -15,5 +15,14 @@ void Init_Style_Resource()
 void Init_Style()
 {
 	Init_Style_Resource();
-	Tank_Style_info[TankStyle::DEFAULT] = new Style_info(60, 60, DefTank_pBitmap);
+
+	/* Tank风格资源 */
+	{
+		Tank_Style_info[TankStyle::DEFAULT] = new Style_info(60, 60, 5, DefTank_pBitmap);
+	}
+
+	/* bullet风格资源 */
+	{
+		Bullet_Style_info[BulletStyle::DEFAULT] = new Style_info(3, 3, 7, NULL);
+	}
 }

@@ -157,7 +157,7 @@
     <ClInclude Include="Tank.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Tank_War.h" />
-    <ClInclude Include="Method.h" />
+    <ClInclude Include="Network.h" />
     <ClInclude Include="header.h" />
   </ItemGroup>
   <ItemGroup>
@@ -170,7 +170,7 @@
     <ClCompile Include="Style.cpp" />
     <ClCompile Include="Tank.cpp" />
     <ClCompile Include="Tank_War.cpp" />
-    <ClCompile Include="Method.cpp" />
+    <ClCompile Include="Network.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Tank_War.rc" />

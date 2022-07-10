@@ -29,88 +29,17 @@ queue <bullet*> to_destroyed_bulletinfo;
 //}
 
 
-Tank::Tank() {}
-
-Tank::Tank(Tank* t) {
-	this->width = t->width;
-	this->height = t->height;
-	this->locationX = t->locationX;
-	this->locationY = t->locationY;
-	this->direction = t->direction;
-	this->isalive = t->isalive;
-}
-
 Tank::Tank(int width, int height)
-{
-	this->width = width;
-	this->height = width;
-	//if (!isregister)
-	//{
-	//	register_tank(this);
-	//	isregister = true;
-	//}
-}
+	:width(width), height(height) {}
 
-Tank::Tank(int X, int Y, int width, int height, int direction,bool alive)
-{
-	this->width = width;
-	this->height = height;
-	this->locationX = X;
-	this->locationY = Y;
-	this->direction = direction;
-	//if (!isregister)
-	//{
-	//	register_tank(this);
-	//	isregister = true;
-	//}
-}
+Tank::Tank(int X, int Y, int width, int height, int direction, int speed, bool alive)
+	: locationX(X), locationY(Y), width(width), height(height), direction(direction), speed(speed), isalive(alive) {}
 
-Tank::Tank(int X, int Y, int width, int height, int direction, bool alive, bool isregister)
+void Tank::Set_Parameter_byStyle(TankStyle tankstyle)
 {
-	this->width = width;
-	this->height = height;
-	this->locationX = X;
-	this->locationY = Y;
-	this->direction = direction;
-	this->isalive = alive;
-	//this->isregister = isregister;
-}
-
-void Tank::InitTank(int X, int Y, int width, int height, int direction)
-{
-	this->width = width;
-	this->height = height;
-	this->locationX = X;
-	this->locationY = Y;
-	this->direction = direction;
-	//if (!isregister)
-	//{
-	//	register_tank(this);
-	//	isregister = true;
-	//}
-}
-
-void Tank::InitTank(int X, int Y, int direction)
-{
-	this->locationX = X;
-	this->locationY = Y;
-	this->direction = direction;
-	//if (!isregister)
-	//{
-	//	register_tank(this);
-	//	isregister = true;
-	//}
-}
-
-void Tank::InitTank(int width, int height)
-{
-	this->width = width;
-	this->height = height;
-	//if (!isregister)
-	//{
-	//	register_tank(this);
-	//	isregister = true;
-	//}
+	this->width = Tank_Style_info[tankstyle]->width;
+	this->height = Tank_Style_info[tankstyle]->height;
+	this->speed = Tank_Style_info[tankstyle]->speed;
 }
 
 void Tank::DrawTank(ID2D1HwndRenderTarget* pRenderTarget)
@@ -125,47 +54,45 @@ void Tank::DrawTank(ID2D1HwndRenderTarget* pRenderTarget)
 	pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 };
 
-void Tank::Tank_Move(Direction direction)
-{
-	switch (direction)
-	{
-	case UP:
-		if (this->direction != UP)
-			this->direction = UP;
-		else this->locationY -= 10;
-		break;
-	case DOWN:
-		if (this->direction != DOWN)
-			this->direction = DOWN;
-		else this->locationY += 10;
-		break;
-	case LEFT:
-		if (this->direction != LEFT)
-			this->direction = LEFT;
-		else this->locationX -= 10;
-		break;
-	case RIGHT:
-		if (this->direction != RIGHT)
-			this->direction = RIGHT;
-		else this->locationX += 10;
-		break;
-	default:
-		break;
-	}
-
-	//	//斜向移动
-	//	if (GetAsyncKeyState('W') & 0x8000 && GetAsyncKeyState('D') & 0x8000)
-	//	{
-	//		if ((this->locationY - this->height / 2 - 10) < rect.top)
-	//			this->locationY = rect.top + this->height / 2;
-	//		else this->locationY -= 10;
-
-	//		if ((this->locationX + this->width / 2 + 10) > rect.right)
-	//			this->locationX = rect.right - this->width / 2;
-	//		else this->locationX += 10;
-	//		return;
-	//	}
-}
+//void Tank::Tank_Move(Direction direction)
+//{
+//	switch (direction)
+//	{
+//	case UP:
+//		this->locationY -= speed;
+//		break;
+//	case DOWN:
+//		if (this->direction != DOWN)
+//			this->direction = DOWN;
+//		this->locationY += 10;
+//		break;
+//	case LEFT:
+//		if (this->direction != LEFT)
+//			this->direction = LEFT;
+//		this->locationX -= 10;
+//		break;
+//	case RIGHT:
+//		if (this->direction != RIGHT)
+//			this->direction = RIGHT;
+//		this->locationX += 10;
+//		break;
+//	default:
+//		break;
+//	}
+//
+//	//	//斜向移动
+//	//	if (GetAsyncKeyState('W') & 0x8000 && GetAsyncKeyState('D') & 0x8000)
+//	//	{
+//	//		if ((this->locationY - this->height / 2 - 10) < rect.top)
+//	//			this->locationY = rect.top + this->height / 2;
+//	//		else this->locationY -= 10;
+//
+//	//		if ((this->locationX + this->width / 2 + 10) > rect.right)
+//	//			this->locationX = rect.right - this->width / 2;
+//	//		else this->locationX += 10;
+//	//		return;
+//	//	}
+//}
 
 //void Tank::Tank2_Move(RECT& rect)
 //{
@@ -203,16 +130,24 @@ void Tank::Tank_Move(Direction direction)
 //	}
 //}
 
-void Tank::Addbullet() {
+
+void bullet::Set_Parameter_byStyle(BulletStyle bulletstyle)
+{
+	this->width = Bullet_Style_info[bulletstyle]->width;
+	this->height = Bullet_Style_info[bulletstyle]->height;
+	this->speed = Bullet_Style_info[bulletstyle]->speed;
+}
+
+void Tank::Addbullet(BulletStyle bulletstyle) {
 	if (this->bullet_head == NULL)
 	{
-		this->bullet_head = new bullet(this->locationX, this->locationY, this->direction, 20, this);
+		this->bullet_head = new bullet(this->locationX, this->locationY, this->direction, bulletstyle, this);
 	}
 	else {
 		bullet* temp = this->bullet_head;
 		while (temp->next != NULL)
 			temp = temp->next;
-		temp->next = new bullet(this->locationX, this->locationY, this->direction, 20, this, temp);
+		temp->next = new bullet(this->locationX, this->locationY, this->direction, bulletstyle, this, temp);
 	}
 }
 
@@ -236,156 +171,20 @@ void bullet::Drawbullet()
 		(*(this->next)).Drawbullet();
 }
 
-void bullet::Move(RECT rect)
-{
-	switch (this->direction)
-	{
-	case UP:
-		if ((this->locationY - this->height / 2 - speed) < rect.top || crash(rect, UP))
-			destroy();
-		else this->locationY -= speed;
-		break;
-	case DOWN:
-		if ((this->locationY + this->height / 2 + speed) > rect.bottom || crash(rect, DOWN))
-			destroy();
-		else this->locationY += speed;
-		break;
-	case LEFT:
-		if ((this->locationX - this->width / 2 - speed) < rect.left || crash(rect, LEFT))
-			destroy();
-		else this->locationX -= speed;
-		break;
-	case RIGHT:
-		if ((this->locationX + this->width / 2 + speed) > rect.right || crash(rect, RIGHT))
-			destroy();
-		else this->locationX += speed;
-		break;
-	}
-	if (this->next != NULL)
-		(*(this->next)).Move(rect);
-}
-
 void bullet::destroy() {
 	if (this->last != NULL) {
 		this->last->next = this->next;
 	}
 	else
 		this->owner->bullet_head = this->next;
+
 	if (this->next != NULL)
 		this->next->last = this->last;
-	else (this->owner)->bullet_head = NULL;
+	owner->bullet_count--;
 }
 
-bool bullet::crash(RECT rect, int direction)
-{
-	int new_locationX = this->locationX;
-	int new_locationY = this->locationY;
-	switch (direction)
-	{
-	case UP:
-		new_locationY = this->locationY - speed;
-		break;
-	case DOWN:
-		new_locationY = this->locationY + speed;
-		break;
-	case LEFT:
-		new_locationX = this->locationX - speed;
-		break;
-	case RIGHT:
-		new_locationX = this->locationX + speed;
-		break;
-	}
-	//for (auto& it : tank_list)
-	//{
-	//	if ((it->cur != this->owner) && it->cur->isalive)
-	//	{
-	//		int half_height = it->cur->height / 2;
-	//		int half_width = it->cur->width / 2;
-	//		if (new_locationY <  it->cur->locationY + half_height && new_locationY >it->cur->locationY - half_height
-	//			&& new_locationX < it->cur->locationX + half_width && new_locationX >it->cur->locationX - half_width)
-	//		{
-	//			if (!isonline_game)
-	//				it->cur->isalive = false;
-	//			else
-	//			{
-	//				this->locationX = new_locationX;
-	//				this->locationY = new_locationY;
-	//				send_destroy(this);
-	//			}
-	//			/*tank_list.erase(it);*/
-	//			return true;
-	//		}
-	//	}
-	//}
-	return false;
-}
-
-void send_location(Tank* tank)
-{
-	char buffer[1024] = "mylocation:";
-	int i = sizeof(Tank);
-	memcpy(&buffer[11], (char*)tank, sizeof(Tank));
-	send(mysocket, buffer, 1023, 0);
-}
-
-void send_bullet(bullet* cur)
-{
-	string str = "mybullet:";
-	while (cur != NULL)
-	{
-		str = str + "{"
-			+ to_string(cur->locationX)
-			+ ","
-			+ to_string(cur->locationY)
-			+ "}";
-		cur = cur->next;
-	}
-	send(mysocket, (const char*)&str[0], 1023, 0);
-}
-
-//void Refresh_opTank(char buf[])
-//{
-//	try
-//	{
-//		memcpy(optank, &buf[11], 24);
-//	}
-//	catch (exception& e)
-//	{
-//		return;
-//	}
-//}
-
-mutex mtx; // 主线程唤醒子线程的锁
-condition_variable cv;//主线程唤醒子线程的条件变量 
-//void Refresh_opbullet(string& re)
-//{
-//	bullet* newhead = new bullet();
-//	bullet* temp = newhead;
-//
-//	regex user_reg("[0-9]+");
-//	sregex_iterator end;
-//	for (sregex_iterator iter(re.begin(), re.end(), user_reg); iter != end; iter++) {
-//		string s1 = ((*iter)[0]);
-//		if (++iter != end)
-//		{
-//			string s2 = ((*iter)[0]);
-//			if (temp->next == NULL)
-//			{
-//				temp->next = new bullet();
-//				temp = temp->next;
-//				temp->locationX = atoi(s1.c_str());
-//				temp->locationY = atoi(s2.c_str());
-//				temp->speed = 20;
-//				temp->owner = optank;
-//			}
-//		}
-//		else break;
-//	}
-//	optank->bullet_head = newhead->next;
-//	to_destroyed_bulletinfo.push(optank->bullet_head);
-//	//cv.notify_one();
-//}
-
+mutex mtx;
+condition_variable cv;
 void destory_bulletinfo()
 {
 	bullet* cur = NULL;
@@ -408,23 +207,3 @@ void destory_bulletinfo()
 		lck.unlock();
 	}
 }
-
-void send_destroy(bullet* bullet)
-{
-	string str = "destroy:{";
-	str += to_string(bullet->locationX);
-	str += ",";
-	str += to_string(bullet->locationY);
-	str += "}";
-	send(mysocket, (const char*)&(str[0]), 1023, 0);
-}
-
-//void my_destroy()
-//{
-//	mytank->isalive = false;
-//}
-//
-//void op_destory()
-//{
-//	optank->isalive = false;
-//}

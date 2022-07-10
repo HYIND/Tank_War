@@ -1,82 +1,445 @@
 #include "Game.h"
 
-Game* Cur_Game = new Game();
+extern SOCKET mysocket;
 
-void Game::Init_Game(int id)
+Game* Cur_Game = new Game();
+int my_tank_location = 1;
+
+extern RECT _rect;
+
+void Game::Init_Game(int map_id, int my_id)
 {
-	this->map_info = Map_list[id];
+	this->map_info = Map_list[map_id];
 	for (auto& v : map_info.Init_Location)
 	{
 		Tank* tank = new Tank(v.x, v.y,
 			Tank_Style_info[v.tank_style]->width,
 			Tank_Style_info[v.tank_style]->height,
-			v.direction, v.isalive);
+			v.direction,
+			Tank_Style_info[v.tank_style]->speed,
+			v.isalive);
 		Tank_info[v.Tank_id] = tank;
+	}
+	this->player_alive = map_info.user_limited;
+	this->my_tankid = my_id;
+	if (!isonline_game)
+	{
+		ptank1 = Tank_info[1];
+		ptank2 = Tank_info[2];
+	}
+	else
+	{
+		ptank1 = Tank_info[my_tankid];
+	}
+}
+
+bool collision(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2)
+{
+	//¼ì²âYÖáÅö×²,Åö×²Ôò·µ»Øtrue;
+	bool collisionY = y1 - height1 / 2 < y2 + height2 / 2 == y1 + height1 / 2 > y2 - height2 / 2;
+	//¼ì²âXÖáÅö×²
+	bool collisionX = x1 - width1 / 2 < x2 + width2 / 2 == x1 + width1 / 2 > x2 - width2 / 2;
+
+	if (collisionX && collisionY)
+	{
+		return true;
+	}
+	return false;
+}
+
+void Game::Tank_Input()
+{
+	if (GetAsyncKeyState('W') & 0x8000)
+	{
+		if (ptank1->direction != UP)
+		{
+			ptank1->direction = UP;
+		}
+		else
+		{
+			Tank_Move(ptank1);
+		}
+	}
+	else if (GetAsyncKeyState('A') & 0x8000)
+	{
+		if (ptank1->direction != LEFT)
+		{
+			ptank1->direction = LEFT;
+		}
+		else
+		{
+			Tank_Move(ptank1);
+		}
+	}
+	else if (GetAsyncKeyState('S') & 0x8000)
+	{
+		if (ptank1->direction != DOWN)
+		{
+			ptank1->direction = DOWN;
+		}
+		else
+		{
+			Tank_Move(ptank1);
+		}
+	}
+	else if (GetAsyncKeyState('D') & 0x8000)
+	{
+		if (ptank1->direction != RIGHT)
+		{
+			ptank1->direction = RIGHT;
+		}
+		else
+		{
+			Tank_Move(ptank1);
+		}
+	}
+	if (GetAsyncKeyState(VK_SPACE) & 0x8000)
+	{
+		if (ptank1->bullet_count < ptank1->bullet_limited)
+		{
+			ptank1->bullet_now = clock();
+			if (ptank1->bullet_now - ptank1->bullet_last > 250)
+			{
+				ptank1->Addbullet(BulletStyle::DEFAULT);
+				ptank1->bullet_count++;
+				ptank1->bullet_last = ptank1->bullet_now;
+			}
+		}
+	}
+	if (!isonline_game)
+	{
+		if (GetAsyncKeyState(VK_UP) & 0x8000)
+		{
+			if (ptank2->direction != UP)
+			{
+				ptank2->direction = UP;
+			}
+			else
+			{
+				Tank_Move(ptank2);
+			}
+		}
+		else if (GetAsyncKeyState(VK_LEFT) & 0x8000)
+		{
+			if (ptank2->direction != LEFT)
+			{
+				ptank2->direction = LEFT;
+			}
+			else
+			{
+				Tank_Move(ptank2);
+			}
+		}
+		else if (GetAsyncKeyState(VK_DOWN) & 0x8000)
+		{
+			if (ptank2->direction != DOWN)
+			{
+				ptank2->direction = DOWN;
+			}
+			else
+			{
+				Tank_Move(ptank2);
+			}
+		}
+		else if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
+		{
+			if (ptank2->direction != RIGHT)
+			{
+				ptank2->direction = RIGHT;
+			}
+			else
+			{
+				Tank_Move(ptank2);
+			}
+		}
+		if (GetAsyncKeyState(VK_OEM_2) & 0x8000)
+		{
+			if (ptank2->bullet_count < ptank2->bullet_limited)
+			{
+				ptank2->bullet_now = clock();
+				if (ptank2->bullet_now - ptank2->bullet_last > 250)
+				{
+					ptank2->Addbullet(BulletStyle::DEFAULT);
+					ptank2->bullet_count++;
+					ptank2->bullet_last = ptank2->bullet_now;
+				}
+			}
+		}
 	}
 }
 
 void Game::Move()
 {
-	if (isonline_game)
-	{
-	}
-	else
-	{
-		if (GetAsyncKeyState('W') & 0x8000)
-		{
-			Tank_info[1]->Tank_Move(UP);
-		}
-		else if (GetAsyncKeyState('A') & 0x8000)
-		{
-			Tank_info[1]->Tank_Move(LEFT);
-		}
-		else if (GetAsyncKeyState('S') & 0x8000)
-		{
-			Tank_info[1]->Tank_Move(DOWN);
-		}
-		else if (GetAsyncKeyState('D') & 0x8000)
-		{
-			Tank_info[1]->Tank_Move(RIGHT);
-		}
-
-		if (GetAsyncKeyState(VK_UP) & 0x8000)
-		{
-			Tank_info[2]->Tank_Move(UP);
-		}
-		else if (GetAsyncKeyState(VK_LEFT) & 0x8000)
-		{
-			Tank_info[2]->Tank_Move(LEFT);
-		}
-		else if (GetAsyncKeyState(VK_DOWN) & 0x8000)
-		{
-			Tank_info[2]->Tank_Move(DOWN);
-		}
-		else if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
-		{
-			Tank_info[2]->Tank_Move(RIGHT);
-		}
-	}
-}
-
-void Game::Draw(bool isonline)
-{
-	if (isonline)
-	{
-
-	}
-	else
+	if (!isonline_game)
 	{
 		for (auto& v : Tank_info)
 		{
-			if (v.second->isalive)
-			{
-				v.second->DrawTank();
-			}
 			if (v.second->bullet_head)
-			{
-				v.second->bullet_head->Drawbullet();
-			}
+				Bullet_Move(v.second->bullet_head);
 		}
-		map_info.DrawMap();
 	}
+	else
+	{
+		if (ptank1->bullet_head)
+			Bullet_Move(ptank1->bullet_head);
+	}
+}
+
+void Game::Tank_Move(Tank* ptank)
+{
+	int new_locationX = ptank->locationX;
+	int new_locationY = ptank->locationY;
+	switch (ptank->direction)
+	{
+	case UP:
+		new_locationY -= ptank->speed;
+		break;
+	case DOWN:
+		new_locationY += ptank->speed;
+		break;
+	case LEFT:
+		new_locationX -= ptank->speed;
+		break;
+	case RIGHT:
+		new_locationX += ptank->speed;
+		break;
+	}
+	for (auto& v : Tank_info)
+	{
+		if (v.second == ptank)
+			continue;
+		Tank* pother_tank = v.second;
+		if (collision(new_locationX, new_locationY,
+			ptank->width, ptank->height,
+			pother_tank->locationX, pother_tank->locationY,
+			pother_tank->width, pother_tank->height))
+		{
+			new_locationY = pother_tank->locationY + pother_tank->height / 2 + ptank->height / 2;
+			return;
+		}
+	}
+	if (new_locationX - ptank->width / 2 < _rect.left)
+	{
+		ptank->locationX = _rect.left + ptank->width / 2;
+		return;
+	}
+	if (new_locationX + ptank->width / 2 > _rect.right)
+	{
+		ptank->locationX = _rect.right - ptank->width / 2;
+		return;
+	}
+	if (new_locationY - ptank->height / 2 < _rect.top)
+	{
+		ptank->locationY = _rect.top + ptank->height / 2;
+		return;
+	}
+	if (new_locationY + ptank->height / 2 > _rect.bottom)
+	{
+		ptank->locationY = _rect.bottom - ptank->height / 2;
+		return;
+	}
+	ptank->locationY = new_locationY;
+	ptank->locationX = new_locationX;
+}
+
+// destorytank:(INT){INT,INT,bulletStyle}
+void Game::send_destory(int id, bullet* pbullet)
+{
+	char ch[1024] = "destroytank:";
+
+	int cur_loc = 12;
+	ch[cur_loc] = '(';
+	cur_loc++;
+	memcpy(&ch[cur_loc], &id, sizeof(int));
+	cur_loc += sizeof(int);
+	ch[cur_loc] = ')';
+	cur_loc++;
+	ch[cur_loc] = '{';
+	cur_loc++;
+	memcpy(&ch[cur_loc], &(pbullet->locationX), sizeof(int) * 3 + sizeof(BulletStyle));
+	cur_loc += sizeof(int) * 3 + sizeof(BulletStyle);
+	ch[cur_loc] = '}';
+
+	send(mysocket, (const char*)&ch[0], 1023, 0);
+}
+
+void Game::Bullet_Move(bullet* pbullet)
+{
+	if (!pbullet) return;
+	int new_locationX = pbullet->locationX;
+	int new_locationY = pbullet->locationY;
+	switch (pbullet->direction)
+	{
+	case UP:
+		new_locationY -= pbullet->speed;
+		break;
+	case DOWN:
+		new_locationY += pbullet->speed;
+		break;
+	case LEFT:
+		new_locationX -= pbullet->speed;
+		break;
+	case RIGHT:
+		new_locationX += pbullet->speed;
+		break;
+	}
+	pbullet->locationX = new_locationX;
+	pbullet->locationY = new_locationY;
+	for (auto& v : Tank_info)
+	{
+		if (v.second == pbullet->owner || v.second->isalive == false)
+			continue;
+		Tank* pother_tank = v.second;
+		if (collision(pbullet->locationX, pbullet->locationY,
+			pbullet->width, pbullet->height,
+			pother_tank->locationX, pother_tank->locationY,
+			pother_tank->width, pother_tank->height))
+		{
+			if (isonline_game)
+			{
+				send_destory(v.first, pbullet);
+				pbullet->destroy();
+				return;
+			}
+			pother_tank->isalive = false;
+			pbullet->destroy();
+			player_alive--;
+			return;
+		}
+	}
+	if (pbullet->locationX - pbullet->width / 2 > _rect.right || pbullet->locationX + pbullet->width / 2 < _rect.left
+		|| pbullet->locationY - pbullet->height / 2 > _rect.bottom || pbullet->locationY + pbullet->height / 2 < _rect.top)
+	{
+		pbullet->destroy();
+	}
+	Bullet_Move(pbullet->next);
+}
+
+void Game::Draw()
+{
+
+	for (auto& v : Tank_info)
+	{
+		if (v.second->isalive)
+		{
+			v.second->DrawTank();
+		}
+		if (v.second->bullet_head)
+		{
+			v.second->bullet_head->Drawbullet();
+		}
+	}
+	map_info.DrawMap();
+}
+
+void Game::online()
+{
+	send_mytankinfo();
+	send_bullet();
+}
+
+void Game::send_mytankinfo()
+{
+	char buffer[1024] = "mytankinfo:";
+	int i = sizeof(Tank);
+	memcpy(&buffer[11], ptank1, sizeof(Tank));
+	send(mysocket, buffer, 1023, 0);
+}
+//mybullet:{xystyle} {}
+void Game::send_bullet()
+{
+	bullet* cur = ptank1->bullet_head;
+	char ch[1024] = "mybullet:";
+	int cur_loc = 9;
+	while (cur != NULL)
+	{
+		if (cur_loc > 900)
+			break;
+
+		ch[cur_loc] = '{';
+		cur_loc++;
+		memcpy(&ch[cur_loc], &(cur->locationX), sizeof(int) * 3 + sizeof(BulletStyle));
+		cur_loc += sizeof(int) * 3 + sizeof(BulletStyle);
+		ch[cur_loc] = '}';
+		cur_loc++;
+		cur = cur->next;
+	}
+	send(mysocket, (const char*)&ch[0], 1023, 0);
+}
+
+//tankinfo:(INT){22}
+void Game::refrash_tankinfo(char ch[])
+{
+	int id = 0;
+	int cur_loc = 9;
+	int i = sizeof(Tank);
+	if (ch[cur_loc] == '(' && ch[cur_loc + sizeof(int) + 1] == ')')
+	{
+		cur_loc++;
+		memcpy(&id, &ch[cur_loc], sizeof(int));
+		cur_loc = cur_loc + sizeof(int) + 1;
+	}
+	else return;
+	if (ch[cur_loc] == '{' && ch[cur_loc + 21 + 1] == '}')
+	{
+		cur_loc++;
+		memcpy(Tank_info[id], &ch[cur_loc], 21);
+		cur_loc = cur_loc + 21;
+	}
+	else return;
+}
+//opbulletinfo:(int){xystyle}
+void Game::refrash_bullet(char ch[])
+{
+	bullet* newhead = new bullet();
+	bullet* temp = newhead;
+
+	int id = 0;
+	int cur_loc = 11;
+	if (ch[cur_loc] == '(' && ch[cur_loc + sizeof(int) + 1] == ')')
+	{
+		cur_loc++;
+		memcpy(&id, &ch[cur_loc], sizeof(int));
+		cur_loc = cur_loc + sizeof(int) + 1;
+	}
+	else return;
+	while (ch[cur_loc] == '{' && ch[cur_loc + sizeof(int) * 3 + sizeof(BulletStyle) + 1] == '}')
+	{
+		cur_loc++;
+		if (temp->next == NULL)
+		{
+			temp->next = new bullet();
+			temp = temp->next;
+			memcpy(&(temp->locationX), &ch[cur_loc], sizeof(int) * 3 + sizeof(BulletStyle));
+			cur_loc += sizeof(int) * 3 + sizeof(BulletStyle) + 1;
+			temp->Set_Parameter_byStyle(temp->bullet_style);
+		}
+	}
+	Tank_info[id]->bullet_head = newhead->next;
+
+	//to_destroyed_bulletinfo.push(optank->bullet_head);
+	//cv.notify_one();
+}
+
+void Game::destoryed(char buf[])
+{
+	int hited_id = -1;
+	int cur_loc = 10;
+	if (buf[cur_loc] == '(' && buf[cur_loc + sizeof(int) + 1] == ')')
+	{
+		cur_loc++;
+		memcpy(&hited_id, &buf[cur_loc], sizeof(int));
+	}
+	Tank_info[hited_id]->isalive = false;
+}
+
+void Game::mydestoryed()
+{
+	ptank1->isalive = false;
+}
+
+
+void set_My_id(int id)
+{
+	::my_tank_location = id;
 }

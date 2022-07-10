@@ -30,7 +30,7 @@
     <ClInclude Include="Tank.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Method.h">
+    <ClInclude Include="Network.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="D2D_Scene.h">
@@ -62,7 +62,7 @@
     <ClCompile Include="Tank.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Method.cpp">
+    <ClCompile Include="Network.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="D2D_Scene.cpp">

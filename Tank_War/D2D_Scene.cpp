@@ -1,4 +1,5 @@
 #include "D2D_Scene.h"
+#include "Network.h"
 
 namespace Location
 {
@@ -43,6 +44,7 @@ Scene* SRoom_host;
 Scene* SRoom_nothost;
 Scene* SGaming_local;
 Scene* SGaming_online;
+Scene* SEndGame;
 Scene* SWinGame;
 Scene* SFailGame;
 Scene* SPause;
@@ -59,6 +61,8 @@ HWND edit_hall;
 HWND Room_user_list;
 HWND Room_edit_in;
 HWND edit_room;
+
+STATUS status = STATUS::Main;
 
 int MoveX, MoveY, ClickX, ClickY;
 
@@ -819,6 +823,7 @@ void Load_D2DUI(RECT& rect)
 	Load_SHall(rect);
 	Load_Soption(rect);
 	Load_SRoom(rect);
+	//Load_EndGame(rect);
 	Load_SWinGame(rect);
 	Load_SFailGame(rect);
 	Load_SGaming(rect);
@@ -954,5 +959,76 @@ void Show_Room(bool flag)
 		ShowWindow(edit_room, SW_HIDE);
 		ShowWindow(Room_edit_in, SW_HIDE);
 		ShowWindow(Room_user_list, SW_HIDE);
+	}
+}
+
+
+void Set_CurScene(STATUS status_in)
+{
+	Show_Hall(false);
+	Show_Room(false);
+	switch (status_in)
+	{
+	case STATUS::Room_Status:
+	{
+		isonline_game = false;
+		isstart = false;
+		status = STATUS::Room_Status;
+		if (!host)
+		{
+			if (isready)
+			{
+				isready = false;
+				SRoom_nothost->ModifyButton_ID(IDB_CANCELREADY, IDB_READY);
+				SRoom_nothost->ModifyText_byButton(IDB_READY, L"×¼±¸");
+			}
+			CurScene = SRoom_nothost;
+		}
+		else
+		{
+			CurScene = SRoom_host;
+		}
+		Show_Room(TRUE);
+		Get_Room_Info();
+		break;
+	}
+	case STATUS::Main:
+	{
+		isonline_game = false;
+		isready = false;
+		isstart = false;
+		host = false;
+		status = STATUS::Main;
+		CurScene = SMain;
+		break;
+	}
+	case STATUS::Option:
+	{
+		status = STATUS::Option;
+		CurScene = SOption;
+		break;
+	}
+	case STATUS::Hall_Status:
+	{
+		isonline_game = false;
+		isready = false;
+		isstart = false;
+		host = false;
+		status = STATUS::Hall_Status;
+		CurScene = SHall;
+		Show_Hall(true);
+		Get_Hallinfo();
+		break;
+	}
+	case STATUS::Game_Status:
+	{
+		isstart = true;
+		status = STATUS::Game_Status;
+		if (isonline_game)
+			CurScene = SGaming_online;
+		else CurScene = SGaming_local;
+	}
+	default:
+		break;
 	}
 }

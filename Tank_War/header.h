@@ -33,8 +33,15 @@
 #include <mutex> 
 
 #include <map>
+#include <unordered_map>
+
+using namespace std;
 
 extern bool isstart;
 extern bool isready;
 extern bool host;
 extern bool isonline_game;
+
+wstring string2wstring(string str);
+string wstring2string(wstring wstr);
+

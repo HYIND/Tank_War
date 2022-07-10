@@ -4,7 +4,7 @@
 //#include <regex>
 //#include <thread>
 #include "header.h"
-#include"D2D_Scene.h"
+#include "D2D_Scene.h"
 
 using namespace std;
 
@@ -54,9 +54,10 @@ struct socket_messageinfo
 #define IDB_Bitmap1 3401
 #define IDB_Bitmap2 3402
 
-#define Enterroom 7777
-#define START 8888
-#define QUITROOM 9999
+#define Enterroom 6666
+#define START 7777
+#define DISBANDINROOM 8888
+#define DISBANDINEND 9999
 #define WIN 666
 #define FAIL 777
 
@@ -68,17 +69,7 @@ extern queue<Ping_info> ping_queue;
 extern int delay;
 
 
-//status Ã¶¾Ù
-enum class STATUS { Main, Option, Hall_Status, Room_Status, Game_Status };
-
-//void START(HWND hWnd);
-//void Get_Init_UI(HWND hWnd);
-void Show_Main_UI();
-void Hide_Main_UI();
-void Return_To_Mune();
 void SIG_IO();
-wstring string2wstring(string str);
-string wstring2string(wstring wstr);
 
 bool isconnecting();
 void send_socket(string s);
@@ -112,7 +103,6 @@ DWORD WINAPI Process_Thread();
 
 HRESULT Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget, LPCTSTR pszResource, ID2D1Bitmap** ppBitmap);
 HRESULT LoadResourceBitmap(HINSTANCE hinstance, IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget, LPCWSTR resourceType, LPCWSTR resourceName, ID2D1Bitmap** ppBitmap);
-HBRUSH OnCtlColorEdit(WPARAM wParam, LPARAM lParam);
 
 void Show_Hall(bool flag);
 void Show_Room(bool flag);
