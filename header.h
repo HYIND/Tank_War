@@ -18,10 +18,13 @@
 #include <assert.h>
 #include <unordered_map>
 #include <queue>
-#include <mutex> 
+#include <mutex>
 #include <condition_variable>
+#include <stdio.h>
+#include <stdlib.h>
+
 void setnonblocking(int fd);
 
-void addfd(int epollfd, int fd);
+void addfd(int epollfd, int fd, bool block = true);
 
 void delfd(int epollfd, int fd);

@@ -1,10 +1,11 @@
 #include "header.h"
 #include "Tank_Server.h"
-
+#include <net/if.h>
+#include <sys/ioctl.h>
 using namespace std;
 
-extern vector<sock_info> user_list;
-extern vector<room_info> room_list;
+extern vector<sock_info *> user_list;
+extern vector<Room_Process *> room_list;
 extern vector<int> room_user;
 extern vector<int> game_pipe_list;
 
@@ -70,10 +71,12 @@ void server_hall()
                 delfd(hall_epoll, socket);
                 for (auto it = user_list.begin(); it != user_list.end(); it++)
                 {
-                    if (it->accept == socket)
+                    if ((*it)->accept == socket)
                     {
-                        if (it->states == room)
-                            Quit_Room(socket);
+                        if ((*it)->states == room)
+                        {
+                            // Quit_Room(socket);
+                        }
                         user_list.erase(it);
                         break;
                     }
@@ -95,7 +98,7 @@ void server_hall()
                 {
                     for (auto it = user_list.begin(); it != user_list.end(); it++)
                     {
-                        if (it->accept == socket)
+                        if ((*it)->accept == socket)
                         {
                             user_list.erase(it);
                             break;
@@ -160,7 +163,8 @@ void server_listen(int mysocket)
                 if (socket != -1)
                 {
                     setnonblocking(socket);
-                    user_list.emplace_back(sock_info(socket, client));
+                    sock_info *info = new sock_info(socket, client);
+                    user_list.emplace_back(info);
                     int flag = 1;
                     setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, (void *)&flag, sizeof(flag));
 
@@ -194,7 +198,6 @@ void server_listen(int mysocket)
 //             cout << "game_epoll failed!";
 //             break;
 //         }
-
 //         for (int i = 0; i < num; i++)
 //         {
 //             int socket = game_events[i].data.fd;
@@ -224,13 +227,53 @@ void server_listen(int mysocket)
 //     }
 // }
 
-int main()
+int get_local_ip(const char *eth_inf, char *out)
+{
+    int sd;
+    struct sockaddr_in sin;
+    struct ifreq ifr;
+
+    sd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (-1 == sd)
+    {
+        printf("socket error: %s\n", strerror(errno));
+        return -1;
+    }
+
+    strncpy(ifr.ifr_name, eth_inf, IFNAMSIZ);
+    ifr.ifr_name[IFNAMSIZ - 1] = 0;
+
+    // if error: No such device
+    if (ioctl(sd, SIOCGIFADDR, &ifr) < 0)
+    {
+        printf("ioctl error: %s\n", strerror(errno));
+        close(sd);
+        return -1;
+    }
+
+    strcpy(out, inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
+
+    close(sd);
+    return 0;
+}
+
+int main(int argc, char *argv[])
 {
     sockaddr_in sock_addr;
     bzero(&sock_addr, sizeof(sock_addr));
     sock_addr.sin_family = AF_INET;
     sock_addr.sin_port = htons(2336);
-    sock_addr.sin_addr.s_addr = inet_addr("10.0.20.4");
+
+    if (argc > 1)
+    {
+        sock_addr.sin_addr.s_addr = inet_addr(argv[1]);
+    }
+    // else
+    // {
+    //     char IP[20] = {'\0'};
+    //     get_local_ip("eth0", IP);
+    //     sock_addr.sin_addr.s_addr = inet_addr(IP);
+    // }
 
     int mysocket = socket(PF_INET, SOCK_STREAM, 0);
 
@@ -258,6 +301,8 @@ int main()
     // getsockopt(socket, SOL_SOCKET, SO_SNDBUF, &i, &j);
     // setsockopt(mysocket, SOL_SOCKET, SO_SNDBUF, (const char *)&SendBuf, sizeof(int));
     // setsockopt(mysocket, SOL_SOCKET, SO_RCVBUF, (const char *)&RecvBuf, sizeof(int));
+
+    Init_Style();
 
     thread T1(server_listen, mysocket);
 
