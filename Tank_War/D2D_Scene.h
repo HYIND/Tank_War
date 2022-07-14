@@ -80,7 +80,7 @@ extern ID2D1SolidColorBrush* pMain_ClickBrush;
 extern IDWriteTextFormat* pMain_Format;
 extern IDWriteTextFormat* pHall_Format;
 extern IDWriteTextFormat* pPing_Format;
-
+extern HFONT edit_listbox_front;
 
 extern ID2D1Bitmap* OP_pBitmap;
 extern ID2D1Bitmap* TEXT_pBitmap;

@@ -28,7 +28,7 @@ ID2D1SolidColorBrush* pMain_ClickBrush;
 IDWriteTextFormat* pMain_Format;
 IDWriteTextFormat* pHall_Format;
 IDWriteTextFormat* pPing_Format;
-
+HFONT edit_listbox_front;
 
 ID2D1Bitmap* OP_pBitmap;
 ID2D1Bitmap* TEXT_pBitmap;
@@ -643,8 +643,33 @@ void Load_SHall(RECT& rect)
 			broder1 + len_x, broder2 + len_y * 8,
 			len_x * 5, len_y * 2 - 10,
 			_hwnd, (HMENU)HALL_EDIT_IN, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
-	}
 
+		/* 设置字体 */
+		SendMessage(
+			Hall_room_list,  //欲设置字体的控件句柄
+			WM_SETFONT,  //消息名（消息类型）
+			(WPARAM)edit_listbox_front,  //字体句柄
+			NULL  //传空值即可
+		);
+		SendMessage(
+			Hall_user_list,  //欲设置字体的控件句柄
+			WM_SETFONT,  //消息名（消息类型）
+			(WPARAM)edit_listbox_front,  //字体句柄
+			NULL  //传空值即可
+		);
+		SendMessage(
+			edit_hall,  //欲设置字体的控件句柄
+			WM_SETFONT,  //消息名（消息类型）
+			(WPARAM)edit_listbox_front,  //字体句柄
+			NULL  //传空值即可
+		);
+		SendMessage(
+			Hall_edit_in,  //欲设置字体的控件句柄
+			WM_SETFONT,  //消息名（消息类型）
+			(WPARAM)edit_listbox_front,  //字体句柄
+			NULL  //传空值即可
+		);
+	}
 }
 void Load_Soption(RECT& rect)
 {
@@ -690,7 +715,6 @@ void Load_Soption(RECT& rect)
 }
 void Load_SRoom(RECT& rect)
 {
-
 	{
 		SRoom_host->LoadResourceBitmap(broder1, broder2, broder3, broder4, L"PNG", MAKEINTRESOURCE(TEXTBK_PNG), 0.6f);
 
@@ -766,6 +790,26 @@ void Load_SRoom(RECT& rect)
 			broder1 + len_x, broder2 + len_y * 8,
 			len_x * 5, len_y * 2 - 10,
 			_hwnd, (HMENU)ROOM_EDIT_IN, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
+
+		/* 设置字体 */
+		SendMessage(
+			Room_user_list,  //欲设置字体的控件句柄
+			WM_SETFONT,  //消息名（消息类型）
+			(WPARAM)edit_listbox_front,  //字体句柄
+			NULL  //传空值即可
+		);
+		SendMessage(
+			edit_room,  //欲设置字体的控件句柄
+			WM_SETFONT,  //消息名（消息类型）
+			(WPARAM)edit_listbox_front,  //字体句柄
+			NULL  //传空值即可
+		);
+		SendMessage(
+			Room_edit_in,  //欲设置字体的控件句柄
+			WM_SETFONT,  //消息名（消息类型）
+			(WPARAM)edit_listbox_front,  //字体句柄
+			NULL  //传空值即可
+		);
 	}
 }
 void Load_SGaming(RECT& rect)
@@ -902,6 +946,16 @@ void Init_D2DTool(RECT& rect)
 
 	hr = pPing_Format->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
 	hr = pPing_Format->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+
+	edit_listbox_front = CreateFont(
+		-16/*高度*/, -7.5/*宽度*/, 0/*不用管*/, 0/*不用管*/, 500 /*一般这个值设为400*/,
+		FALSE/*不带斜体*/, FALSE/*不带下划线*/, FALSE/*不带删除线*/,
+		DEFAULT_CHARSET,  //这里我们使用默认字符集，还有其他以 _CHARSET 结尾的常量可用
+		OUT_CHARACTER_PRECIS, CLIP_CHARACTER_PRECIS,  //这行参数不用管
+		DEFAULT_QUALITY,  //默认输出质量
+		FF_DONTCARE,  //不指定字体族*/
+		L"微软雅黑"  //字体名
+	);
 
 	DelayRect = RectF(rect.right - 60, rect.top + 5, rect.right - 5, rect.top + 30);
 }
