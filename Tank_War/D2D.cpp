@@ -93,6 +93,8 @@ HRESULT LoadResourceBitmap(
 	}
 	if (SUCCEEDED(hr))
 	{
+		UINT count;
+		hr = pDecoder->GetFrameCount(&count);
 		// Create the initial frame.
 		hr = pDecoder->GetFrame(0, &pSource);
 	}
@@ -165,6 +167,8 @@ HRESULT Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderT
 	if (SUCCEEDED(hr))
 	{
 		// Create the initial frame.
+		UINT count;
+		hr = pDecoder->GetFrameCount(&count);
 		hr = pDecoder->GetFrame(0, &pSource);
 	}
 

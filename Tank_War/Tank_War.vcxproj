@@ -150,6 +150,7 @@
     <ClInclude Include="D2D.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="Game_Component.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="D2D_Scene.h" />
@@ -189,12 +190,14 @@
     <Image Include="..\x64\Debug\Resource\Return.png" />
     <Image Include="..\x64\Debug\Resource\Tank2.bmp" />
     <Image Include="..\x64\Debug\Resource\Tank2.png" />
+    <Image Include="..\x64\Debug\Resource\test.gif" />
     <Image Include="..\x64\Debug\Resource\Text_BK.png" />
     <Image Include="..\x64\Debug\Resource\Win.png" />
     <Image Include="Tank_War.ico" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\x64\Debug\Resource\Cursor.cur" />
+    <None Include="..\x64\debug\resource\gif2.bin" />
     <None Include="..\x64\debug\resource\jpg1.bin" />
     <None Include="..\x64\debug\resource\jpg2.bin" />
   </ItemGroup>

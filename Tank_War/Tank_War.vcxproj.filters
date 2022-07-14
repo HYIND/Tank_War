@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="资源文件\Resource">
+      <UniqueIdentifier>{8be8d9cd-e014-4b6f-8c88-5a3eaf31eeee}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -54,6 +57,9 @@
     <ClInclude Include="Style.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Game_Component.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Tank_War.cpp">
@@ -93,63 +99,69 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Tank_War.ico">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\x64\Debug\Resource\Tank2.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\x64\Debug\Resource\Text_BK.png">
-      <Filter>资源文件</Filter>
-    </Image>
     <Image Include="..\x64\Debug\Resource\Bullet.png">
-      <Filter>资源文件</Filter>
+      <Filter>资源文件\Resource</Filter>
     </Image>
     <Image Include="..\x64\Debug\Resource\Bullet_Green.png">
-      <Filter>资源文件</Filter>
+      <Filter>资源文件\Resource</Filter>
     </Image>
     <Image Include="..\x64\Debug\Resource\Bullet_Orange.png">
-      <Filter>资源文件</Filter>
+      <Filter>资源文件\Resource</Filter>
     </Image>
     <Image Include="..\x64\Debug\Resource\Bullet_Purple.png">
-      <Filter>资源文件</Filter>
+      <Filter>资源文件\Resource</Filter>
     </Image>
     <Image Include="..\x64\Debug\Resource\Cursor.png">
-      <Filter>资源文件</Filter>
+      <Filter>资源文件\Resource</Filter>
     </Image>
     <Image Include="..\x64\Debug\Resource\Fail.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\x64\Debug\Resource\liangliang.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\x64\Debug\Resource\Win.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\x64\Debug\Resource\OP_BK.jpg">
-      <Filter>资源文件</Filter>
+      <Filter>资源文件\Resource</Filter>
     </Image>
     <Image Include="..\x64\Debug\Resource\jiaran.jpg">
-      <Filter>资源文件</Filter>
+      <Filter>资源文件\Resource</Filter>
     </Image>
-    <Image Include="..\x64\Debug\Resource\Tank2.png">
-      <Filter>资源文件</Filter>
+    <Image Include="..\x64\Debug\Resource\liangliang.bmp">
+      <Filter>资源文件\Resource</Filter>
+    </Image>
+    <Image Include="..\x64\Debug\Resource\OP_BK.jpg">
+      <Filter>资源文件\Resource</Filter>
     </Image>
     <Image Include="..\x64\Debug\Resource\Pause.png">
-      <Filter>资源文件</Filter>
+      <Filter>资源文件\Resource</Filter>
     </Image>
     <Image Include="..\x64\Debug\Resource\Return.png">
+      <Filter>资源文件\Resource</Filter>
+    </Image>
+    <Image Include="Tank_War.ico">
+      <Filter>资源文件\Resource</Filter>
+    </Image>
+    <Image Include="..\x64\Debug\Resource\Tank2.bmp">
+      <Filter>资源文件\Resource</Filter>
+    </Image>
+    <Image Include="..\x64\Debug\Resource\Tank2.png">
+      <Filter>资源文件\Resource</Filter>
+    </Image>
+    <Image Include="..\x64\Debug\Resource\Text_BK.png">
+      <Filter>资源文件\Resource</Filter>
+    </Image>
+    <Image Include="..\x64\Debug\Resource\Win.png">
+      <Filter>资源文件\Resource</Filter>
+    </Image>
+    <Image Include="..\x64\Debug\Resource\test.gif">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\x64\debug\resource\jpg1.bin">
-      <Filter>资源文件</Filter>
-    </None>
     <None Include="..\x64\Debug\Resource\Cursor.cur">
-      <Filter>资源文件</Filter>
+      <Filter>资源文件\Resource</Filter>
     </None>
     <None Include="..\x64\debug\resource\jpg2.bin">
+      <Filter>资源文件\Resource</Filter>
+    </None>
+    <None Include="..\x64\debug\resource\jpg1.bin">
+      <Filter>资源文件\Resource</Filter>
+    </None>
+    <None Include="..\x64\debug\resource\gif2.bin">
       <Filter>资源文件</Filter>
     </None>
   </ItemGroup>

@@ -26,6 +26,7 @@
 #define BULLET_GREEN_PNG                164
 #define BULLET_ORANGE_PNG               165
 #define BULLET_PRUPLE_PNG               166
+#define BULLET_PURPLE_PNG               166
 #define FAIL_PNG                        168
 #define IDB_BITMAP2                     170
 #define liangliang_BMP                  170
@@ -37,6 +38,8 @@
 #define TANK_PNG                        177
 #define IDB_PNG3                        185
 #define PAUSE_PNG                       186
+#define IDR_GIF1                        188
+#define TEST_GIF                        188
 #define IDC_BUTTON1                     1002
 #define MYSOURCE_TEXTBK                 1002
 #define IDC_BUTTON2                     1003
@@ -59,7 +62,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        188
+#define _APS_NEXT_RESOURCE_VALUE        190
 #define _APS_NEXT_COMMAND_VALUE         32774
 #define _APS_NEXT_CONTROL_VALUE         1021
 #define _APS_NEXT_SYMED_VALUE           110
