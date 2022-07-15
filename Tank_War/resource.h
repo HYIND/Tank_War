@@ -38,11 +38,18 @@
 #define TANK_PNG                        177
 #define IDB_PNG3                        185
 #define PAUSE_PNG                       186
-#define IDR_GIF1                        188
 #define TEST_GIF                        188
+#define BRICK_WALL                      190
+#define IDB_BITMAP4                     191
+#define HEALTH_KIT                      193
+#define SNOW                            195
+#define WATER                           196
+#define IDR_JPG2                        197
+#define BK_SAND                         197
 #define IDC_BUTTON1                     1002
 #define MYSOURCE_TEXTBK                 1002
 #define IDC_BUTTON2                     1003
+#define IRON_WALL                       1003
 #define IDC_BUTTON3                     1004
 #define RETURN_PNG                      1004
 #define NFG                             1004
@@ -62,7 +69,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        190
+#define _APS_NEXT_RESOURCE_VALUE        198
 #define _APS_NEXT_COMMAND_VALUE         32774
 #define _APS_NEXT_CONTROL_VALUE         1021
 #define _APS_NEXT_SYMED_VALUE           110

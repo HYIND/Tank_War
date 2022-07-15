@@ -16,9 +16,10 @@ extern HINSTANCE hInst;
 void Init_Style_Resource()
 {
 	HRESULT hr = S_OK;
-	//hr = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(TANK_PNG), &Def_Tank_pBitmap);
 	//hr = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"GIF", MAKEINTRESOURCE(TEST_GIF), &Def_Tank_pBitmap);
-	hr = Loadbitmap(pIWICFactory, pRenderTarget, L"C:\\Users\\H\\Desktop\\Tank_War\\x64\\Debug\\Resource\\1213578647.gif", &Def_Tank_pBitmap);
+	//hr = Loadbitmap(pIWICFactory, pRenderTarget, L"C:\\Users\\H\\Desktop\\Tank_War\\x64\\Debug\\Resource\\1213578647.gif", &Def_Tank_pBitmap);
+
+	hr = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(TANK_PNG), &Def_Tank_pBitmap);
 	hr = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(BULLET_PNG), &Def_Bullet_pBitmap);
 	hr = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(BULLET_ORANGE_PNG), &Orange_Bullet_pBitmap);
 	hr = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(BULLET_GREEN_PNG), &Green_Bullet_pBitmap);

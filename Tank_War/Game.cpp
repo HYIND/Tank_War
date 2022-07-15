@@ -317,7 +317,8 @@ void Game::Bullet_Move(bullet* pbullet)
 
 void Game::Draw()
 {
-
+	if (map_info.BK_pBitmap)
+		pRenderTarget->DrawBitmap(map_info.BK_pBitmap, D2D1::RectF(0, 0, _rect.right, _rect.bottom));;
 	for (auto& v : Tank_info)
 	{
 		if (v.second->isalive)

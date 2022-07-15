@@ -1,17 +1,4 @@
 #pragma once
-//d2d及位图 头文件
-//#include <d2d1.h>
-//#include <dwrite.h>
-//#include <wincodec.h>
-//#include <d2d1helper.h>
-//#pragma comment(lib, "d2d1.lib")
-//#pragma comment(lib,"Dwrite.lib")
-//
-////D2D释放资源
-//#define SafeRelease(P) if(P){P->Release() ; P = NULL ;}
-//
-//#include <vector>
-//#include <string>
 
 #include "header.h"
 #include "D2D.h"

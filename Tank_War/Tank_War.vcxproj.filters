@@ -92,6 +92,9 @@
     <ClCompile Include="Style.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Game_Component.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Tank_War.rc">
@@ -148,6 +151,24 @@
       <Filter>资源文件\Resource</Filter>
     </Image>
     <Image Include="..\x64\Debug\Resource\test.gif">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\x64\Debug\Resource\BRICK_WALL.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\x64\Debug\Resource\Health_Kit.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\x64\Debug\Resource\IRON_WALL.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\x64\Debug\Resource\SNOW.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\x64\Debug\Resource\WATER.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\x64\Debug\Resource\GAME_BG_SAND.jpg">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

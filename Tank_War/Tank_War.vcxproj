@@ -121,6 +121,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -136,6 +137,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -166,6 +168,7 @@
     <ClCompile Include="D2D.cpp" />
     <ClCompile Include="D2D_Scene.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Game_Component.cpp" />
     <ClCompile Include="header.cpp" />
     <ClCompile Include="Map.cpp" />
     <ClCompile Include="Style.cpp" />
@@ -177,21 +180,27 @@
     <ResourceCompile Include="Tank_War.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\x64\Debug\Resource\BRICK_WALL.png" />
     <Image Include="..\x64\Debug\Resource\Bullet.png" />
     <Image Include="..\x64\Debug\Resource\Bullet_Green.png" />
     <Image Include="..\x64\Debug\Resource\Bullet_Orange.png" />
     <Image Include="..\x64\Debug\Resource\Bullet_Purple.png" />
     <Image Include="..\x64\Debug\Resource\Cursor.png" />
     <Image Include="..\x64\Debug\Resource\Fail.png" />
+    <Image Include="..\x64\Debug\Resource\GAME_BG_SAND.jpg" />
+    <Image Include="..\x64\Debug\Resource\Health_Kit.png" />
+    <Image Include="..\x64\Debug\Resource\IRON_WALL.png" />
     <Image Include="..\x64\Debug\Resource\jiaran.jpg" />
     <Image Include="..\x64\Debug\Resource\liangliang.bmp" />
     <Image Include="..\x64\Debug\Resource\OP_BK.jpg" />
     <Image Include="..\x64\Debug\Resource\Pause.png" />
     <Image Include="..\x64\Debug\Resource\Return.png" />
+    <Image Include="..\x64\Debug\Resource\SNOW.png" />
     <Image Include="..\x64\Debug\Resource\Tank2.bmp" />
     <Image Include="..\x64\Debug\Resource\Tank2.png" />
     <Image Include="..\x64\Debug\Resource\test.gif" />
     <Image Include="..\x64\Debug\Resource\Text_BK.png" />
+    <Image Include="..\x64\Debug\Resource\WATER.png" />
     <Image Include="..\x64\Debug\Resource\Win.png" />
     <Image Include="Tank_War.ico" />
   </ItemGroup>
