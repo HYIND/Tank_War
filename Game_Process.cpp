@@ -138,6 +138,39 @@ void Room_Process::EndGame()
     }
 }
 
+void Room_Process::hited(int hited_socket, int hited_id)
+{
+    static const string str_hited = "youhited";
+    static const string str_other = "hited:";
+    char ch_hited[1024] = {'\0'};
+    char ch_other[1024] = {'\0'};
+
+    strcpy(ch_hited, str_hited.c_str());
+
+    strcpy(ch_other, str_other.c_str());
+    int cur_loc = 6;
+    ch_other[cur_loc] = '(';
+    cur_loc++;
+    memcpy(&ch_other[cur_loc], &hited_id, sizeof(int));
+    cur_loc += sizeof(int);
+    ch_other[cur_loc] = ')';
+
+    socket_messageinfo *pmsginfo = new socket_messageinfo(hited_socket, ch_hited);
+    unique_lock<mutex> slck(sendqueue_mtx);
+    send_queue.emplace(pmsginfo);
+    sendqueue_mtx.unlock();
+    for (auto &v : info)
+    {
+        if (v.first != hited_socket)
+        {
+            socket_messageinfo *pmsginfo = new socket_messageinfo(v.first, ch_other);
+            unique_lock<mutex> slck(sendqueue_mtx);
+            send_queue.emplace(pmsginfo);
+            sendqueue_mtx.unlock();
+        }
+    }
+}
+
 void Room_Process::destroy(int hited_socket, int hited_id)
 {
     static const string str_hited = "youdestroyed";
@@ -341,12 +374,12 @@ void Room_Process::game_process()
                 }
             }
             // destroytank:(INT){INT,INT,bulletStyle}
-            else if (option == "destroytank")
+            else if (option == "hittank")
             {
                 try
                 {
                     int hited_id;
-                    int cur_loc = 12;
+                    int cur_loc = 8;
                     if (buf[cur_loc] == '(' && buf[cur_loc + sizeof(int) + 1] == ')')
                     {
                         cur_loc++;
@@ -389,9 +422,14 @@ void Room_Process::game_process()
                                   hited_tank->width,
                                   hited_tank->height))
                     {
-                        hited_tank->isalive = false;
-                        player_alive--;
-                        destroy(hited_socket, hited_id);
+                        hited_tank->health -= 21;
+                        hited(hited_socket, hited_id);
+                        if (hited_tank->health <= 0)
+                        {
+                            hited_tank->isalive = false;
+                            player_alive--;
+                            destroy(hited_socket, hited_id);
+                        }
                     }
                     release = true;
                     // send(opsocket, (const char *)&(str[0]), 1023, 0);

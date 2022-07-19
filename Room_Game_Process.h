@@ -80,6 +80,7 @@ public:
     void confim();                                //开始游戏前最后同步地图ID，同时检查有无用户掉线
     void EndGame();                               //检查游戏是否达到结束要求
     void Init_Game();                             //初始化游戏
+    void hited(int hited_socket, int hited_id);   //受击消息通知
     void destroy(int hited_socket, int hited_id); //摧毁消息通知
 
     void run(); //初始运行函数，运行三个线程：接收线程、房间处理线程、发送线程

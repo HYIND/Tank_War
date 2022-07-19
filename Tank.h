@@ -17,6 +17,7 @@ public:
     int height = 0;
     int direction = UP;
     TankStyle tank_style = TankStyle::DEFAULT;
+    int health = 100;
 
     bool isalive = true;
     bool isregister = false;
