@@ -12,6 +12,6 @@ void Init_Style()
 
     /* bullet风格资源 */
     {
-        Bullet_Style_info[BulletStyle::DEFAULT] = new Style_info(3, 3);
+        Bullet_Style_info[BulletStyle::DEFAULT] = new Style_info(30, 30);
     }
 }
