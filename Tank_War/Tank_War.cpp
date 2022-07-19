@@ -31,6 +31,7 @@ HINSTANCE hInst;                                // 当前实例
 WCHAR szTitle[MAX_LOADSTRING] = L"Tank War";                  // 标题栏文本
 WCHAR szWindowClass[MAX_LOADSTRING];            // 主窗口类名
 HWND _hwnd;
+HWND Focus_hwnd;
 RECT _rect;
 
 WSADATA wsa;
@@ -163,6 +164,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 DWORD WINAPI Render_Thread()
 {
+	timeBeginPeriod(1);
 	timeInOneFps = 1.0 / Fps; // 每秒60帧，则1帧就是约16毫秒
 	PAINTSTRUCT ps;
 	hdc = BeginPaint(_hwnd, &ps);
@@ -176,11 +178,17 @@ DWORD WINAPI Render_Thread()
 	QueryPerformanceFrequency(&f);
 	dqFreq = (double)f.QuadPart;
 	QueryPerformanceCounter(&time_last);//获取计时器跳数
+	int i = 0;
 	while (true)
 	{
 		QueryPerformanceCounter(&time_now);
 		while ((time_now.QuadPart - time_last.QuadPart) / dqFreq < timeInOneFps)
+		{
 			QueryPerformanceCounter(&time_now);
+			i = (timeInOneFps - (time_now.QuadPart - time_last.QuadPart) / dqFreq) * 1000;
+			if (i > 0)
+				Sleep(i);
+		}
 		time_last = time_now;
 		{
 			pRenderTarget->BeginDraw();
@@ -192,8 +200,6 @@ DWORD WINAPI Render_Thread()
 					MessageBox(NULL, L"Draw failed!", L"Error", 0);
 				}
 			}
-			if (CurScene)
-				CurScene->DrawScene();
 			if (status == STATUS::Hall_Status || status == STATUS::Room_Status || (status == STATUS::Game_Status && isonline_game))
 			{
 				wstring ws = to_wstring(delay) + L"ms";
@@ -210,8 +216,11 @@ DWORD WINAPI Render_Thread()
 			{
 				Cur_Game->Draw();
 			}
+			if (CurScene)
+				CurScene->DrawScene();
 			hr = pRenderTarget->EndDraw();
 		}
+		//画点画线的各种处理
 	}
 	EndPaint(_hwnd, &ps);
 	return 0;
@@ -257,15 +266,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		case _game:
 		{
-			if (GetFocus() == _hwnd)
-			{
-				Cur_Game->Tank_Input();
-				Cur_Game->Move();
-			}
-			else if (isonline_game)
+			if (GetFocus() == _hwnd || isonline_game)
 			{
 				Cur_Game->Move();
 			}
+			//if (GetFocus() == _hwnd)
+			//{
+			//	Cur_Game->Move();
+			//}
+			//else if (isonline_game)
+			//{
+			//	Cur_Game->Move();
+			//}
 			break;
 		}
 		case hall_refrash:

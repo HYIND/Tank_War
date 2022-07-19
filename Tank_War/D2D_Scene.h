@@ -56,7 +56,7 @@ class Scene;
 class Scene_Option;
 
 /* 以下为内部变量的声明 */
-extern ID2D1SolidColorBrush* pbullet_Brush;
+extern ID2D1SolidColorBrush* pRed_Brush;
 
 extern ID2D1SolidColorBrush* pHall_Brush;
 extern ID2D1SolidColorBrush* pHall_ClickBrush;

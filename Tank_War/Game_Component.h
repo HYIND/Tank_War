@@ -9,6 +9,7 @@ extern ID2D1Bitmap* iron_wall_pBitmap;
 
 class Game_Component
 {
+	friend class Game;
 protected:
 	int locationX;
 	int locationY;
@@ -24,7 +25,7 @@ public:
 	virtual ~Game_Component() {};
 };
 
-class Brick_Wall :Game_Component
+class Brick_Wall :public Game_Component
 {
 public:
 	Brick_Wall(int x, int y, int id, int health = 100, ID2D1Bitmap* Bitmap = brick_wall_pBitmap)
@@ -32,7 +33,7 @@ public:
 	using Game_Component::Draw;
 };
 
-class Iron_Wall :Game_Component
+class Iron_Wall :public Game_Component
 {
 public:
 	Iron_Wall(int x, int y, int id, int health = 100, ID2D1Bitmap* Bitmap = iron_wall_pBitmap)

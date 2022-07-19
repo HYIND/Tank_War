@@ -28,12 +28,18 @@ public:
 	void online();
 	void send_bullet();
 	void send_mytankinfo();
-	void send_destory(int id, bullet* pbullet);
+	void send_hit(int id, bullet* pbullet);
 	void refrash_tankinfo(char ch[]);
 	void refrash_bullet(char ch[]);
+	void hited(char buf[]);
+	void myhited();
 	void destoryed(char buf[]);
 	void mydestoryed();
 	void is_end();
+
+	template<typename T>
+	bool Object_Check(bullet* pbullet, T& vec);
+
 };
 
 void set_My_id(int id);

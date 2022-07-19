@@ -42,6 +42,22 @@ void Tank::Set_Parameter_byStyle(TankStyle tankstyle)
 	this->speed = Tank_Style_info[tankstyle]->speed;
 }
 
+void Tank::DrawTankHP(ID2D1HwndRenderTarget* pRenderTarget)
+{
+
+	int HP_locY = this->locationY - height / 2 - 10;
+	float HP_halfwidth = 23;
+	float HP_halfheight = 1.5;
+
+	//计算血条长度
+	float HP_len = (health / 100.f) * HP_halfwidth * 2;
+
+	//画血条框
+	pRenderTarget->DrawRectangle(D2D1::Rect(locationX - HP_halfwidth - 2, HP_locY - HP_halfheight - 2, locationX + HP_halfwidth + 2, HP_locY + HP_halfheight + 2), pRed_Brush);
+	//画血条
+	pRenderTarget->FillRectangle(D2D1::Rect(locationX - HP_halfwidth, HP_locY - HP_halfheight, locationX - HP_halfwidth + HP_len, HP_locY + HP_halfheight), pRed_Brush);
+}
+
 void Tank::DrawTank(ID2D1HwndRenderTarget* pRenderTarget)
 {
 	int Reloc1 = this->locationX - (this->width) / 2;
@@ -49,6 +65,7 @@ void Tank::DrawTank(ID2D1HwndRenderTarget* pRenderTarget)
 
 	D2D1_POINT_2F center = D2D1::Point2F(this->locationX, this->locationY);
 
+	DrawTankHP(pRenderTarget);
 	pRenderTarget->SetTransform(D2D1::Matrix3x2F::Rotation(this->direction * 90.0f, center));
 	pRenderTarget->DrawBitmap(Tank_Style_info[tank_style]->Bitmap, D2D1::RectF(Reloc1, Reloc2, Reloc1 + width, Reloc2 + height));
 	pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
@@ -165,7 +182,7 @@ void bullet::Drawbullet()
 	else
 	{
 		//D2D1_ELLIPSE ellipse = D2D1::Ellipse(D2D1::Point2F(100.0f, 100.0f), 100.0f, 50.0f);
-		pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(this->locationX, this->locationY), this->width, this->height), pbullet_Brush);
+		pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(this->locationX, this->locationY), this->width, this->height), pRed_Brush);
 	}
 	if (this->next != NULL)
 		(*(this->next)).Drawbullet();

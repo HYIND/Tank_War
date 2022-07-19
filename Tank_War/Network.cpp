@@ -144,7 +144,7 @@ void Return_Class(char buf[]) {
 			}
 		}
 	}
-	else
+	else if(status==STATUS::Game_Status)
 	{
 		if (temp == "tankinfo")
 		{
@@ -153,6 +153,14 @@ void Return_Class(char buf[]) {
 		else if (temp == "bulletinfo")
 		{
 			Cur_Game->refrash_bullet(buf);
+		}
+		else if (temp == "hited")
+		{
+			Cur_Game->hited(buf);
+		}
+		else if (temp == "youhited")
+		{
+			Cur_Game->myhited();
 		}
 		else if (temp == "destroyed")
 		{

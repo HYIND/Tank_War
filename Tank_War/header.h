@@ -34,6 +34,8 @@
 
 #include <map>
 #include <unordered_map>
+#include <timeapi.h>
+#pragma comment(lib,"Winmm.lib")
 
 using namespace std;
 

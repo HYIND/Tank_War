@@ -6,7 +6,7 @@
 #pragma comment(lib,"Msimg32.lib")
 using namespace std;
 
-extern ID2D1SolidColorBrush* pbullet_Brush;
+extern ID2D1SolidColorBrush* pRed_Brush;
 
 class Tank;
 
@@ -50,6 +50,7 @@ public:
 	TankStyle tank_style = TankStyle::DEFAULT;
 
 	bool isalive = true;
+	int health = 100;
 	int speed = 3;
 	int bullet_count = 0;
 	int bullet_limited = 5;
@@ -67,18 +68,11 @@ public:
 	Tank(int width, int height);
 	Tank(int X, int Y, int width, int height, int direction, int speed, bool alive = true);
 	void Set_Parameter_byStyle(TankStyle tankstyle);
+	void DrawTankHP(ID2D1HwndRenderTarget* pRenderTarget = ::pRenderTarget);
 	void DrawTank(ID2D1HwndRenderTarget* pRenderTarget = ::pRenderTarget);
 	void Addbullet(BulletStyle bulletstyle);
 
 	friend class bullet;
 };
 
-void Get_Initinfo();
-void Return_Tankinfo();
-void Init_all();
-void send_destroy(bullet* bullet);
-void Refresh_opTank(char buf[]);
-void Refresh_opbullet(string& re);
 void destory_bulletinfo();
-void my_destroy();
-void op_destory();

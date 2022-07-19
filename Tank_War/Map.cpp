@@ -17,18 +17,18 @@ void Init_Map_Zero()
 	Default_Map.BK_pBitmap = Zero_BK;
 	Default_Map.Init_Location.emplace_back(1, 50, 300, UP, TankStyle::DEFAULT);
 	Default_Map.Init_Location.emplace_back(2, 500, 300, UP, TankStyle::DEFAULT);
-	for (int i = 0; i < 10; i++)
-	{
-		Brick_Wall brick(100 + i * 50, 200, count);
-		Default_Map.Brick_info.emplace_back(brick);
-		count++;
-	}
-	for (int i = 0; i < 10; i++)
-	{
-		Iron_Wall iron(400, 200 + i * 50, count);
-		Default_Map.Iron_info.emplace_back(iron);
-		count++;
-	}
+	//for (int i = 0; i < 10; i++)
+	//{
+	//	Brick_Wall brick(100 + i * 50, 200, count);
+	//	Default_Map.Brick_info.emplace_back(brick);
+	//	count++;
+	//}
+	//for (int i = 0; i < 10; i++)
+	//{
+	//	Iron_Wall iron(400, 200 + i * 50, count);
+	//	Default_Map.Iron_info.emplace_back(iron);
+	//	count++;
+	//}
 	Map_list[Default_Map.map_id] = Default_Map;
 }
 
@@ -42,6 +42,6 @@ void Init_Map()
 
 void Map::DrawMap()
 {
-	//SHOW(Brick_info);
-	//SHOW(Iron_info);
+	SHOW(Brick_info);
+	SHOW(Iron_info);
 }
