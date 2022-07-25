@@ -612,7 +612,7 @@ void Return_Room_Message(string& recv_str) {
 	string user_head(iterStart, _content[0].first - 1);
 	user_head += "  ";
 	user_head += strTime;
-	user_head += ";\r\n";
+	user_head += ":\r\n";
 	wstring w_user_head = string2wstring(user_head);
 
 	//ÏûÏ¢ÄÚÈİ
