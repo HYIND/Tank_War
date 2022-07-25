@@ -14,7 +14,7 @@
 #define IDI_SMALL                       108
 #define IDC_WINDOWSPROJECT1             109
 #define IDR_MAINFRAME                   128
-#define OPBK_JPG                        129
+#define OPBK_PNG                        129
 #define IDD_DIALOG_PAUSE                134
 #define IDD_DIALOG_HALL                 135
 #define IDD_DIALOG_Userid               135
@@ -48,6 +48,7 @@
 #define BK_SAND                         197
 #define IDC_BUTTON1                     1002
 #define MYSOURCE_TEXTBK                 1002
+#define OP                              1002
 #define IDC_BUTTON2                     1003
 #define IRON_WALL                       1003
 #define IDC_BUTTON3                     1004
@@ -69,7 +70,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        198
+#define _APS_NEXT_RESOURCE_VALUE        199
 #define _APS_NEXT_COMMAND_VALUE         32774
 #define _APS_NEXT_CONTROL_VALUE         1021
 #define _APS_NEXT_SYMED_VALUE           110

@@ -1,47 +1,26 @@
 ﻿// WindowsProject1.cpp : 定义应用程序的入口点。
 //
-
-#include "Network.h"
-#include "D2D_Scene.h"
-#include "Game.h"
 //#include "box2d/box2d.h"
-
-static HBRUSH text_brush = CreateSolidBrush(RGB(230, 230, 230));
-
-using namespace D2D1;
+#include "Render.h"
 
 #define MAX_LOADSTRING 100
 
 // 全局变量:
-wstring my_userid = L"unname";
 
 HRESULT hr = S_OK;
 
-HDC hdc;
-bool Hall_IOCP_flag = false;
-bool Game_IOCP_flag = false;
 bool reverse_in = false;
-
-HANDLE Hall_hIOCP;
-PPER_IO_DATA Hall_pPerIO;
-HANDLE Game_hIOCP;
-PPER_IO_DATA Game_pPerIO;
 
 HINSTANCE hInst;                                // 当前实例
 WCHAR szTitle[MAX_LOADSTRING] = L"Tank War";                  // 标题栏文本
 WCHAR szWindowClass[MAX_LOADSTRING];            // 主窗口类名
 HWND _hwnd;
-HWND Focus_hwnd;
 RECT _rect;
-
-WSADATA wsa;
-sockaddr_in addr_info;
-SOCKET mysocket = INVALID_SOCKET;
-char buffer[1024];
+HDC hdc;
 
 void Init_all_Resource()
 {
-	Init_D2DResource();
+	Init_SceneResource();
 	Init_Style();
 	Init_Map();
 }
@@ -50,10 +29,7 @@ void Init_all_Resource()
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    Pause(HWND, UINT, WPARAM, LPARAM);
-//INT_PTR CALLBACK    HALL(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK    ROOM(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK GetID_Proc(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -162,70 +138,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 //
 
-DWORD WINAPI Render_Thread()
-{
-	timeBeginPeriod(1);
-	timeInOneFps = 1.0 / Fps; // 每秒60帧，则1帧就是约16毫秒
-	PAINTSTRUCT ps;
-	hdc = BeginPaint(_hwnd, &ps);
-	RECT rect;
-	GetClientRect(_hwnd, &rect);
-
-	_LARGE_INTEGER time_now;
-	_LARGE_INTEGER time_last;
-	double dqFreq;		//计时器频率
-	LARGE_INTEGER f;	//计时器频率
-	QueryPerformanceFrequency(&f);
-	dqFreq = (double)f.QuadPart;
-	QueryPerformanceCounter(&time_last);//获取计时器跳数
-	int i = 0;
-	while (true)
-	{
-		QueryPerformanceCounter(&time_now);
-		while ((time_now.QuadPart - time_last.QuadPart) / dqFreq < timeInOneFps)
-		{
-			QueryPerformanceCounter(&time_now);
-			i = (timeInOneFps - (time_now.QuadPart - time_last.QuadPart) / dqFreq) * 1000;
-			if (i > 0)
-				Sleep(i);
-		}
-		time_last = time_now;
-		{
-			pRenderTarget->BeginDraw();
-			pRenderTarget->Clear(ColorF(1, 1, 1, 1));
-			if (status != STATUS::Game_Status) {
-				pRenderTarget->DrawBitmap(OP_pBitmap, D2D1::RectF(0, 0, rect.right, rect.bottom));
-				if (FAILED(hr))
-				{
-					MessageBox(NULL, L"Draw failed!", L"Error", 0);
-				}
-			}
-			if (status == STATUS::Hall_Status || status == STATUS::Room_Status || (status == STATUS::Game_Status && isonline_game))
-			{
-				wstring ws = to_wstring(delay) + L"ms";
-				const wchar_t* delay_ch = ws.c_str();
-				pRenderTarget->DrawText(
-					delay_ch,
-					wcslen(delay_ch),
-					pPing_Format,
-					DelayRect,
-					pMain_Brush
-				);
-			}
-			if (status == STATUS::Game_Status)
-			{
-				Cur_Game->Draw();
-			}
-			if (CurScene)
-				CurScene->DrawScene();
-			hr = pRenderTarget->EndDraw();
-		}
-		//画点画线的各种处理
-	}
-	EndPaint(_hwnd, &ps);
-	return 0;
-}
-
 enum { _game, _online, hall_refrash, reconnect, ping, room_refrash };	//定时器ID
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -239,14 +151,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_CREATE:
 	{
 		Init_all_Resource();
-
 		if (FAILED(hr))
 		{
 			MessageBox(hWnd, _T("位图加载失败"), L"Error", MB_OK);
 			DestroyWindow(hWnd);
 		}
 		CurScene = SMain;
-
 		thread T(Render_Thread);
 		T.detach();
 		break;
@@ -266,18 +176,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		case _game:
 		{
-			if (GetFocus() == _hwnd || isonline_game)
+			if (GetFocus() == _hwnd)
+			{
+				Cur_Game->Tank_Input();
+				Cur_Game->Move();
+				break;
+			}
+			else if (isonline_game)
 			{
 				Cur_Game->Move();
 			}
-			//if (GetFocus() == _hwnd)
-			//{
-			//	Cur_Game->Move();
-			//}
-			//else if (isonline_game)
-			//{
-			//	Cur_Game->Move();
-			//}
 			break;
 		}
 		case hall_refrash:
@@ -355,8 +263,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 							  // 设置
 			case IDB_OPTION: {
-				CurScene = SOption;
-				status = STATUS::Option;
+				Set_CurScene(STATUS::Option);
 				break;
 			}
 						   // 退出游戏
@@ -374,8 +281,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 			case IDB_EXITOPTION:
 			{
-				CurScene = SMain;
-				status = STATUS::Main;
+				Set_CurScene(STATUS::Main);
 				break;
 			}
 			case IDB_SETFPS_30:
@@ -419,9 +325,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			// 加入房间
 			case IDB_ENTERROOM:
 			{
-				int index = SendMessage(Hall_room_list, LB_GETCURSEL, 0, 0);
+				int index = SendMessage(SHall->Hall_room_list, LB_GETCURSEL, 0, 0);
 				TCHAR buff[255];
-				SendMessage(Hall_room_list, LB_GETTEXT, index, (LPARAM)buff);
+				SendMessage(SHall->Hall_room_list, LB_GETTEXT, index, (LPARAM)buff);
 				Enter_Room(index);
 				break;
 			}
@@ -437,9 +343,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case IDB_HALL_SEND:
 			{
 				wchar_t temp[1024] = { '\0' };
-				GetWindowTextW(Hall_edit_in, temp, 1024);
+				GetWindowTextW(SHall->Hall_edit_in, temp, 1024);
 				wstring str = temp;
-				Send_Hall_Message(str);
+				if (!str.empty())
+					Send_Hall_Message(str);
 				break;
 			}
 			// 创建房间
@@ -516,7 +423,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case IDB_ROOM_SEND:
 			{
 				wchar_t temp[1024] = { '\0' };
-				GetWindowTextW(Room_edit_in, temp, 1024);
+				GetWindowTextW(Scene_Room::Room_edit_in, temp, 1024);
 				wstring str = temp;
 				if (!str.empty())
 					Send_Room_Message(str);
@@ -585,9 +492,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			switch (wmId)
 			{
-			case IDM_ABOUT:
-				DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-				break;
 			case IDM_EXIT:
 				SafeRelease(pRenderTarget);
 				SafeRelease(pD2DFactory);
@@ -600,6 +504,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		}
 	}
+
 	case WM_MOUSEMOVE:
 	{
 		MoveX = LOWORD(lParam);
@@ -609,6 +514,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		InvalidateRect(hWnd, NULL, TRUE);
 		break;
 	}
+
 	case WM_LBUTTONDOWN:
 	{
 		ClickX = LOWORD(lParam);
@@ -619,158 +525,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 
-	break;
-
-	//case WM_KEYDOWN:
-	//{
-	//	RECT rect;
-	//	GetClientRect(hWnd, &rect);
-	//	switch (wParam)
-	//	{
-	//	}
-	// break;
-	//}
-	//case WM_CTLCOLORLISTBOX:
-	//case WM_CTLCOLOREDIT:
-	//{
-	//	HWND t_hwnd = (HWND)lParam;
-	//	if (t_hwnd == Hall_edit_in || t_hwnd == edit_hall || t_hwnd == Hall_room_list || t_hwnd == Hall_user_list)
-	//	{
-	//		//RECT text_rect;
-	//		//GetClientRect(t_hwnd, &text_rect);
-	//		//pRenderTarget_t->BeginDraw();
-	//		//pRenderTarget_t->Clear(ColorF(1, 1, 1, 1));
-	//		//pRenderTarget_t->DrawBitmap(TEXT_pBitmap, D2D1::RectF(text_rect.left, text_rect.top, text_rect.right, text_rect.bottom),0.4f);
-	//		//pRenderTarget_t->EndDraw();
-	//		HDC t_hdc = (HDC)wParam;
-	//		SetTextColor(t_hdc, RGB(0, 0, 0));   //设置文字颜色
-	//		SetBkColor(t_hdc, RGB(230, 230, 230));//设置文字背景颜色
-	//		SetBkMode(t_hdc, TRANSPARENT);;
-	//		////RECT rect;
-	//		////GetClientRect(hWnd, &rect);
-	//		////HDC m_hdc = GetDC(hWnd);
-	//		//////通过SetStretchBltMode的设置能使StretchBlt在缩放图像更加清晰
-	//		////SetStretchBltMode((HDC)wParam, COLORONCOLOR);
-	//		////StretchBlt((HDC)wParam, 0, 0, rect.right, rect.bottom, hdcmem, 0, 0, bm1.bmWidth, bm1.bmHeight, SRCCOPY);
-	//		return (INT_PTR)text_brush;
-	//	}
-	//	break;
-	//}
-	//case WM_CTLCOLORBTN:
-	//case WM_CTLCOLORSTATIC:
-	//{
-	//	HDC hdcStatic = (HDC)wParam;
-	//	SetTextColor(hdcStatic, RGB(255, 255, 255));   //设置文字颜色
-	//	SetBkColor(hdcStatic, RGB(0, 0, 0));//设置文字背景颜色
-	//	SetBkMode(hdcStatic, TRANSPARENT);//设置控件背景为透明
-	//	return (INT_PTR)(HBRUSH(GetStockObject(NULL_BRUSH)));//设置控件背景颜色为灰色
-	//	break;
-	//}
-
 	case WM_DESTROY:
+	{
 		closesocket(mysocket);
 		PostQuitMessage(0);
 		break;
+	}
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
 	return 0;
-}
-
-// “关于”框的消息处理程序。
-INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	UNREFERENCED_PARAMETER(lParam);
-	switch (message)
-	{
-	case WM_INITDIALOG:
-		return (INT_PTR)TRUE;
-
-	case WM_COMMAND:
-		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-		{
-			EndDialog(hDlg, LOWORD(wParam));
-			return (INT_PTR)TRUE;
-		}
-		break;
-	}
-	return (INT_PTR)FALSE;
-}
-
-// 暂停窗口
-INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-	UNREFERENCED_PARAMETER(lParam);
-	switch (message)
-	{
-	case WM_INITDIALOG:
-	{
-		RECT Father_rect;
-		RECT My_rect;
-		GetWindowRect(_hwnd, &Father_rect);
-		GetClientRect(hDlg, &My_rect);
-		SetWindowPos(
-			hDlg,
-			_hwnd,
-			(Father_rect.right - My_rect.right) / 2, (Father_rect.bottom - My_rect.bottom) / 2,
-			100, 200,
-			SWP_NOSIZE
-		);
-	}
-	case WM_COMMAND:
-	{
-		int wmId = LOWORD(wParam);
-		switch (wParam) {
-		case IDC_BUTTON1:
-			EndDialog(hDlg, 10);
-			break;
-		case IDC_BUTTON2:
-			EndDialog(hDlg, 20);
-			break;
-		case IDC_BUTTON3:
-			EndDialog(hDlg, 30);
-			break;
-		default: return DefWindowProc(hDlg, message, wParam, lParam);
-		}
-		break;
-	}
-	case WM_CLOSE:
-	{
-		EndDialog(hDlg, 10);
-		break;
-	}
-	}
-	return (INT_PTR)FALSE;
-}
-
-// 登陆前设置ID窗口
-BOOL CALLBACK GetID_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	switch (message)
-	{
-	case WM_INITDIALOG:
-	{
-		userid_in = GetDlgItem(hDlg, Userid_in);
-		SetWindowTextW(userid_in, my_userid.c_str());
-	}
-	case WM_COMMAND:
-	{
-		switch (LOWORD(wParam))
-		{
-		case IDOK:
-		{
-			wchar_t temp[17] = { '\0' };
-			GetWindowTextW(userid_in, temp, 17);
-			my_userid = temp;
-			EndDialog(hDlg, TRUE);
-			return TRUE;
-		}
-		case IDCANCEL:
-		{
-			EndDialog(hDlg, FALSE);
-			return FALSE;
-		}
-		}
-	}
-	}
-	return FALSE;
 }

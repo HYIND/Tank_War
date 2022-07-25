@@ -42,6 +42,16 @@
 #define IDB_SETFPS_60 7302
 #define IDB_SETFPS_144 7303
 #define IDB_EXITOPTION 7304
+#define EDIT_EKY1_UP 7401
+#define EDIT_EKY1_DOWN 7402
+#define EDIT_EKY1_LEFT 7403
+#define EDIT_EKY1_RIGHT 7404
+#define EDIT_EKY1_FIRE 7405
+#define EDIT_EKY2_UP 7406
+#define EDIT_EKY2_DOWN 7407
+#define EDIT_EKY2_LEFT 7408
+#define EDIT_EKY2_RIGHT 7409
+#define EDIT_EKY2_FIRE 7410
 
 using namespace std;
 using namespace D2D1;
@@ -54,6 +64,8 @@ class Scene;
 
 //场景派生类
 class Scene_Option;
+class Scene_Hall;
+class Scene_Room;
 
 /* 以下为内部变量的声明 */
 extern ID2D1SolidColorBrush* pRed_Brush;
@@ -77,10 +89,10 @@ extern D2D1_RECT_F DelayRect;
 extern Scene* CurScene;
 
 extern Scene* SMain;
-extern Scene* SHall;
+extern Scene_Hall* SHall;
 extern Scene_Option* SOption;
-extern Scene* SRoom_host;
-extern Scene* SRoom_nothost;
+extern Scene_Room* SRoom_host;
+extern Scene_Room* SRoom_nothost;
 extern Scene* SPause;
 extern Scene* SGaming_online;
 extern Scene* SGaming_local;
@@ -89,16 +101,16 @@ extern Scene* SFailGame;
 
 extern HWND userid_in;
 
-extern HWND Hall;
-extern HWND Hall_room_list;
-extern HWND Hall_user_list;
-extern HWND Hall_edit_in;
-extern HWND edit_hall;
+//extern HWND Hall;
+//extern HWND Hall_room_list;
+//extern HWND Hall_user_list;
+//extern HWND Hall_edit_in;
+//extern HWND edit_hall;
 
-extern HWND Room_user_list;
-extern HWND Room_edit_in;
-extern HWND edit_room;
-extern HWND Room;
+//extern HWND Room_user_list;
+//extern HWND Room_edit_in;
+//extern HWND edit_room;
+//extern HWND Room;
 
 //status 枚举
 enum class STATUS { Main, Option, Hall_Status, Room_Status, Game_Status };
@@ -229,19 +241,49 @@ protected:
 	IDWriteFactory* pIDWriteFactory = NULL;
 };
 
-
 class Scene_Option :public Scene
 {
 public:
+	HWND key1_UP;
+	HWND key1_DOWN;
+	HWND key1_LEFT;
+	HWND key1_RIGHT;
+	HWND key1_FIRE;
+
+	HWND key2_UP;
+	HWND key2_DOWN;
+	HWND key2_LEFT;
+	HWND key2_RIGHT;
+	HWND key2_FIRE;
+
+	vector<HWND*> HWND_Messager;
+	map<HWND, enum class keybroad> key_map_set1;
+	map<HWND, enum class keybroad> key_map_set2;
+
 	using Scene::Scene;
 	virtual void DrawScene();
+	void Get_Key();
 };
 
-//class Scene_Room :public Scene
-//{
-//public:
-//	using Scene::Scene;
-//	virtual void DrawScene();
-//};
+class Scene_Hall :public Scene
+{
+public:
+	using Scene::Scene;
+	HWND Hall;
+	HWND Hall_room_list;
+	HWND Hall_user_list;
+	HWND Hall_edit_in;
+	HWND edit_hall;
+};
 
-void Init_D2DResource();
+
+class Scene_Room :public Scene
+{
+public:
+	using Scene::Scene;
+	static HWND Room_user_list;
+	static HWND Room_edit_in;
+	static HWND edit_room;
+};
+
+void Init_SceneResource();

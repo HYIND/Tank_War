@@ -153,9 +153,11 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Game_Component.h" />
+    <ClInclude Include="keymap.h" />
     <ClInclude Include="Map.h" />
+    <ClInclude Include="Render.h" />
     <ClInclude Include="Resource.h" />
-    <ClInclude Include="D2D_Scene.h" />
+    <ClInclude Include="Scene.h" />
     <ClInclude Include="Style.h" />
     <ClInclude Include="Tank.h" />
     <ClInclude Include="targetver.h" />
@@ -166,15 +168,19 @@
   <ItemGroup>
     <ClCompile Include="collision.cpp" />
     <ClCompile Include="D2D.cpp" />
-    <ClCompile Include="D2D_Scene.cpp" />
+    <ClCompile Include="Scene_outer.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Game_Component.cpp" />
+    <ClCompile Include="hands.cpp" />
     <ClCompile Include="header.cpp" />
     <ClCompile Include="Map.cpp" />
+    <ClCompile Include="Render.cpp" />
+    <ClCompile Include="Scene_inner.cpp" />
     <ClCompile Include="Style.cpp" />
     <ClCompile Include="Tank.cpp" />
     <ClCompile Include="Tank_War.cpp" />
     <ClCompile Include="Network.cpp" />
+    <ClCompile Include="keymap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Tank_War.rc" />
@@ -192,13 +198,12 @@
     <Image Include="..\x64\Debug\Resource\IRON_WALL.png" />
     <Image Include="..\x64\Debug\Resource\jiaran.jpg" />
     <Image Include="..\x64\Debug\Resource\liangliang.bmp" />
-    <Image Include="..\x64\Debug\Resource\OP_BK.jpg" />
+    <Image Include="..\x64\Debug\Resource\OP_KB.png" />
     <Image Include="..\x64\Debug\Resource\Pause.png" />
     <Image Include="..\x64\Debug\Resource\Return.png" />
     <Image Include="..\x64\Debug\Resource\SNOW.png" />
     <Image Include="..\x64\Debug\Resource\Tank2.bmp" />
     <Image Include="..\x64\Debug\Resource\Tank2.png" />
-    <Image Include="..\x64\Debug\Resource\test.gif" />
     <Image Include="..\x64\Debug\Resource\Text_BK.png" />
     <Image Include="..\x64\Debug\Resource\WATER.png" />
     <Image Include="..\x64\Debug\Resource\Win.png" />
@@ -206,7 +211,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\x64\Debug\Resource\Cursor.cur" />
-    <None Include="..\x64\debug\resource\gif2.bin" />
     <None Include="..\x64\debug\resource\jpg1.bin" />
     <None Include="..\x64\debug\resource\jpg2.bin" />
   </ItemGroup>

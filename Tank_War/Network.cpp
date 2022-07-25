@@ -3,7 +3,7 @@
 
 extern STATUS status;
 
-extern wstring my_userid;
+wstring my_userid = L"unname";
 
 extern HWND _hwnd;
 extern HDC hdc;
@@ -11,26 +11,17 @@ extern HDC hdc;
 extern HWND Hall;
 extern HWND Room;
 
-extern SOCKET mysocket;
-extern char buffer[1024];
-
 int room_id[65535];
 int room_count = 0;
 
-extern bool Hall_IOCP_flag;
-extern bool Game_IOCP_flag;
+WSADATA wsa;
+sockaddr_in addr_info;
+SOCKET mysocket = INVALID_SOCKET;
+char buffer[1024];
 
-extern WSADATA wsa;
-extern sockaddr_in addr_info;
-extern SOCKET mysocket;
 
-extern HANDLE Hall_hIOCP;
-extern PPER_IO_DATA Hall_pPerIO;
-
-//extern void Refresh_opTank(char buf[]);
-//extern void Refresh_opbullet(string& re);
-//extern void my_destroy();
-//extern void op_destory();
+HANDLE hIOCP;
+PPER_IO_DATA pPerIO;
 
 queue<Ping_info> ping_queue;
 int delay = 0;
@@ -144,7 +135,7 @@ void Return_Class(char buf[]) {
 			}
 		}
 	}
-	else if(status==STATUS::Game_Status)
+	else if (status == STATUS::Game_Status)
 	{
 		if (temp == "tankinfo")
 		{
@@ -154,21 +145,25 @@ void Return_Class(char buf[]) {
 		{
 			Cur_Game->refrash_bullet(buf);
 		}
+		else if (temp == "hitbrick")
+		{
+			Cur_Game->recv_hitbrick(buf);
+		}
 		else if (temp == "hited")
 		{
-			Cur_Game->hited(buf);
+			Cur_Game->recv_hited(buf);
 		}
 		else if (temp == "youhited")
 		{
-			Cur_Game->myhited();
+			Cur_Game->recv_myhited();
 		}
 		else if (temp == "destroyed")
 		{
-			Cur_Game->destoryed(buf);
+			Cur_Game->recv_destoryed(buf);
 		}
 		else if (temp == "youdestroyed")
 		{
-			Cur_Game->mydestoryed();
+			Cur_Game->recv_mydestoryed();
 		}
 		else if (temp == "wingame")
 		{
@@ -215,9 +210,9 @@ void Return_Hallinfo_Message(string& recv_str) {
 	wstring w_content = string2wstring(content);
 
 	//发送消息到文本框
-	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_head[0]));
-	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_content[0]));
-	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
+	SendMessage(SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_head[0]));
+	SendMessage(SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_content[0]));
+	SendMessage(SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
 }
 
 void Get_Hallinfo() {
@@ -232,22 +227,22 @@ void Get_Hallinfo() {
 }
 
 void Return_Get_Hallinfo_User(string& re) {
-	(int)SendMessage(Hall_user_list, LB_RESETCONTENT, 0, 0);
+	(int)SendMessage(SHall->Hall_user_list, LB_RESETCONTENT, 0, 0);
 	wstring wtemp = my_userid + L"(您)";
-	(int)SendMessage(Hall_user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
+	(int)SendMessage(SHall->Hall_user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
 	{
 		regex user_reg("(#)[^;]*");
 		string temp;
 		sregex_iterator end;
 		for (sregex_iterator iter(re.begin(), re.end(), user_reg); iter != end; iter++) {
 			wtemp = string2wstring((*iter)[0]);
-			(int)SendMessage(Hall_user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[1]));
+			(int)SendMessage(SHall->Hall_user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[1]));
 		}
 	}
 }
 
 void Return_Get_Hallinfo_Room(string re) {
-	(int)SendMessage(Hall_room_list, LB_RESETCONTENT, 0, 0);
+	(int)SendMessage(SHall->Hall_room_list, LB_RESETCONTENT, 0, 0);
 	{
 		regex room_reg("(#)[^;]*");
 		string temp;
@@ -258,7 +253,7 @@ void Return_Get_Hallinfo_Room(string re) {
 			string s = (*iter)[0];
 			s += "的房间";
 			wtemp = string2wstring(s);
-			(int)SendMessage(Hall_room_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[1]));
+			(int)SendMessage(SHall->Hall_room_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[1]));
 		}
 	}
 }
@@ -294,11 +289,11 @@ void Send_Hall_Message(wstring& w_content) {
 
 	wstring w_user_head = string2wstring(user_head);
 	//清空输入文本框
-	SendMessage(Hall_edit_in, WM_SETTEXT, 0, (LPARAM)L"");
+	SendMessage(SHall->Hall_edit_in, WM_SETTEXT, 0, (LPARAM)L"");
 	//发送消息到文本框
-	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_head[0]));
-	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_content[0]));
-	SendMessage(edit_hall, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
+	SendMessage(SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_head[0]));
+	SendMessage(SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_content[0]));
+	SendMessage(SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
 
 	//发送消息
 	string s = wstring2string(w_content);
@@ -417,18 +412,18 @@ bool Init_Hall()
 	unsigned long ul = 1;
 	ioctlsocket(mysocket, FIONBIO, &ul);
 
-	Hall_hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
-	CreateIoCompletionPort((HANDLE)mysocket, Hall_hIOCP, NULL, 0);
-	Hall_pPerIO = (PPER_IO_DATA)::GlobalAlloc(GPTR, sizeof(PER_IO_DATA));
-	Hall_pPerIO->nOperationType = OP_READ;
+	hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
+	CreateIoCompletionPort((HANDLE)mysocket, hIOCP, NULL, 0);
+	pPerIO = (PPER_IO_DATA)::GlobalAlloc(GPTR, sizeof(PER_IO_DATA));
+	pPerIO->nOperationType = OP_READ;
 	WSABUF buf;
-	buf.buf = Hall_pPerIO->buf;
+	buf.buf = pPerIO->buf;
 	buf.len = 1023;
 	DWORD dwRecv;
 	DWORD dwFlags = 0;
-	WSARecv(mysocket, &buf, 1, &dwRecv, &dwFlags, &Hall_pPerIO->ol, NULL);
+	WSARecv(mysocket, &buf, 1, &dwRecv, &dwFlags, &pPerIO->ol, NULL);
 	Process_Stop = false;
-	thread T1(Recv_Thread, Hall_pPerIO, LPVOID(Hall_hIOCP));
+	thread T1(Recv_Thread, pPerIO, LPVOID(hIOCP));
 	T1.detach();
 	return true;
 }
@@ -508,7 +503,7 @@ void Get_Room_Info()
 
 void Return_Get_Room_User(string& re)
 {
-	(int)SendMessage(Room_user_list, LB_RESETCONTENT, 0, 0);
+	(int)SendMessage(SRoom_host->Room_user_list, LB_RESETCONTENT, 0, 0);
 	wstring wtemp = my_userid + L"(您)";
 	if (host)
 	{
@@ -518,7 +513,7 @@ void Return_Get_Room_User(string& re)
 	{
 		wtemp += L"（已准备）";
 	}
-	(int)SendMessage(Room_user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
+	(int)SendMessage(SRoom_host->Room_user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
 
 	{
 		regex user_reg("(#)[^;]*");
@@ -545,7 +540,7 @@ void Return_Get_Room_User(string& re)
 				name_str += "（房主）";
 			}
 			wstring name = string2wstring(name_str);
-			(int)SendMessage(Room_user_list, LB_ADDSTRING, 0, (LPARAM) & (name[0]));
+			(int)SendMessage(SRoom_host->Room_user_list, LB_ADDSTRING, 0, (LPARAM) & (name[0]));
 		}
 	}
 }
@@ -583,11 +578,11 @@ void Send_Room_Message(wstring& w_content) {
 
 	wstring w_user_head = string2wstring(user_head);
 	//清空输入文本框
-	SendMessage(Room_edit_in, WM_SETTEXT, 0, (LPARAM)L"");
+	SendMessage(Scene_Room::Room_edit_in, WM_SETTEXT, 0, (LPARAM)L"");
 	//发送消息到文本框
-	SendMessage(edit_room, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_head[0]));
-	SendMessage(edit_room, EM_REPLACESEL, FALSE, (LPARAM) & (w_content[0]));
-	SendMessage(edit_room, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
+	SendMessage(Scene_Room::edit_room, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_head[0]));
+	SendMessage(Scene_Room::edit_room, EM_REPLACESEL, FALSE, (LPARAM) & (w_content[0]));
+	SendMessage(Scene_Room::edit_room, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
 
 	//发送消息
 	string s = wstring2string(w_content);
@@ -625,7 +620,7 @@ void Return_Room_Message(string& recv_str) {
 	wstring w_content = string2wstring(content);
 
 	//发送消息到文本框
-	SendMessage(edit_room, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_head[0]));
-	SendMessage(edit_room, EM_REPLACESEL, FALSE, (LPARAM) & (w_content[0]));
-	SendMessage(edit_room, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
+	SendMessage(Scene_Room::edit_room, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_head[0]));
+	SendMessage(Scene_Room::edit_room, EM_REPLACESEL, FALSE, (LPARAM) & (w_content[0]));
+	SendMessage(Scene_Room::edit_room, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
 }

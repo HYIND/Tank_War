@@ -1,28 +1,7 @@
 #include "Game.h"
+#include "collision.h"
+#include "keymap.h"\
 
-#define  Object_Check(A,B) collision(A->locationX, A->locationY,A->width, A->height,B->locationX, B->locationY,B->width, B->height)
-
-#define  Object_Check_predict(A,B) if(collision(new_locationX, new_locationY,A->width, A->height,B->locationX, B->locationY,B->width, B->height))\
-		{\
-		switch (ptank->direction)\
-		{\
-		case UP:\
-			new_locationY = B->locationY + B->height / 2 + A->height / 2;\
-			break;\
-		case DOWN:\
-			new_locationY = B->locationY - B->height / 2 - A->height / 2;\
-			break;\
-		case LEFT:\
-			new_locationX = B->locationX + B->width / 2 + A->width / 2;\
-			break;\
-		case RIGHT:\
-			new_locationX = B->locationX - B->width / 2 - A->width / 2;\
-			break;\
-		}\
-		A->locationX = new_locationX;\
-		A->locationY = new_locationY;\
-		return;\
-		}\
 
 extern SOCKET mysocket;
 
@@ -31,22 +10,9 @@ int my_tank_location = 1;
 
 extern RECT _rect;
 
-bool collision(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2)
-{
-	//¼ì²âYÖáÅö×²,Åö×²Ôò·µ»Øtrue;
-	bool collisionY = y1 - height1 / 2 < y2 + height2 / 2 == y1 + height1 / 2 > y2 - height2 / 2;
-	//¼ì²âXÖáÅö×²,Åö×²Ôò·µ»Øtrue
-	bool collisionX = x1 - width1 / 2 < x2 + width2 / 2 == x1 + width1 / 2 > x2 - width2 / 2;
-
-	if (collisionX && collisionY)
-	{
-		return true;
-	}
-	return false;
-}
-
 void Game::Init_Game(int map_id, int my_id)
 {
+	Get_keymap();
 	this->map_info = Map_list[map_id];
 	for (auto& v : map_info.Init_Location)
 	{
@@ -71,9 +37,24 @@ void Game::Init_Game(int map_id, int my_id)
 	}
 }
 
+void Game::Get_keymap()
+{
+	key1[0] = key_map_p1[keybroad::UP];
+	key1[1] = key_map_p1[keybroad::DOWN];
+	key1[2] = key_map_p1[keybroad::LEFT];
+	key1[3] = key_map_p1[keybroad::RIGHT];
+	key1[4] = key_map_p1[keybroad::FIRE];
+
+	key2[0] = key_map_p2[keybroad::UP];
+	key2[1] = key_map_p2[keybroad::DOWN];
+	key2[2] = key_map_p2[keybroad::LEFT];
+	key2[3] = key_map_p2[keybroad::RIGHT];
+	key2[4] = key_map_p2[keybroad::FIRE];
+}
+
 void Game::Tank_Input()
 {
-	if (GetAsyncKeyState('W') & 0x8000)
+	if (GetAsyncKeyState(key1[0]) & 0x8000)
 	{
 		if (ptank1->direction != UP)
 		{
@@ -84,7 +65,7 @@ void Game::Tank_Input()
 			Tank_Move(ptank1);
 		}
 	}
-	else if (GetAsyncKeyState('A') & 0x8000)
+	else if (GetAsyncKeyState(key1[2]) & 0x8000)
 	{
 		if (ptank1->direction != LEFT)
 		{
@@ -95,7 +76,7 @@ void Game::Tank_Input()
 			Tank_Move(ptank1);
 		}
 	}
-	else if (GetAsyncKeyState('S') & 0x8000)
+	else if (GetAsyncKeyState(key1[1]) & 0x8000)
 	{
 		if (ptank1->direction != DOWN)
 		{
@@ -106,7 +87,7 @@ void Game::Tank_Input()
 			Tank_Move(ptank1);
 		}
 	}
-	else if (GetAsyncKeyState('D') & 0x8000)
+	else if (GetAsyncKeyState(key1[3]) & 0x8000)
 	{
 		if (ptank1->direction != RIGHT)
 		{
@@ -117,7 +98,7 @@ void Game::Tank_Input()
 			Tank_Move(ptank1);
 		}
 	}
-	if (GetAsyncKeyState(VK_SPACE) & 0x8000)
+	if (GetAsyncKeyState(key1[4]) & 0x8000)
 	{
 		if (ptank1->bullet_count < ptank1->bullet_limited)
 		{
@@ -132,7 +113,7 @@ void Game::Tank_Input()
 	}
 	if (!isonline_game)
 	{
-		if (GetAsyncKeyState(VK_UP) & 0x8000)
+		if (GetAsyncKeyState(key2[0]) & 0x8000)
 		{
 			if (ptank2->direction != UP)
 			{
@@ -143,7 +124,7 @@ void Game::Tank_Input()
 				Tank_Move(ptank2);
 			}
 		}
-		else if (GetAsyncKeyState(VK_LEFT) & 0x8000)
+		else if (GetAsyncKeyState(key2[2]) & 0x8000)
 		{
 			if (ptank2->direction != LEFT)
 			{
@@ -154,7 +135,7 @@ void Game::Tank_Input()
 				Tank_Move(ptank2);
 			}
 		}
-		else if (GetAsyncKeyState(VK_DOWN) & 0x8000)
+		else if (GetAsyncKeyState(key2[1]) & 0x8000)
 		{
 			if (ptank2->direction != DOWN)
 			{
@@ -165,7 +146,7 @@ void Game::Tank_Input()
 				Tank_Move(ptank2);
 			}
 		}
-		else if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
+		else if (GetAsyncKeyState(key2[3]) & 0x8000)
 		{
 			if (ptank2->direction != RIGHT)
 			{
@@ -176,7 +157,7 @@ void Game::Tank_Input()
 				Tank_Move(ptank2);
 			}
 		}
-		if (GetAsyncKeyState(VK_OEM_2) & 0x8000)
+		if (GetAsyncKeyState(key2[4]) & 0x8000)
 		{
 			if (ptank2->bullet_count < ptank2->bullet_limited)
 			{
@@ -194,7 +175,6 @@ void Game::Tank_Input()
 
 void Game::Move()
 {
-	Tank_Input();
 	if (!isonline_game)
 	{
 		for (auto& v : Tank_info)
@@ -235,27 +215,6 @@ void Game::Tank_Move(Tank* ptank)
 			continue;
 		Tank* pother_tank = v.second;
 		Object_Check_predict(ptank, pother_tank);
-		//if (Object_Check(ptank, pother_tank))
-		//{
-		//	switch (ptank->direction)
-		//	{
-		//	case UP:
-		//		new_locationY = pother_tank->locationY + pother_tank->height / 2 + ptank->height / 2;
-		//		break;
-		//	case DOWN:
-		//		new_locationY = pother_tank->locationY - pother_tank->height / 2 - ptank->height / 2;
-		//		break;
-		//	case LEFT:
-		//		new_locationX = pother_tank->locationX + pother_tank->width / 2 + ptank->width / 2;
-		//		break;
-		//	case RIGHT:
-		//		new_locationX = pother_tank->locationX - pother_tank->width / 2 - ptank->width / 2;
-		//		break;
-		//	}
-		//	ptank->locationY = new_locationY;
-		//	ptank->locationX = new_locationX;
-		//	return;
-		//}
 	}
 
 	for (auto& v : map_info.Brick_info)
@@ -295,27 +254,6 @@ void Game::Tank_Move(Tank* ptank)
 	ptank->locationX = new_locationX;
 }
 
-// destorytank:(INT){INT,INT,bulletStyle}
-void Game::send_hit(int id, bullet* pbullet)
-{
-	char ch[1024] = "hittank:";
-
-	int cur_loc = 8;
-	ch[cur_loc] = '(';
-	cur_loc++;
-	memcpy(&ch[cur_loc], &id, sizeof(int));
-	cur_loc += sizeof(int);
-	ch[cur_loc] = ')';
-	cur_loc++;
-	ch[cur_loc] = '{';
-	cur_loc++;
-	memcpy(&ch[cur_loc], &(pbullet->locationX), sizeof(int) * 3 + sizeof(BulletStyle));
-	cur_loc += sizeof(int) * 3 + sizeof(BulletStyle);
-	ch[cur_loc] = '}';
-
-	send(mysocket, (const char*)&ch[0], 1023, 0);
-}
-
 void Game::Bullet_Move(bullet* pbullet)
 {
 	if (!pbullet) return;
@@ -347,7 +285,7 @@ void Game::Bullet_Move(bullet* pbullet)
 		{
 			if (isonline_game)
 			{
-				send_hit(v.first, pbullet);
+				send_hittank(v.first, pbullet);
 				pbullet->destroy();
 				return;
 			}
@@ -366,8 +304,14 @@ void Game::Bullet_Move(bullet* pbullet)
 		Brick_Wall* pBWall = &(*it);
 		if (Object_Check(pbullet, pBWall))
 		{
+			if (isonline_game)
+			{
+				send_hitbrick(pBWall->id, pbullet);
+				pbullet->destroy();
+				return;
+			}
 			pbullet->destroy();
-			pBWall->health -= 35;
+			pBWall->health -= 21;
 			if (pBWall->health <= 0)
 			{
 				map_info.Brick_info.erase(it);
@@ -382,11 +326,6 @@ void Game::Bullet_Move(bullet* pbullet)
 		if (Object_Check(pbullet, pIWall))
 		{
 			pbullet->destroy();
-			pIWall->health -= 35;
-			if (pIWall->health <= 0)
-			{
-				map_info.Iron_info.erase(it);
-			}
 			return;
 		}
 	}
@@ -417,10 +356,53 @@ void Game::Draw()
 	map_info.DrawMap();
 }
 
+
+
 void Game::online()
 {
 	send_mytankinfo();
 	send_bullet();
+}
+
+// hittank:(INT){INT,INT,bulletStyle}
+void Game::send_hittank(int id, bullet* pbullet)
+{
+	char ch[1024] = "hittank:";
+
+	int cur_loc = 8;
+	ch[cur_loc] = '(';
+	cur_loc++;
+	memcpy(&ch[cur_loc], &id, sizeof(int));
+	cur_loc += sizeof(int);
+	ch[cur_loc] = ')';
+	cur_loc++;
+	ch[cur_loc] = '{';
+	cur_loc++;
+	memcpy(&ch[cur_loc], &(pbullet->locationX), sizeof(int) * 3 + sizeof(BulletStyle));
+	cur_loc += sizeof(int) * 3 + sizeof(BulletStyle);
+	ch[cur_loc] = '}';
+
+	send(mysocket, (const char*)&ch[0], 1023, 0);
+}
+
+void Game::send_hitbrick(int id, bullet* pbullet)
+{
+	char ch[1024] = "hitbrick:";
+
+	int cur_loc = 9;
+	ch[cur_loc] = '(';
+	cur_loc++;
+	memcpy(&ch[cur_loc], &id, sizeof(int));
+	cur_loc += sizeof(int);
+	ch[cur_loc] = ')';
+	cur_loc++;
+	ch[cur_loc] = '{';
+	cur_loc++;
+	memcpy(&ch[cur_loc], &(pbullet->locationX), sizeof(int) * 3 + sizeof(BulletStyle));
+	cur_loc += sizeof(int) * 3 + sizeof(BulletStyle);
+	ch[cur_loc] = '}';
+
+	send(mysocket, (const char*)&ch[0], 1023, 0);
 }
 
 void Game::send_mytankinfo()
@@ -506,7 +488,37 @@ void Game::refrash_bullet(char ch[])
 	//cv.notify_one();
 }
 
-void Game::hited(char buf[])
+void Game::recv_hitbrick(char buf[])
+{
+	int hited_brick_id = -1;
+	int cur_loc = 9;
+	int health = 1;
+	if (buf[cur_loc] == '(' && buf[cur_loc + 2 * sizeof(int) + 1] == ')')
+	{
+		cur_loc++;
+		memcpy(&hited_brick_id, &buf[cur_loc], sizeof(int));
+		memcpy(&health, &buf[cur_loc + sizeof(int)], sizeof(int));
+	}
+
+	auto iter = map_info.Brick_info.begin();
+	while (iter != map_info.Brick_info.end())
+	{
+		if (iter->id == hited_brick_id)
+			break;
+		iter++;
+	}
+	if (iter == map_info.Brick_info.end())
+		return;
+	if (health <= 0)
+	{
+		map_info.Brick_info.erase(iter);
+		return;
+	}
+	Brick_Wall* pwall = &(*iter);
+	pwall->health = health;
+}
+
+void Game::recv_hited(char buf[])
 {
 	int hited_id = -1;
 	int cur_loc = 6;
@@ -519,13 +531,12 @@ void Game::hited(char buf[])
 		Tank_info[hited_id]->health -= 21;
 }
 
-void Game::myhited()
+void Game::recv_myhited()
 {
 	ptank1->health -= 21;
 }
 
-
-void Game::destoryed(char buf[])
+void Game::recv_destoryed(char buf[])
 {
 	int hited_id = -1;
 	int cur_loc = 10;
@@ -537,11 +548,10 @@ void Game::destoryed(char buf[])
 	Tank_info[hited_id]->isalive = false;
 }
 
-void Game::mydestoryed()
+void Game::recv_mydestoryed()
 {
 	ptank1->isalive = false;
 }
-
 
 void set_My_id(int id)
 {

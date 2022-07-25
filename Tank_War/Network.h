@@ -4,7 +4,7 @@
 //#include <regex>
 //#include <thread>
 #include "header.h"
-#include "D2D_Scene.h"
+#include "Scene.h"
 
 using namespace std;
 
@@ -26,7 +26,6 @@ struct Ping_info
 	int send_time;
 };
 
-
 struct socket_messageinfo
 {
 	char ch[1024];
@@ -35,17 +34,6 @@ struct socket_messageinfo
 		memcpy(this->ch, ch, 1024);
 	}
 };
-
-
-//struct player_info
-//{
-//
-//};
-//
-//class Room_info
-//{
-//	vector<>
-//};
 
 
 //按钮、位图及事件标识符
@@ -64,10 +52,12 @@ struct socket_messageinfo
 #define DEFAULT_PORT 2336
 #define SERVER_IP "175.178.90.119"
 
+extern wstring my_userid;
 
 extern queue<Ping_info> ping_queue;
 extern int delay;
 
+extern SOCKET mysocket;
 
 void SIG_IO();
 
@@ -84,7 +74,6 @@ void Send_Room_Message(wstring& w_content);
 
 void win_game();
 void lost_game();
-void ReturnToRoom();
 
 void send_pingmessage();
 
@@ -99,10 +88,6 @@ void Ping_Count(string&);
 
 DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam);
 DWORD WINAPI Process_Thread();
-
-
-HRESULT Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget, LPCTSTR pszResource, ID2D1Bitmap** ppBitmap);
-HRESULT LoadResourceBitmap(HINSTANCE hinstance, IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget, LPCWSTR resourceType, LPCWSTR resourceName, ID2D1Bitmap** ppBitmap);
 
 void Show_Hall(bool flag);
 void Show_Room(bool flag);
