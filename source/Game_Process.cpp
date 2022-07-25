@@ -378,108 +378,143 @@ void Room_Process::game_process()
     int player_alive = user_count;
     while (!end && !stop)
     {
-        unique_lock<mutex> lck(process_mtx);
-        process_cv.wait(lck);
-        while (!recv_queue.empty())
+        try
         {
-            bool release = false;
-            if (stop)
+            unique_lock<mutex> lck(process_mtx);
+            process_cv.wait(lck);
+            while (!recv_queue.empty())
             {
-                break;
-            }
-            unique_lock<mutex> qlck(recvqueue_mtx);
-            messageinfo = recv_queue.front();
-            recv_queue.pop();
-            qlck.unlock();
-            cur_socket = messageinfo->socket;
-            buf = messageinfo->ch;
-            str = messageinfo->ch;
-            string::const_iterator iterStart = str.begin();
-            string::const_iterator iterEnd = str.end();
-            smatch m;
-            regex reg("^[A-Z|a-z]+");
-            regex_search(iterStart, iterEnd, m, reg);
-            string option;
-            option = m[0];
-            // {
-            //     try
-            //     {
-            //         delfd(recv_epoll, mysocket);
-            //         if (mysocket == socket1)
-            //         {
-            //             for (auto &v : user_list)
-            //             {
-            //                 if (v.accept == mysocket)
-            //                 {
-            //                     v.states = room;
-            //                 }
-            //             }
-            //             stop1 = true;
-            //             if (stop2)
-            //             {
-            //                 stop = true;
-            //             }
-            //         }
-            //         else if (mysocket == socket2)
-            //         {
-            //             for (auto &v : user_list)
-            //             {
-            //                 if (v.accept == mysocket)
-            //                 {
-            //                     if (roominfo)
-            //                     {
-            //                         v.states = room;
-            //                     }
-            //                     else
-            //                     {
-            //                         v.states = hall;
-            //                         string str = "disband";
-            //                         send(socket2, (const char *)&(str[0]), 1023, 0);
-            //                     }
-            //                 }
-            //             }
-            //             stop2 = true;
-            //             if (stop1)
-            //             {
-            //                 stop = true;
-            //             }
-            //         }
-            //         addfd(hall_epoll, mysocket);
-            //         break;
-            //     }
-            //     catch (const std::exception &e)
-            //     {
-            //         break;
-            //     }
-            // }
-            if (option == "ping")
-            {
-                unique_lock<mutex> slck(sendqueue_mtx);
-                send_queue.emplace(messageinfo);
-                sendqueue_mtx.unlock();
-                // string s = buf;
-                // send(mysocket, (const char *)buf, 1023, 0);
-            }
-            else if (option == "mytankinfo")
-            {
-                try
+                bool release = false;
+                if (stop)
                 {
-                    Tank *mytank = Tank_info[cur_socket];
-                    if (mytank->isalive)
+                    break;
+                }
+                unique_lock<mutex> qlck(recvqueue_mtx);
+                messageinfo = recv_queue.front();
+                recv_queue.pop();
+                qlck.unlock();
+                cur_socket = messageinfo->socket;
+                buf = messageinfo->ch;
+                str = messageinfo->ch;
+                string::const_iterator iterStart = str.begin();
+                string::const_iterator iterEnd = str.end();
+                smatch m;
+                regex reg("^[A-Z|a-z]+");
+                regex_search(iterStart, iterEnd, m, reg);
+                string option;
+                option = m[0];
+                // {
+                //     try
+                //     {
+                //         delfd(recv_epoll, mysocket);
+                //         if (mysocket == socket1)
+                //         {
+                //             for (auto &v : user_list)
+                //             {
+                //                 if (v.accept == mysocket)
+                //                 {
+                //                     v.states = room;
+                //                 }
+                //             }
+                //             stop1 = true;
+                //             if (stop2)
+                //             {
+                //                 stop = true;
+                //             }
+                //         }
+                //         else if (mysocket == socket2)
+                //         {
+                //             for (auto &v : user_list)
+                //             {
+                //                 if (v.accept == mysocket)
+                //                 {
+                //                     if (roominfo)
+                //                     {
+                //                         v.states = room;
+                //                     }
+                //                     else
+                //                     {
+                //                         v.states = hall;
+                //                         string str = "disband";
+                //                         send(socket2, (const char *)&(str[0]), 1023, 0);
+                //                     }
+                //                 }
+                //             }
+                //             stop2 = true;
+                //             if (stop1)
+                //             {
+                //                 stop = true;
+                //             }
+                //         }
+                //         addfd(hall_epoll, mysocket);
+                //         break;
+                //     }
+                //     catch (const std::exception &e)
+                //     {
+                //         break;
+                //     }
+                // }
+                if (option == "ping")
+                {
+                    unique_lock<mutex> slck(sendqueue_mtx);
+                    send_queue.emplace(messageinfo);
+                    sendqueue_mtx.unlock();
+                    // string s = buf;
+                    // send(mysocket, (const char *)buf, 1023, 0);
+                }
+                else if (option == "mytankinfo")
+                {
+                    try
                     {
-                        memcpy(mytank, &buf[11], 21);
+                        Tank *mytank = Tank_info[cur_socket];
+                        if (mytank->isalive)
+                        {
+                            memcpy(mytank, &buf[11], 21);
+                            int id = info[cur_socket]->tank_id;
+                            char send_ch[1024] = "tankinfo:(";
+                            int cur_loc = 10;
+                            memcpy(&send_ch[cur_loc], &id, sizeof(int));
+                            cur_loc += sizeof(int);
+                            send_ch[cur_loc] = ')';
+                            cur_loc++;
+                            send_ch[cur_loc] = '{';
+                            cur_loc++;
+                            memcpy(&send_ch[cur_loc], &buf[11], 21);
+                            cur_loc += 21;
+                            send_ch[cur_loc] = '}';
+                            for (auto &v : info)
+                            {
+                                if (v.first == cur_socket)
+                                    continue;
+                                unique_lock<mutex> slck(sendqueue_mtx);
+                                socket_messageinfo *pmsginfo = new socket_messageinfo(v.first, send_ch);
+                                send_queue.emplace(pmsginfo);
+                                sendqueue_mtx.unlock();
+                            }
+                            // send(opsocket, (const char *)&(buf[0]), 1023, 0);
+                            // memset(buf, '\0', 1024);
+                        }
+                    }
+                    catch (exception &e)
+                    {
+                        return;
+                    }
+                }
+                else if (option == "mybullet")
+                {
+                    try
+                    {
                         int id = info[cur_socket]->tank_id;
-                        char send_ch[1024] = "tankinfo:(";
-                        int cur_loc = 10;
+                        char send_ch[1024] = "bulletinfo:(";
+                        int cur_loc = 12;
                         memcpy(&send_ch[cur_loc], &id, sizeof(int));
                         cur_loc += sizeof(int);
-                        send_ch[cur_loc] = ')';
-                        cur_loc++;
-                        send_ch[cur_loc] = '{';
-                        cur_loc++;
-                        memcpy(&send_ch[cur_loc], &buf[11], 21);
-                        cur_loc += 21;
-                        send_ch[cur_loc] = '}';
+                        if (id < 10)
+                        {
+                            send_ch[cur_loc] = ')';
+                            cur_loc++;
+                        }
+                        memcpy(&send_ch[cur_loc], &buf[9], 900);
                         for (auto &v : info)
                         {
                             if (v.first == cur_socket)
@@ -489,81 +524,53 @@ void Room_Process::game_process()
                             send_queue.emplace(pmsginfo);
                             sendqueue_mtx.unlock();
                         }
-                        // send(opsocket, (const char *)&(buf[0]), 1023, 0);
-                        // memset(buf, '\0', 1024);
                     }
-                }
-                catch (exception &e)
-                {
-                    return;
-                }
-            }
-            else if (option == "mybullet")
-            {
-                try
-                {
-                    int id = info[cur_socket]->tank_id;
-                    char send_ch[1024] = "bulletinfo:(";
-                    int cur_loc = 12;
-                    memcpy(&send_ch[cur_loc], &id, sizeof(int));
-                    cur_loc += sizeof(int);
-                    if (id < 10)
+                    catch (exception &e)
                     {
-                        send_ch[cur_loc] = ')';
-                        cur_loc++;
+                        return;
                     }
-                    memcpy(&send_ch[cur_loc], &buf[9], 900);
-                    for (auto &v : info)
+                }
+                // destroytank:(INT){INT,INT,bulletStyle}
+                else if (option == "hittank")
+                {
+                    if (hittank(buf))
                     {
-                        if (v.first == cur_socket)
-                            continue;
-                        unique_lock<mutex> slck(sendqueue_mtx);
-                        socket_messageinfo *pmsginfo = new socket_messageinfo(v.first, send_ch);
-                        send_queue.emplace(pmsginfo);
-                        sendqueue_mtx.unlock();
+                        player_alive--;
                     }
+                    release = true;
                 }
-                catch (exception &e)
+                else if (option == "hitbrick")
                 {
-                    return;
+                    hitbrick(buf);
+                    release = true;
                 }
-            }
-            // destroytank:(INT){INT,INT,bulletStyle}
-            else if (option == "hittank")
-            {
-                if (hittank(buf))
+                else if (player_alive == 1)
                 {
-                    player_alive--;
+                    EndGame();
+                    end = true;
                 }
-                release = true;
+                else if (option == "returntohall")
+                {
+                    unique_lock<mutex> infolck(info_mtx);
+                    info[cur_socket]->sockinfo->states = hall;
+                    delfd(recv_epoll, cur_socket);
+                    addfd(hall_epoll, cur_socket);
+                    info.erase(cur_socket);
+                    infolck.unlock();
+                }
+                send_cv.notify_one();
+                if (release)
+                {
+                    delete (messageinfo);
+                }
+                messageinfo = NULL;
             }
-            else if (option == "hitbrick")
-            {
-                hitbrick(buf);
-                release = true;
-            }
-            else if (player_alive == 1)
-            {
-                EndGame();
-                end = true;
-            }
-            else if (option == "returntohall")
-            {
-                unique_lock<mutex> infolck(info_mtx);
-                info[cur_socket]->sockinfo->states = hall;
-                delfd(recv_epoll, cur_socket);
-                addfd(hall_epoll, cur_socket);
-                info.erase(cur_socket);
-                infolck.unlock();
-            }
-            send_cv.notify_one();
-            if (release)
-            {
-                delete (messageinfo);
-            }
-            messageinfo = NULL;
+            lck.unlock();
         }
-        lck.unlock();
+        catch (exception &e)
+        {
+            break;
+        }
     }
     //正常结束游戏、将消息处理移交给处理进程
     if (end)

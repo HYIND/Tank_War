@@ -180,53 +180,10 @@ void Room_Process::recv_process()
             // int opsocket = socket2;
             if (events[i].events & EPOLLRDHUP)
             {
-                // for (auto &v : user_list)
-                // {
-                //     if (v.accept == mysocket)
-                //         mysocket = disconnection;
-                // }
-                // delfd(recv_epoll, socket);
-                // close(socket);
-                // two_user1[socket1] = 0;
-                // two_user2[socket2] = 0;
-                // if (mysocket == socket1)
-                // {
-                //     roominfo = NULL;
-                //     auto it = find(room_user.begin(), room_user.end(), socket1);
-                //     if (it != room_user.end())
-                //     {
-                //         room_user.erase(it);
-                //     }
-                //     for (auto it = room_list.begin(); it != room_list.end(); it++)
-                //     {
-                //         if (it->user1 == socket1)
-                //         {
-                //             room_list.erase(it);
-                //         }
-                //     }
-                //     stop1 = true;
-                //     if (!stop2)
-                //     {
-                //         for (auto &v : user_list)
-                //         {
-                //             if (v.accept == socket2 && v.states == room)
-                //             {
-                //                 v.states = hall;
-                //                 string str = "disband";
-                //                 send(socket2, (const char *)&(str[0]), 1023, 0);
-                //             }
-                //         }
-                //     }
-                // }
-                // else if (mysocket == socket2)
-                // {
-                //     for (auto &v : room_list)
-                //         if (v.user2 == mysocket)
-                //             v.user2 = 0;
-                //     stop2 = true;
-                // }
-                // if (stop1 == true && stop2 == true)
-                //     stop = true;
+                stop = true;
+                //非正常退出，暂时直接回收资源
+                delete (this);
+                break;
             }
             else if (events[i].events & EPOLLIN)
             {
@@ -315,6 +272,10 @@ void Room_Process::room_process()
         process_cv.wait(lck);
         while (!recv_queue.empty())
         {
+            if (stop)
+            {
+                break;
+            }
             unique_lock<mutex> qlck(recvqueue_mtx);
             messageinfo = recv_queue.front();
             recv_queue.pop();
@@ -584,8 +545,15 @@ void Room_Process::send_process()
             info = send_queue.front();
             send_queue.pop();
             sendqueue_mtx.unlock();
-            send(info->socket, (const char *)info->ch, 1023, 0);
-
+            try
+            {
+                signal(SIGPIPE, SIG_IGN);
+                send(info->socket, (const char *)info->ch, 1023, 0);
+            }
+            catch (const exception &e)
+            {
+                continue;
+            }
             delete (info);
         }
         lck.unlock();

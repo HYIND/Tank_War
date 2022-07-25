@@ -233,7 +233,6 @@ int main(int argc, char *argv[])
     //     get_local_ip("eth0", IP);
     //     sock_addr.sin_addr.s_addr = inet_addr(IP);
     // }
-
     int mysocket = socket(PF_INET, SOCK_STREAM, 0);
 
     int result = 0;
@@ -254,7 +253,7 @@ int main(int argc, char *argv[])
     addfd(game_epoll, game_pipe[0]);
     addsig(SIGINT);
     addsig(SIGTERM);
-
+    signal(SIGPIPE, SIG_IGN);
     // int SendBuf = 1024 * 1024;
     // int RecvBuf = 1024 * 1024;
     // getsockopt(socket, SOL_SOCKET, SO_SNDBUF, &i, &j);
