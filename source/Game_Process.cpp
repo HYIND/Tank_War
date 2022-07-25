@@ -544,11 +544,6 @@ void Room_Process::game_process()
                     hitbrick(buf);
                     release = true;
                 }
-                else if (player_alive == 1)
-                {
-                    EndGame();
-                    end = true;
-                }
                 else if (option == "returntohall")
                 {
                     unique_lock<mutex> infolck(info_mtx);
@@ -564,6 +559,12 @@ void Room_Process::game_process()
                     delete (messageinfo);
                 }
                 messageinfo = NULL;
+                if (player_alive == 1)
+                {
+                    EndGame();
+                    end = true;
+                    break;
+                }
             }
             lck.unlock();
         }
