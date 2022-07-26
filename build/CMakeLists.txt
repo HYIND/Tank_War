@@ -7,5 +7,6 @@ aux_source_directory(../source DIR_SRCS)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../bin)
 add_executable(Tank_War_Server ${DIR_SRCS})
 
-set(CMAKE_CXX_FLAGS "-g -pthread")
+set(CMAKE_CXX_FLAGS "-pthread")
+
 
