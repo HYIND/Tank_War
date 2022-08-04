@@ -66,6 +66,9 @@
     <ClInclude Include="keymap.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\protobuf\myprotocol.pb.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Tank_War.cpp">
@@ -111,6 +114,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="keymap.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\protobuf\myprotocol.pb.cc">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,12 +1,10 @@
-#include "D2D.h"
+﻿#include "D2D.h"
 
 ID2D1Factory* pD2DFactory;
-ID2D1RenderTarget* pT;
 ID2D1HwndRenderTarget* pRenderTarget;
 IWICImagingFactory* pIWICFactory;
 IDWriteFactory* pIDWriteFactory;
 
-	ID2D1DeviceContext3* pDCont = NULL;
 double Fps = 60;
 double timeInOneFps;
 

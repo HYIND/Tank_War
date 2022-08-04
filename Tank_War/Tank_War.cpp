@@ -138,7 +138,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 //
 
-enum { _game, _online, hall_refrash, reconnect, ping, room_refrash };	//定时器ID
+enum { _game, _online, hall_refreash, reconnect, ping, room_refreash };	//定时器ID
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	PAINTSTRUCT ps;
@@ -188,10 +188,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		}
-		case hall_refrash:
+		case hall_refreash:
 			Get_Hallinfo();
 			break;
-		case room_refrash:
+		case room_refreash:
 			Get_Room_Info();
 			break;
 		case ping:
@@ -251,12 +251,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					break;
 				if (!Init_Hall())
 					break;
-				setmyuserid();
+				set_my_userid();
 				Show_Hall(true);
 				CurScene = SHall;
 				status = STATUS::Hall_Status;
 				SetTimer(hWnd, reconnect, 5000, NULL);
-				SetTimer(hWnd, hall_refrash, 4000, NULL);
+				SetTimer(hWnd, hall_refreash, 4000, NULL);
 				SetTimer(hWnd, ping, 2000, NULL);
 				UpdateWindow(hWnd);
 				break;
@@ -310,8 +310,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 			case Enterroom:
 			{
-				KillTimer(hWnd, hall_refrash);
-				SetTimer(hWnd, room_refrash, 1000, NULL);
+				KillTimer(hWnd, hall_refreash);
+				SetTimer(hWnd, room_refreash, 1000, NULL);
 				Set_CurScene(STATUS::Room_Status);
 				UpdateWindow(_hwnd);
 				break;
@@ -335,7 +335,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case IDB_EXITHALL:
 				closesocket(mysocket);
 				KillTimer(hWnd, reconnect);
-				KillTimer(hWnd, hall_refrash);
+				KillTimer(hWnd, hall_refreash);
 				KillTimer(hWnd, ping);
 				Set_CurScene(STATUS::Main);
 				UpdateWindow(_hwnd);
@@ -352,8 +352,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			// 创建房间
 			case IDB_CREATEROOM:
 			{
-				KillTimer(hWnd, hall_refrash);
-				SetTimer(hWnd, room_refrash, 1000, NULL);
+				KillTimer(hWnd, hall_refreash);
+				SetTimer(hWnd, room_refreash, 1000, NULL);
 				Create_Room();
 				UpdateWindow(_hwnd);
 				break;
@@ -372,7 +372,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					MessageBox(hWnd, L"您不是房主，请等待房主开始游戏", NULL, MB_OK);
 					break;
 				}
-				send(mysocket, "StartGame", 1023, 0);
+				send_string("StartGame");
 				break;
 			}
 			case IDB_READY:
@@ -387,25 +387,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			case DISBANDINROOM:
 			{
-				KillTimer(hWnd, room_refrash);
+				KillTimer(hWnd, room_refreash);
 				MessageBox(hWnd, L"房主已将房间解散！", NULL, MB_OK);
 				Set_CurScene(STATUS::Hall_Status);
-				SetTimer(hWnd, hall_refrash, 4000, NULL);
+				SetTimer(hWnd, hall_refreash, 4000, NULL);
 				UpdateWindow(hWnd);
 				break;
 			}
 			case IDB_EXITROOM:
 			{
-				KillTimer(hWnd, room_refrash);
-				send(mysocket, "QuitRoom", 1023, 0);
+				KillTimer(hWnd, room_refreash);
+				send_string("QuitRoom");
 				Set_CurScene(STATUS::Hall_Status);
-				SetTimer(hWnd, hall_refrash, 4000, NULL);
+				SetTimer(hWnd, hall_refreash, 4000, NULL);
 				UpdateWindow(hWnd);
 				break;
 			}
 			case START:
 			{
-				KillTimer(hWnd, room_refrash);
+				KillTimer(hWnd, room_refreash);
 				SetTimer(hWnd, _game, 20, NULL);
 				SetTimer(hWnd, _online, 25, NULL);
 
@@ -470,8 +470,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				KillTimer(_hwnd, _game);
 				KillTimer(_hwnd, _online);
 				SetTimer(hWnd, reconnect, 5000, NULL);
-				//SetTimer(hWnd, hall_refrash, 4000, NULL);
-				SetTimer(hWnd, room_refrash, 1000, NULL);
+				//SetTimer(hWnd, hall_refreash, 4000, NULL);
+				SetTimer(hWnd, room_refreash, 1000, NULL);
 				Set_CurScene(STATUS::Room_Status);
 				Show_Room(TRUE);
 				break;
@@ -482,7 +482,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				KillTimer(_hwnd, _game);
 				KillTimer(_hwnd, _online);
 				SetTimer(hWnd, reconnect, 5000, NULL);
-				SetTimer(hWnd, hall_refrash, 4000, NULL);
+				SetTimer(hWnd, hall_refreash, 4000, NULL);
 				Set_CurScene(STATUS::Hall_Status);
 			}
 			}

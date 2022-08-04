@@ -1,4 +1,4 @@
-#include "keymap.h"
+﻿#include "keymap.h"
 
 map<enum class keybroad, int> key_map_p1 = {
 	{ keybroad::UP,87 },{ keybroad::DOWN,83 },

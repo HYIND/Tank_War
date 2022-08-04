@@ -1,4 +1,4 @@
-#include "Tank.h"
+ï»¿#include "Tank.h"
 using namespace std;
 
 
@@ -49,12 +49,12 @@ void Tank::DrawTankHP(ID2D1HwndRenderTarget* pRenderTarget)
 	float HP_halfwidth = 23;
 	float HP_halfheight = 1.5;
 
-	//¼ÆËãÑªÌõ³¤¶È
+	//è®¡ç®—è¡€æ¡é•¿åº¦
 	float HP_len = (health / 100.f) * HP_halfwidth * 2;
 
-	//»­ÑªÌõ¿ò
+	//ç”»è¡€æ¡æ¡†
 	pRenderTarget->DrawRectangle(D2D1::Rect(locationX - HP_halfwidth - 2, HP_locY - HP_halfheight - 2, locationX + HP_halfwidth + 2, HP_locY + HP_halfheight + 2), pRed_Brush);
-	//»­ÑªÌõ
+	//ç”»è¡€æ¡
 	pRenderTarget->FillRectangle(D2D1::Rect(locationX - HP_halfwidth, HP_locY - HP_halfheight, locationX - HP_halfwidth + HP_len, HP_locY + HP_halfheight), pRed_Brush);
 }
 
@@ -97,7 +97,7 @@ void Tank::DrawTank(ID2D1HwndRenderTarget* pRenderTarget)
 //		break;
 //	}
 //
-//	//	//Ð±ÏòÒÆ¶¯
+//	//	//æ–œå‘ç§»åŠ¨
 //	//	if (GetAsyncKeyState('W') & 0x8000 && GetAsyncKeyState('D') & 0x8000)
 //	//	{
 //	//		if ((this->locationY - this->height / 2 - 10) < rect.top)

@@ -1,4 +1,4 @@
-#include "Game_Component.h"
+﻿#include "Game_Component.h"
 #include "D2D.h"
 
 ID2D1Bitmap* brick_wall_pBitmap;

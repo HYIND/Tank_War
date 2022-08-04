@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "header.h"
 
 enum class keybroad { UP, DOWN, LEFT, RIGHT, FIRE };

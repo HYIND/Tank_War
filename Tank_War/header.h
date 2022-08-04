@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #define WIN32_LEAN_AND_MEAN
 
 #include "Tank_War.h"
@@ -16,7 +16,7 @@
 #include <regex>
 #include <thread>
 
-//d2d��λͼ ͷ�ļ�
+//d2d及位图 头文件
 //#include <d2d1.h>
 #include <d2d1_3.h>
 #include <dwrite.h>
@@ -25,7 +25,7 @@
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib,"Dwrite.lib")
 
-//D2D�ͷ���Դ
+//D2D释放资源
 #define SafeRelease(P) if(P){P->Release() ; P = NULL ;}
 
 #include <vector>
@@ -38,6 +38,9 @@
 #include <timeapi.h>
 #pragma comment(lib,"Winmm.lib")
 
+#include "myprotocol.pb.h"
+#include <type_traits>
+
 using namespace std;
 
 extern bool isstart;
@@ -45,6 +48,8 @@ extern bool isready;
 extern bool host;
 extern bool isonline_game;
 
-wstring string2wstring(string str);
-string wstring2string(wstring wstr);
+//wstring stringh2wstring(string str);
+//string wstring2string(wstring wstr);
 
+string wstring2utf8(const std::wstring & str);
+wstring utf82wstring(const std::string & str);

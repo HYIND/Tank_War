@@ -1,15 +1,15 @@
-#pragma once
+ï»¿#pragma once
 #include "header.h"
 #include "Tank.h"
 #include "Game_Component.h"
 #include "D2D.h"
 
 struct Init_info {
-	int Tank_id = 0;			//±àºÅ
-	int x = 0;					//³õÊ¼x
-	int y = 0;					//³õÊ¼y
-	int direction = UP;			//³õÊ¼·½Ïò
-	TankStyle tank_style = TankStyle::DEFAULT;	//³õÊ¼ÑùÊ½
+	int Tank_id = 0;			//ç¼–å·
+	int x = 0;					//åˆå§‹x
+	int y = 0;					//åˆå§‹y
+	int direction = UP;			//åˆå§‹æ–¹å‘
+	TankStyle tank_style = TankStyle::DEFAULT;	//åˆå§‹æ ·å¼
 	bool isalive = true;
 
 	Init_info(int Tank_id, int x, int y, int direction, TankStyle tank_style = TankStyle::DEFAULT, bool isalive = true)

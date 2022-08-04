@@ -1,4 +1,4 @@
-#include "Scene.h"
+ï»¿#include "Scene.h"
 
 D2D_Bitmap* Scene::Loadbitmap(int loc1, int loc2, int loc3, int loc4, LPCTSTR pszResource, float opacity)
 {
@@ -331,7 +331,7 @@ void Scene::Click()
 	}
 }
 
-// ĞŞ¸Ä°´Å¥
+// ä¿®æ”¹æŒ‰é’®
 bool Scene::ModifyButton_Location(int id, int loc1, int loc2, int loc3, int loc4, bool offset)
 {
 	for (auto& v : Button_list)
@@ -368,7 +368,7 @@ bool Scene::ModifyButton_ID(int oldid, int newid)
 	}
 	return false;
 }
-//ĞŞ¸ÄÎÄ×Ö
+//ä¿®æ”¹æ–‡å­—
 bool Scene::ModifyText_byButton(int id, wstring newstr)
 {
 	for (auto& v : Button_list)
@@ -385,7 +385,7 @@ bool Scene::ModifyText_byButton(int id, wstring newstr)
 	}
 	return false;
 }
-//ĞŞ¸ÄÎ»Í¼ĞÅÏ¢
+//ä¿®æ”¹ä½å›¾ä¿¡æ¯
 bool Scene::ModifyBitmap_byButton(int id, int loc1, int loc2, int loc3, int loc4, bool offset, float opcaity)
 {
 	for (auto& v : Button_list)
@@ -415,7 +415,7 @@ bool Scene::ModifyBitmap_byButton(int id, int loc1, int loc2, int loc3, int loc4
 	return false;
 }
 
-//É¾³ı°´Å¥
+//åˆ é™¤æŒ‰é’®
 bool Scene::DeleteButton(int id)
 {
 	for (auto button_it = Button_list.begin(); button_it != Button_list.end(); button_it++)

@@ -1,4 +1,4 @@
-#include"Network.h"
+ï»¿#include"Network.h"
 #include"Game.h"
 
 extern STATUS status;
@@ -12,7 +12,7 @@ extern HWND Hall;
 extern HWND Room;
 
 int room_id[65535];
-int room_count = 0;
+//int room_count = 0;
 
 WSADATA wsa;
 sockaddr_in addr_info;
@@ -45,237 +45,334 @@ bool Process_Stop = false;
 //	return true;
 //}
 
-
-void send_socket(string s) {
-	char* send_buf = &(s[0]);
-	int i = send(mysocket, send_buf, 1023, 0);
-}
-
-void set_tankid(string& s)
+int Get_Header_Type_bystring(string& str)
 {
-	string::const_iterator iterStart = s.begin();
-	string::const_iterator iterEnd = s.end();
-	smatch m;
-	regex reg("[0-9]+");
-	regex_search(iterStart, iterEnd, m, reg);
-	string temp;
-	temp = m[0];
-	int id = atoi(temp.c_str());
-	set_My_id(id);
+	if (str == "GetHallinfo")return 101;
+	else if (str == "CreateRoom") return 104;
+	else if (str == "GetRoominfo") return 110;
+	else if (str == "Ready") return 111;
+	else if (str == "CancelReady") return 112;
+	else if (str == "StartGame")return 115;
+	else if (str == "QuitRoom") return 116;
 }
 
-void Return_Class(char buf[]) {
-	string re = buf;
-	string::const_iterator iterStart = re.begin();
-	string::const_iterator iterEnd = re.end();
-	smatch m;
-	regex reg("^[A-Z|a-z]+");
-	regex_search(iterStart, iterEnd, m, reg);
-	string temp;
-	temp = m[0];
-	if (temp == "ping")
+void send_string(string s) {
+	Header header;
+	header.type = Get_Header_Type_bystring(s);
+	if (header.type == 0)
+		return;
+	header.length = 0;
+	char send_buf[sizeof(Header)] = { '\0' };
+	memcpy(send_buf, &header, sizeof(Header));
+	send(mysocket, send_buf, sizeof(Header), 0);
+}
+
+//void Return_Class(char buf[]) {
+//	string re = buf;
+//	string::const_iterator iterStart = re.begin();
+//	string::const_iterator iterEnd = re.end();
+//	smatch m;
+//	regex reg("^[A-Z|a-z]+");
+//	regex_search(iterStart, iterEnd, m, reg);
+//	string temp;
+//	temp = m[0];
+//	if (temp == "ping")
+//	{
+//		string recv_str(m[0].second + 1, iterEnd);
+//		Ping_Count(recv_str);
+//		return;
+//	}
+//	if (!isstart)
+//	{
+//		if (status == STATUS::Hall_Status)
+//		{
+//			if (temp == "user")
+//			{
+//				string recv_str(m[0].second + 1, iterEnd);
+//				Return_Get_Hallinfo_User(recv_str);
+//			}
+//			else if (temp == "HallMessage")
+//			{
+//				string recv_str(m[0].second + 1, iterEnd);
+//				Return_Hallinfo_Message(recv_str);
+//			}
+//			else if (temp == "room")
+//			{
+//				string recv_str(m[0].second + 1, iterEnd);
+				//Return_Get_Hallinfo_Room(recv_str);
+//			}
+//			else if (temp == "roomid")
+//			{
+//				string recv_str(m[0].second + 1, iterEnd);
+//				Return_Get_Hallinfo_Roomid(recv_str);
+//			}
+//			else if (temp == "EnterRoom")
+//			{
+//				SendMessage(_hwnd, WM_COMMAND, Enterroom, (LPARAM)_hwnd);
+//			}
+//		}
+//		else if (status == STATUS::Room_Status)
+//		{
+//			if (temp == "Start")
+//			{
+//				SendMessage(_hwnd, WM_COMMAND, START, (LPARAM)_hwnd);
+//			}
+//			else if (temp == "disband")
+//			{
+//				SendMessage(_hwnd, WM_COMMAND, DISBANDINROOM, (LPARAM)_hwnd);
+//			}
+//			else if (temp == "Roomuser")
+//			{
+//				string recv_str(m[0].second + 1, iterEnd);
+//				Return_Get_Room_User(recv_str);
+//			}
+//			else if (temp == "RoomMessage")
+//			{
+//				string recv_str(m[0].second + 1, iterEnd);
+//				Return_Room_Message(recv_str);
+//			}
+//			else if (temp == "tankid")
+//			{
+//				string recv_str(m[0].second + 1, iterEnd);
+//				set_tankid(recv_str);
+//			}
+//		}
+//	}
+//	else if (status == STATUS::Game_Status)
+//	{
+//		if (temp == "tankinfo")
+//		{
+//			Cur_Game->refreash_tankinfo(buf);
+//		}
+//		else if (temp == "bulletinfo")
+//		{
+//			Cur_Game->refreash_bullet(buf);
+//		}
+//		else if (temp == "hitbrick")
+//		{
+//			Cur_Game->recv_hitbrick(buf);
+//		}
+//		else if (temp == "hited")
+//		{
+//			Cur_Game->recv_hited(buf);
+//		}
+//		else if (temp == "youhited")
+//		{
+//			Cur_Game->recv_myhited();
+//		}
+//		else if (temp == "destroyed")
+//		{
+//			Cur_Game->recv_destoryed(buf);
+//		}
+//		else if (temp == "youdestroyed")
+//		{
+//			Cur_Game->recv_mydestoryed();
+//		}
+//		else if (temp == "wingame")
+//		{
+//			SendMessage(_hwnd, WM_COMMAND, WIN, (LPARAM)_hwnd);
+//		}
+//		else if (temp == "failgame")
+//		{
+//			SendMessage(_hwnd, WM_COMMAND, FAIL, (LPARAM)_hwnd);
+//		}
+//		else if (temp == "disband")
+//		{
+//			SendMessage(_hwnd, WM_COMMAND, DISBANDINEND, (LPARAM)_hwnd);
+//		}
+//	}
+//}
+
+void Return_Class(socket_messageinfo* info)
+{
+	if (info->header.type == 206)
 	{
-		string recv_str(m[0].second + 1, iterEnd);
-		Ping_Count(recv_str);
+		Ping_Count(info->header, info->content);
 		return;
 	}
-	if (!isstart)
+	switch (status)
 	{
-		if (status == STATUS::Hall_Status)
+	case STATUS::Hall_Status:
+	{
+		switch (info->header.type)
 		{
-			if (temp == "user")
-			{
-				string recv_str(m[0].second + 1, iterEnd);
-				Return_Get_Hallinfo_User(recv_str);
-			}
-			else if (temp == "HallMessage")
-			{
-				string recv_str(m[0].second + 1, iterEnd);
-				Return_Hallinfo_Message(recv_str);
-			}
-			else if (temp == "room")
-			{
-				string recv_str(m[0].second + 1, iterEnd);
-				Return_Get_Hallinfo_Room(recv_str);
-			}
-			else if (temp == "roomid")
-			{
-				string recv_str(m[0].second + 1, iterEnd);
-				Return_Get_Hallinfo_Roomid(recv_str);
-			}
-			else if (temp == "EnterRoom")
-			{
-				SendMessage(_hwnd, WM_COMMAND, Enterroom, (LPARAM)_hwnd);
-			}
+		case 201:
+			Return_Get_Hallinfo(info->header, info->content);
+			break;
+		case 203:
+			Return_Hall_Message(info->header, info->content);
+			break;
+		case 205:
+			Return_Enter_Room(info->header, info->content);
+			break;
 		}
-		else if (status == STATUS::Room_Status)
+		break;
+	}
+	case STATUS::Room_Status:
+	{
+		switch (info->header.type)
 		{
-			if (temp == "Start")
-			{
-				SendMessage(_hwnd, WM_COMMAND, START, (LPARAM)_hwnd);
-			}
-			else if (temp == "disband")
-			{
-				SendMessage(_hwnd, WM_COMMAND, DISBANDINROOM, (LPARAM)_hwnd);
-			}
-			else if (temp == "Roomuser")
-			{
-				string recv_str(m[0].second + 1, iterEnd);
-				Return_Get_Room_User(recv_str);
-			}
-			else if (temp == "RoomMessage")
-			{
-				string recv_str(m[0].second + 1, iterEnd);
-				Return_Room_Message(recv_str);
-			}
-			else if (temp == "tankid")
-			{
-				string recv_str(m[0].second + 1, iterEnd);
-				set_tankid(recv_str);
-			}
+		case 210:
+			Return_Get_Roominfo(info->header, info->content);
+			break;
+		case 213:
+			Return_Room_Message(info->header, info->content);
+			break;
+		case 214:
+			Return_Set_tankid(info->header, info->content);
+			break;
+		case 215:
+			Return_Start(info->header, info->content);
+			break;
+		case 216:
+			SendMessage(_hwnd, WM_COMMAND, DISBANDINROOM, (LPARAM)_hwnd);
+			break;
+		}
+		break;
+	}
+	case STATUS::Game_Status:
+	{
+
+		switch (info->header.type)
+		{
+		case 220:
+			Cur_Game->refreash_tankinfo(info->header, info->content);
+			break;
+		case 221:
+			Cur_Game->refreash_bullet(info->header, info->content);
+			break;
+		case 222:
+			Cur_Game->recv_hitbrick(info->header, info->content);
+			break;
+		case 223:
+			Cur_Game->recv_hited(info->header, info->content);
+			break;
+		case 224:
+			Cur_Game->recv_myhited();
+			break;
+		case 225:
+			Cur_Game->recv_destoryed(info->header, info->content);
+			break;
+		case 226:
+			Cur_Game->recv_mydestoryed();
+			break;
+		case 227:
+			SendMessage(_hwnd, WM_COMMAND, WIN, (LPARAM)_hwnd);
+			break;
+		case 228:
+			SendMessage(_hwnd, WM_COMMAND, FAIL, (LPARAM)_hwnd);
+			break;
+		case 229:
+			SendMessage(_hwnd, WM_COMMAND, DISBANDINEND, (LPARAM)_hwnd);
+			break;
 		}
 	}
-	else if (status == STATUS::Game_Status)
+	break;
+	}
+}
+
+
+void Return_Get_Hallinfo(Header& header, char* content) {
+	Message::Hall_info_Response Res;
+	Res.ParseFromArray(content, header.length);
+
 	{
-		if (temp == "tankinfo")
-		{
-			Cur_Game->refrash_tankinfo(buf);
+		(int)SendMessage(SHall->Hall_user_list, LB_RESETCONTENT, 0, 0);
+		wstring w_name = my_userid + L"(æ‚¨)";
+		(int)SendMessage(SHall->Hall_user_list, LB_ADDSTRING, 0, (LPARAM) & (w_name[0]));
+		string name;
+		for (int i = 0; i < Res.userinfo_size(); i++) {
+			Message::Hall_info_Response_User userinfo = Res.userinfo(i);
+			name = userinfo.name();
+			w_name = utf82wstring(name);
+			(int)SendMessage(SHall->Hall_user_list, LB_ADDSTRING, 0, (LPARAM) & (w_name[0]));
 		}
-		else if (temp == "bulletinfo")
-		{
-			Cur_Game->refrash_bullet(buf);
-		}
-		else if (temp == "hitbrick")
-		{
-			Cur_Game->recv_hitbrick(buf);
-		}
-		else if (temp == "hited")
-		{
-			Cur_Game->recv_hited(buf);
-		}
-		else if (temp == "youhited")
-		{
-			Cur_Game->recv_myhited();
-		}
-		else if (temp == "destroyed")
-		{
-			Cur_Game->recv_destoryed(buf);
-		}
-		else if (temp == "youdestroyed")
-		{
-			Cur_Game->recv_mydestoryed();
-		}
-		else if (temp == "wingame")
-		{
-			SendMessage(_hwnd, WM_COMMAND, WIN, (LPARAM)_hwnd);
-		}
-		else if (temp == "failgame")
-		{
-			SendMessage(_hwnd, WM_COMMAND, FAIL, (LPARAM)_hwnd);
-		}
-		else if (temp == "disband")
-		{
-			SendMessage(_hwnd, WM_COMMAND, DISBANDINEND, (LPARAM)_hwnd);
+	}
+
+	{
+		(int)SendMessage(SHall->Hall_room_list, LB_RESETCONTENT, 0, 0);
+
+		string name;
+		wstring w_name;
+		int counter = 0;
+		for (int i = 0; i < Res.roominfo_size(); i++) {
+			Message::Hall_info_Response_Roominfo roominfo = Res.roominfo(i);
+			int id = roominfo.room_id();
+			name = roominfo.host_name();
+			w_name = utf82wstring(name) + L"çš„æˆ¿é—´";
+			room_id[counter] = id;
+			counter++;
+			(int)SendMessage(SHall->Hall_room_list, LB_ADDSTRING, 0, (LPARAM) & (w_name[0]));
 		}
 	}
 }
 
-void Return_Hallinfo_Message(string& recv_str) {
-	string::const_iterator iterStart = recv_str.begin();
-	string::const_iterator iterEnd = recv_str.end();
-	smatch _content;
-	regex message_reg("_content");
-	regex_search(iterStart, iterEnd, _content, message_reg);
+void Return_Hall_Message(Header& header, char* content) {
+	Message::Hall_Message_Response Res;
+	Res.ParseFromArray(content, header.length);
 
-	//»ñÈ¡µ±Ç°Ê±¼ä²¢¸ñÊ½»¯Îª×Ö·û´®
+	//è·å–å½“å‰æ—¶é—´å¹¶æ ¼å¼åŒ–ä¸ºå­—ç¬¦ä¸²
 	auto now = std::chrono::system_clock::now();
 	time_t tt = std::chrono::system_clock::to_time_t(now);
-	struct tm t;   //tm½á¹¹Ö¸Õë
+	struct tm t;   //tmç»“æ„æŒ‡é’ˆ
 	auto time_tm = localtime_s(&t, &tt);
 	char charTime[25] = { 0 };
 	sprintf_s(charTime, "%d-%02d-%02d %02d:%02d:%02d", t.tm_year + 1900,
 		t.tm_mon + 1, t.tm_mday, t.tm_hour,
 		t.tm_min, t.tm_sec);
 
-	//ÏûÏ¢Í·(ÓÃ»§ID Ê±¼ä;)
+	//æ¶ˆæ¯å¤´(ç”¨æˆ·ID æ—¶é—´;)
 	string strTime = charTime;
-	string user_head(iterStart, _content[0].first - 1);
-	user_head += "  ";
-	user_head += strTime;
-	user_head += ";\r\n";
-	wstring w_user_head = string2wstring(user_head);
+	string message_head = Res.name() + " " + strTime + ":\r\n";
+	wstring w_message_head = utf82wstring(message_head);
 
-	//ÏûÏ¢ÄÚÈİ
-	string content(_content[0].second + 1, iterEnd);
-	wstring w_content = string2wstring(content);
+	//æ¶ˆæ¯å†…å®¹
+	string message_content = Res.content();
+	wstring w_message_content = utf82wstring(message_content);
 
-	//·¢ËÍÏûÏ¢µ½ÎÄ±¾¿ò
-	SendMessage(SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_head[0]));
-	SendMessage(SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_content[0]));
+	//å‘é€æ¶ˆæ¯åˆ°æ–‡æœ¬æ¡†
+	SendMessage(SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_message_head[0]));
+	SendMessage(SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_message_content[0]));
 	SendMessage(SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
+}
+
+void Return_Enter_Room(Header& header, char* content) {
+	Message::Hall_EnterRoom_Response Res;
+	Res.ParseFromArray(content, header.length);
+	switch (Res.result())
+	{
+	case 1:
+	{
+		SendMessage(_hwnd, WM_COMMAND, Enterroom, (LPARAM)_hwnd);
+		break;
+	}
+	case 0:
+	{
+		MessageBox(_hwnd, L"æˆ¿é—´äººæ•°å·²æ»¡", NULL, MB_OK);
+		break;
+	}
+	case -1:
+	{
+		MessageBox(_hwnd, L"æˆ¿é—´ä¸å­˜åœ¨/å·²è§£æ•£", NULL, MB_OK);
+	}
+	}
 }
 
 void Get_Hallinfo() {
-	static clock_t last_refrash = 0;
-	static clock_t now_refrash = 0;
-	now_refrash = clock();
-	if (now_refrash - last_refrash <= 1000)
+	static clock_t last_refreash = 0;
+	static clock_t now_refreash = 0;
+	now_refreash = clock();
+	if (now_refreash - last_refreash <= 1000)
 		return;
-	last_refrash = now_refrash;
-	send_socket("Getuser");
-	send_socket("Getroom");
-}
-
-void Return_Get_Hallinfo_User(string& re) {
-	(int)SendMessage(SHall->Hall_user_list, LB_RESETCONTENT, 0, 0);
-	wstring wtemp = my_userid + L"(Äú)";
-	(int)SendMessage(SHall->Hall_user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
-	{
-		regex user_reg("(#)[^;]*");
-		string temp;
-		sregex_iterator end;
-		for (sregex_iterator iter(re.begin(), re.end(), user_reg); iter != end; iter++) {
-			wtemp = string2wstring((*iter)[0]);
-			(int)SendMessage(SHall->Hall_user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[1]));
-		}
-	}
-}
-
-void Return_Get_Hallinfo_Room(string re) {
-	(int)SendMessage(SHall->Hall_room_list, LB_RESETCONTENT, 0, 0);
-	{
-		regex room_reg("(#)[^;]*");
-		string temp;
-		wstring wtemp;
-		sregex_iterator end;
-		for (sregex_iterator iter(re.begin(), re.end(), room_reg); iter != end; iter++)
-		{
-			string s = (*iter)[0];
-			s += "µÄ·¿¼ä";
-			wtemp = string2wstring(s);
-			(int)SendMessage(SHall->Hall_room_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[1]));
-		}
-	}
-}
-
-void Return_Get_Hallinfo_Roomid(string re) {
-	regex roomid_reg("[0-9]+");
-	sregex_iterator end;
-	int counter = 0;
-	for (sregex_iterator iter(re.begin(), re.end(), roomid_reg); iter != end; iter++) {
-		string str = (*iter)[0];
-		int id = atoi(str.c_str());
-		room_id[counter] = id;
-		counter++;
-	}
-	room_count = counter + 1;
+	last_refreash = now_refreash;
+	send_string("GetHallinfo");
 }
 
 void Send_Hall_Message(wstring& w_content) {
-	//»ñÈ¡µ±Ç°Ê±¼ä²¢¸ñÊ½»¯Îª×Ö·û´®
+	//è·å–å½“å‰æ—¶é—´å¹¶æ ¼å¼åŒ–ä¸ºå­—ç¬¦ä¸²
 	auto now = std::chrono::system_clock::now();
 	time_t tt = std::chrono::system_clock::to_time_t(now);
-	struct tm t;   //tm½á¹¹Ö¸Õë
+	struct tm t;   //tmç»“æ„æŒ‡é’ˆ
 	auto time_tm = localtime_s(&t, &tt);
 	char charTime[25] = { 0 };
 	sprintf_s(charTime, "%d-%02d-%02d %02d:%02d:%02d", t.tm_year + 1900,
@@ -283,22 +380,20 @@ void Send_Hall_Message(wstring& w_content) {
 		t.tm_min, t.tm_sec);
 	string strTime = charTime;
 
-	string user_head = "ÎÒ  ";
-	user_head += strTime;
-	user_head += ":\r\n";
+	//string user_head = "(æ‚¨)  " + strTime + ":\r\n";
+	wstring w_user_head = my_userid + L"(æ‚¨)  " +utf82wstring(strTime)+L":\r\n";
 
-	wstring w_user_head = string2wstring(user_head);
-	//Çå¿ÕÊäÈëÎÄ±¾¿ò
+	//æ¸…ç©ºè¾“å…¥æ–‡æœ¬æ¡†
 	SendMessage(SHall->Hall_edit_in, WM_SETTEXT, 0, (LPARAM)L"");
-	//·¢ËÍÏûÏ¢µ½ÎÄ±¾¿ò
+	//å‘é€æ¶ˆæ¯åˆ°æ–‡æœ¬æ¡†
 	SendMessage(SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_head[0]));
 	SendMessage(SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_content[0]));
 	SendMessage(SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
 
-	//·¢ËÍÏûÏ¢
-	string s = wstring2string(w_content);
-	s = "HallSend:" + s;
-	send(mysocket, &(s[0]), 1023, 0);
+	//å‘é€æ¶ˆæ¯
+	Message::Hall_Message_Request Req;
+	Req.set_content(wstring2utf8(w_content));
+	Send(Req);
 }
 
 mutex process_mtx;
@@ -314,7 +409,8 @@ DWORD WINAPI Process_Thread() {
 			socket_messageinfo* pinfo = message_queue.front();
 			message_queue.pop();
 			qlck.unlock();
-			Return_Class(pinfo->ch);
+			Return_Class(pinfo);
+			delete pinfo;
 		}
 		lck.unlock();
 	}
@@ -325,7 +421,7 @@ DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam) {
 	thread T2(Process_Thread);
 	HANDLE hIOCP = (HANDLE)lpParam;
 	DWORD dwBytesTranfered = 0;
-	long long pPerHandle;
+	unsigned long long pPerHandle;
 	while (true) {
 		bool bl = ::GetQueuedCompletionStatus(hIOCP, &dwBytesTranfered, (PULONG_PTR)&pPerHandle, (LPOVERLAPPED*)&pPerIO, WSA_INFINITE);
 		if (!bl)
@@ -340,15 +436,22 @@ DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam) {
 			continue;
 		}
 		switch (pPerIO->nOperationType)
-		{   //Í¨¹ıper-IOÊı¾İÖĞµÄnOperationTypeÓò²é¿´ÓĞÊ²Ã´I/OÇëÇóÍê³ÉÁË
-		case OP_READ:  //Íê³ÉÒ»¸ö½ÓÊÕÇëÇó
+		{   //é€šè¿‡per-IOæ•°æ®ä¸­çš„nOperationTypeåŸŸæŸ¥çœ‹æœ‰ä»€ä¹ˆI/Oè¯·æ±‚å®Œæˆäº†
+		case OP_READ:  //å®Œæˆä¸€ä¸ªæ¥æ”¶è¯·æ±‚
 		{
-			//pPerIO->buf[dwBytesTranfered] = '\0';
 			socket_messageinfo* pinfo = new socket_messageinfo(pPerIO->buf);
-			unique_lock<mutex> qlck(messagequeue_mutex);
-			message_queue.push(pinfo);
-			qlck.unlock();
-			process_cv.notify_one();
+			if (sizeof(Header) + pinfo->header.length == dwBytesTranfered)
+			{
+				unique_lock<mutex> qlck(messagequeue_mutex);
+				message_queue.push(pinfo);
+				qlck.unlock();
+				process_cv.notify_one();
+			}
+			else {
+				delete pinfo;
+			}
+
+			/* é‡æ–°æŠ•é€’é‡å WSARecvè¯·æ±‚ */
 			WSABUF buf;
 			buf.buf = pPerIO->buf;
 			buf.len = 1023;
@@ -367,24 +470,16 @@ DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam) {
 }
 
 void Create_Room() {
-	send_socket("CreateRoom");
+	send_string("CreateRoom");
 	host = true;
 	Set_CurScene(STATUS::Room_Status);
+	Get_Room_Info();
 }
 
 void Enter_Room(int index) {
-	string s = "EnterRoom:" + to_string(room_id[index]);
-	send_socket(s);
-}
-
-void win_game()
-{
-	SendMessage(_hwnd, WM_COMMAND, WIN, (LPARAM)_hwnd);
-}
-
-void lost_game()
-{
-	SendMessage(_hwnd, WM_COMMAND, FAIL, (LPARAM)_hwnd);
+	Message::Hall_EnterRoom_Request Req;
+	Req.set_room_id(room_id[index]);
+	Send(Req);
 }
 
 bool Init_Hall()
@@ -398,15 +493,13 @@ bool Init_Hall()
 	memset(buffer, '\0', 1024);
 	mysocket = WSASocket(addr_info.sin_family, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 
-	int RecvBuf = 1024 * 1024;
-	int SendBuf = 1024 * 1024;
 
 	int flag = 1;
 	setsockopt(mysocket, IPPROTO_TCP, TCP_NODELAY, (const char*)&flag, sizeof(flag));
 
 	if (-1 == connect(mysocket, (struct sockaddr*)&addr_info, sizeof(struct sockaddr)))
 	{
-		MessageBoxW(_hwnd, L"ÎŞ·¨Á¬½Ó·şÎñÆ÷£¬Çë¼ì²éÍøÂçÉèÖÃ", L"ÍøÂçÁ¬½Ó´íÎó", NULL);
+		MessageBoxW(_hwnd, L"æ— æ³•è¿æ¥æœåŠ¡å™¨ï¼Œè¯·æ£€æŸ¥ç½‘ç»œè®¾ç½®", L"ç½‘ç»œè¿æ¥é”™è¯¯", NULL);
 		return false;
 	}
 	unsigned long ul = 1;
@@ -428,15 +521,18 @@ bool Init_Hall()
 	return true;
 }
 
-void Ping_Count(string& str)
+void Ping_Count(Header& header, char* content)
 {
+	Message::Ping_info Res;
+	Res.ParseFromArray(content, header.length);
+
 	chrono::milliseconds ms = chrono::duration_cast<chrono::milliseconds>(
 		chrono::system_clock::now().time_since_epoch()
 		);
 	int recv_time = ms.count();
 	try
 	{
-		int recv_id = atoi(str.c_str());
+		int recv_id = Res.ping_id();
 		while (!ping_queue.empty())
 		{
 			if (ping_queue.front().id > recv_id)
@@ -446,7 +542,6 @@ void Ping_Count(string& str)
 			else if (ping_queue.front().id == recv_id)
 			{
 				delay = min((recv_time - ping_queue.front().send_time) / 2, 999);
-				//delay = recv_id;
 				ping_queue.pop();
 				return;
 			}
@@ -474,72 +569,66 @@ void send_pingmessage()
 	ping_info.send_time = time;
 	ping_queue.push(ping_info);
 
-	send_socket("ping:" + to_string(ping_id));
+	Message::Ping_info info;
+	info.set_ping_id(ping_id);
+	Send(info);
 
 	if (ping_id != INT32_MAX)
 	{
 		ping_id++;
+		return;
 	}
-	else
+
+	ping_id = 0;
+	while (!ping_queue.empty())
 	{
-		ping_id = 0;
-		while (!ping_queue.empty())
-		{
-			ping_queue.pop();
-		}
+		ping_queue.pop();
 	}
 }
 
-void setmyuserid()
+void set_my_userid()
 {
-	string str = "myuserid:" + wstring2string(my_userid);
-	send_socket(str);
+	Message::Set_User_id info;
+	info.set_name(wstring2utf8(my_userid));
+	Send(info);
 }
 
 void Get_Room_Info()
 {
-	send_socket("GetRoominfo");
+	send_string("GetRoominfo");
 }
 
-void Return_Get_Room_User(string& re)
+void Return_Get_Roominfo(Header& header, char* content)
 {
 	(int)SendMessage(SRoom_host->Room_user_list, LB_RESETCONTENT, 0, 0);
-	wstring wtemp = my_userid + L"(Äú)";
+
+	wstring wtemp = my_userid + L"(æ‚¨)";
 	if (host)
 	{
-		wtemp += L"£¨·¿Ö÷£©";
+		wtemp += L"ï¼ˆæˆ¿ä¸»ï¼‰";
 	}
 	else if (isready)
 	{
-		wtemp += L"£¨ÒÑ×¼±¸£©";
+		wtemp += L"ï¼ˆå·²å‡†å¤‡ï¼‰";
 	}
 	(int)SendMessage(SRoom_host->Room_user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
 
 	{
-		regex user_reg("(#)[^;]*");
-		string temp;
-		sregex_iterator end;
-		for (sregex_iterator iter(re.begin(), re.end(), user_reg); iter != end; iter++)
+		Message::Room_info_Response Res;
+		Res.ParseFromArray(content, header.length);
+		for (int i = 0; i < Res.userinfo_size(); i++)
 		{
-			string s = (*iter)[0];
-
-			string::const_iterator iterStart = s.begin();
-			string::const_iterator iterEnd = s.end();
-			regex inter_reg("[:]{2}");
-			smatch m;
-			regex_search(iterStart, iterEnd, m, inter_reg);
-			string ready_str(m[0].second, m[0].second + 1);
-			string name_str(iterStart + 1, m[0].first);
-
-			if (ready_str == "1")
+			Message::Room_info_Response_User info = Res.userinfo(i);
+			wstring name = utf82wstring(info.name());
+			int status = info.status();
+			if (status == 1)
 			{
-				name_str += "£¨ÒÑ×¼±¸£©";
+				name += L"ï¼ˆå·²å‡†å¤‡ï¼‰";
 			}
-			else if (ready_str == "2")
+			else if (status == 2)
 			{
-				name_str += "£¨·¿Ö÷£©";
+				name += L"ï¼ˆæˆ¿ä¸»ï¼‰";
 			}
-			wstring name = string2wstring(name_str);
 			(int)SendMessage(SRoom_host->Room_user_list, LB_ADDSTRING, 0, (LPARAM) & (name[0]));
 		}
 	}
@@ -547,24 +636,25 @@ void Return_Get_Room_User(string& re)
 
 void Room_Ready()
 {
-	send(mysocket, "Ready", 1023, 0);
+	send_string("Ready");
 	isready = true;
 	SRoom_nothost->ModifyButton_ID(IDB_READY, IDB_CANCELREADY);
-	SRoom_nothost->ModifyText_byButton(IDB_CANCELREADY, L"È¡Ïû×¼±¸");
+	SRoom_nothost->ModifyText_byButton(IDB_CANCELREADY, L"å–æ¶ˆå‡†å¤‡");
 }
+
 void Room_CancelReady()
 {
-	send(mysocket, "CancelReady", 1023, 0);
+	send_string("CancelReady");
 	isready = false;
 	SRoom_nothost->ModifyButton_ID(IDB_CANCELREADY, IDB_READY);
-	SRoom_nothost->ModifyText_byButton(IDB_READY, L"×¼±¸");
+	SRoom_nothost->ModifyText_byButton(IDB_READY, L"å‡†å¤‡");
 }
 
 void Send_Room_Message(wstring& w_content) {
-	//»ñÈ¡µ±Ç°Ê±¼ä²¢¸ñÊ½»¯Îª×Ö·û´®
+	//è·å–å½“å‰æ—¶é—´å¹¶æ ¼å¼åŒ–ä¸ºå­—ç¬¦ä¸²
 	auto now = std::chrono::system_clock::now();
 	time_t tt = std::chrono::system_clock::to_time_t(now);
-	struct tm t;   //tm½á¹¹Ö¸Õë
+	struct tm t;   //tmç»“æ„æŒ‡é’ˆ
 	auto time_tm = localtime_s(&t, &tt);
 	char charTime[25] = { 0 };
 	sprintf_s(charTime, "%d-%02d-%02d %02d:%02d:%02d", t.tm_year + 1900,
@@ -572,55 +662,93 @@ void Send_Room_Message(wstring& w_content) {
 		t.tm_min, t.tm_sec);
 	string strTime = charTime;
 
-	string user_head = "ÎÒ  ";
-	user_head += strTime;
-	user_head += ":\r\n";
-
-	wstring w_user_head = string2wstring(user_head);
-	//Çå¿ÕÊäÈëÎÄ±¾¿ò
+	wstring w_user_head = my_userid + L"(æ‚¨)  " + utf82wstring(strTime) + L":\r\n";
+	//æ¸…ç©ºè¾“å…¥æ–‡æœ¬æ¡†
 	SendMessage(Scene_Room::Room_edit_in, WM_SETTEXT, 0, (LPARAM)L"");
-	//·¢ËÍÏûÏ¢µ½ÎÄ±¾¿ò
+	//å‘é€æ¶ˆæ¯åˆ°æ–‡æœ¬æ¡†
 	SendMessage(Scene_Room::edit_room, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_head[0]));
 	SendMessage(Scene_Room::edit_room, EM_REPLACESEL, FALSE, (LPARAM) & (w_content[0]));
 	SendMessage(Scene_Room::edit_room, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
 
-	//·¢ËÍÏûÏ¢
-	string s = wstring2string(w_content);
-	s = "RoomSend:" + s;
-	send(mysocket, &(s[0]), 1023, 0);
+	//å‘é€æ¶ˆæ¯
+	string i = wstring2utf8(w_content);
+	wstring wi = utf82wstring(i);
+	string n = "ç™½æœˆå…‰åœ¨ç…§è€€";
+	Message::Room_Message_Request Req;
+	Req.set_content(wstring2utf8(w_content));
+	Send(Req);
 }
 
-void Return_Room_Message(string& recv_str) {
-	string::const_iterator iterStart = recv_str.begin();
-	string::const_iterator iterEnd = recv_str.end();
-	smatch _content;
-	regex message_reg("_content");
-	regex_search(iterStart, iterEnd, _content, message_reg);
+void Return_Room_Message(Header& header, char* content) {
+	Message::Room_Message_Response Res;
+	Res.ParseFromArray(content, header.length);
 
-	//»ñÈ¡µ±Ç°Ê±¼ä²¢¸ñÊ½»¯Îª×Ö·û´®
+	//è·å–å½“å‰æ—¶é—´å¹¶æ ¼å¼åŒ–ä¸ºå­—ç¬¦ä¸²
 	auto now = std::chrono::system_clock::now();
 	time_t tt = std::chrono::system_clock::to_time_t(now);
-	struct tm t;   //tm½á¹¹Ö¸Õë
+	struct tm t;   //tmç»“æ„æŒ‡é’ˆ
 	auto time_tm = localtime_s(&t, &tt);
 	char charTime[25] = { 0 };
 	sprintf_s(charTime, "%d-%02d-%02d %02d:%02d:%02d", t.tm_year + 1900,
 		t.tm_mon + 1, t.tm_mday, t.tm_hour,
 		t.tm_min, t.tm_sec);
 
-	//ÏûÏ¢Í·(ÓÃ»§ID Ê±¼ä;)
+	//æ¶ˆæ¯å¤´(ç”¨æˆ·ID æ—¶é—´;)
 	string strTime = charTime;
-	string user_head(iterStart, _content[0].first - 1);
-	user_head += "  ";
-	user_head += strTime;
-	user_head += ":\r\n";
-	wstring w_user_head = string2wstring(user_head);
+	wstring w_user_head = utf82wstring(Res.name()) + L"  " + utf82wstring(strTime) + L":\r\n";
 
-	//ÏûÏ¢ÄÚÈİ
-	string content(_content[0].second + 1, iterEnd);
-	wstring w_content = string2wstring(content);
+	//æ¶ˆæ¯å†…å®¹
+	string message_content = Res.content();
+	wstring w_message_content = utf82wstring(message_content);
 
-	//·¢ËÍÏûÏ¢µ½ÎÄ±¾¿ò
+	//å‘é€æ¶ˆæ¯åˆ°æ–‡æœ¬æ¡†
 	SendMessage(Scene_Room::edit_room, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_head[0]));
-	SendMessage(Scene_Room::edit_room, EM_REPLACESEL, FALSE, (LPARAM) & (w_content[0]));
+	SendMessage(Scene_Room::edit_room, EM_REPLACESEL, FALSE, (LPARAM) & (w_message_content[0]));
 	SendMessage(Scene_Room::edit_room, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
+}
+
+void Return_Set_tankid(Header& header, char* content)
+{
+	Message::Room_Set_tankid_Response Res;
+	Res.ParseFromArray(content, header.length);
+	int id = Res.id();
+	set_My_id(id);
+}
+
+void Return_Start(Header& header, char* content)
+{
+	static clock_t last_popup = 0;	//è®°å½•å¼¹çª—æ—¶é—´ï¼Œé¿å…é¢‘ç¹å¼¹çª—
+	static clock_t now_popup = 0;
+	Message::Room_Start_Response Res;
+	Res.ParseFromArray(content, header.length);
+	switch (Res.result())
+	{
+	case 1:
+		SendMessage(_hwnd, WM_COMMAND, START, (LPARAM)_hwnd);
+		break;
+	case 0:
+		now_popup = clock();
+		if (now_popup - last_popup < 1000)
+			return;
+		MessageBox(_hwnd, L"æœ‰ç©å®¶å°šæœªå‡†å¤‡ï¼", NULL, MB_OK);
+		last_popup = now_popup;
+		break;
+	case -1:
+		now_popup = clock();
+		if (now_popup - last_popup < 1000)
+			return;
+		MessageBox(_hwnd, L"æˆ¿é—´äººæ•°ä¸è¶³ä»¥å¼€å§‹æ¸¸æˆï¼", NULL, MB_OK);
+		last_popup = now_popup;
+		break;
+	}
+}
+
+void win_game()
+{
+	SendMessage(_hwnd, WM_COMMAND, WIN, (LPARAM)_hwnd);
+}
+
+void lost_game()
+{
+	SendMessage(_hwnd, WM_COMMAND, FAIL, (LPARAM)_hwnd);
 }

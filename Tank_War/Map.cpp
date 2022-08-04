@@ -1,4 +1,4 @@
-#include "Map.h"
+ï»¿#include "Map.h"
 
 extern RECT _rect;
 
@@ -8,7 +8,7 @@ map<int, Map> Map_list;
 
 ID2D1Bitmap* Zero_BK;
 
-/* ÒÔÏÂÎªÍâ²¿ÉùÃ÷ */
+/* ä»¥ä¸‹ä¸ºå¤–éƒ¨å£°æ˜ */
 extern HINSTANCE hInst;
 
 void Init_Map_Zero()

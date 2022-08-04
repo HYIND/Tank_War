@@ -1,9 +1,9 @@
-#pragma once
+﻿#pragma once
 #include "D2D.h"
 using namespace std;
 
-enum class TankStyle :uint8_t { DEFAULT, BIG_DEFAULT, SMALL_DEFAULT };
-enum class BulletStyle :uint8_t { DEFAULT, BIG_DEFAULT, SMALL_DEFAULT, ORANGE, GREEN, PURPLE };
+enum class TankStyle :int { DEFAULT, BIG_DEFAULT, SMALL_DEFAULT };
+enum class BulletStyle :int { DEFAULT, BIG_DEFAULT, SMALL_DEFAULT, ORANGE, GREEN, PURPLE };
 
 struct Style_info
 {

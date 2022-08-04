@@ -1,6 +1,6 @@
-#include "Game.h"
+﻿#include "Game.h"
 #include "collision.h"
-#include "keymap.h"\
+#include "keymap.h"
 
 
 extern SOCKET mysocket;
@@ -356,149 +356,125 @@ void Game::Draw()
 	map_info.DrawMap();
 }
 
-
-
 void Game::online()
 {
 	send_mytankinfo();
 	send_bullet();
 }
 
-// hittank:(INT){INT,INT,bulletStyle}
 void Game::send_hittank(int id, bullet* pbullet)
 {
-	char ch[1024] = "hittank:";
+	Message::Game_hit_tank_Request Req;
+	Req.set_hited_tank_id(id);
 
-	int cur_loc = 8;
-	ch[cur_loc] = '(';
-	cur_loc++;
-	memcpy(&ch[cur_loc], &id, sizeof(int));
-	cur_loc += sizeof(int);
-	ch[cur_loc] = ')';
-	cur_loc++;
-	ch[cur_loc] = '{';
-	cur_loc++;
-	memcpy(&ch[cur_loc], &(pbullet->locationX), sizeof(int) * 3 + sizeof(BulletStyle));
-	cur_loc += sizeof(int) * 3 + sizeof(BulletStyle);
-	ch[cur_loc] = '}';
+	Message::bulletinfo* binfo = new Message::bulletinfo();
+	binfo->set_locationx(pbullet->locationX);
+	binfo->set_locationy(pbullet->locationY);
+	binfo->set_direction(pbullet->direction);
+	binfo->set_bullet_style((int)pbullet->bullet_style);
+	Req.set_allocated_bulletinfo(binfo);
 
-	send(mysocket, (const char*)&ch[0], 1023, 0);
+	Send(Req);
 }
 
 void Game::send_hitbrick(int id, bullet* pbullet)
 {
-	char ch[1024] = "hitbrick:";
+	Message::Game_hit_brick_Request Req;
+	Req.set_hited_brick_id(id);
 
-	int cur_loc = 9;
-	ch[cur_loc] = '(';
-	cur_loc++;
-	memcpy(&ch[cur_loc], &id, sizeof(int));
-	cur_loc += sizeof(int);
-	ch[cur_loc] = ')';
-	cur_loc++;
-	ch[cur_loc] = '{';
-	cur_loc++;
-	memcpy(&ch[cur_loc], &(pbullet->locationX), sizeof(int) * 3 + sizeof(BulletStyle));
-	cur_loc += sizeof(int) * 3 + sizeof(BulletStyle);
-	ch[cur_loc] = '}';
+	Message::bulletinfo* binfo = new Message::bulletinfo();
+	binfo->set_locationx(pbullet->locationX);
+	binfo->set_locationy(pbullet->locationY);
+	binfo->set_direction(pbullet->direction);
+	binfo->set_bullet_style((int)pbullet->bullet_style);
+	Req.set_allocated_bulletinfo(binfo);
 
-	send(mysocket, (const char*)&ch[0], 1023, 0);
+	Send(Req);
 }
 
 void Game::send_mytankinfo()
 {
-	char buffer[1024] = "mytankinfo:";
-	int i = sizeof(Tank);
-	memcpy(&buffer[11], ptank1, sizeof(Tank));
-	send(mysocket, buffer, 1023, 0);
+	Message::Game_tankinfo_Request Req;
+	Req.set_locationx(ptank1->locationX);
+	Req.set_locationy(ptank1->locationY);
+	Req.set_direction(ptank1->direction);
+	Req.set_tank_style((int)ptank1->tank_style);
+
+	Send(Req);
 }
-//mybullet:{xystyle} {}
+
 void Game::send_bullet()
 {
 	bullet* cur = ptank1->bullet_head;
-	char ch[1024] = "mybullet:";
-	int cur_loc = 9;
+	Message::Game_bulletinfo_Request Req;
 	while (cur != NULL)
 	{
-		if (cur_loc > 900)
-			break;
-
-		ch[cur_loc] = '{';
-		cur_loc++;
-		memcpy(&ch[cur_loc], &(cur->locationX), sizeof(int) * 3 + sizeof(BulletStyle));
-		cur_loc += sizeof(int) * 3 + sizeof(BulletStyle);
-		ch[cur_loc] = '}';
-		cur_loc++;
+		Message::bulletinfo* bulletinfo = Req.add_bulletinfo();
+		bulletinfo->set_locationx(cur->locationX);
+		bulletinfo->set_locationy(cur->locationY);
+		bulletinfo->set_direction(cur->direction);
+		bulletinfo->set_bullet_style((int)cur->bullet_style);
 		cur = cur->next;
 	}
-	send(mysocket, (const char*)&ch[0], 1023, 0);
+	Send(Req);
 }
 
-//tankinfo:(INT){22}
-void Game::refrash_tankinfo(char ch[])
+void Game::refreash_tankinfo(Header& header, char* content)
 {
-	int id = 0;
-	int cur_loc = 9;
-	int i = sizeof(Tank);
-	if (ch[cur_loc] == '(' && ch[cur_loc + sizeof(int) + 1] == ')')
-	{
-		cur_loc++;
-		memcpy(&id, &ch[cur_loc], sizeof(int));
-		cur_loc = cur_loc + sizeof(int) + 1;
-	}
-	else return;
-	if (ch[cur_loc] == '{' && ch[cur_loc + 21 + 1] == '}')
-	{
-		cur_loc++;
-		memcpy(Tank_info[id], &ch[cur_loc], 21);
-		cur_loc = cur_loc + 21;
-	}
-	else return;
-}
-//opbulletinfo:(int){xystyle}
-void Game::refrash_bullet(char ch[])
-{
-	bullet* newhead = new bullet();
-	bullet* temp = newhead;
+	Message::Game_tankinfo_Response Res;
+	Res.ParseFromArray(content, header.length);
 
-	int id = 0;
-	int cur_loc = 11;
-	if (ch[cur_loc] == '(' && ch[cur_loc + sizeof(int) + 1] == ')')
+	for (int i = 0; i < Res.info_size(); i++)
 	{
-		cur_loc++;
-		memcpy(&id, &ch[cur_loc], sizeof(int));
-		cur_loc = cur_loc + sizeof(int) + 1;
+		Message::Game_tankinfo_Response_tankinfo tankinfo = Res.info(i);
+		Message::Game_tankinfo_Request* info = tankinfo.mutable_tankinfo();
+		Tank* ptank = Tank_info[tankinfo.id()];
+		if (ptank == ptank1) continue;
+		ptank->locationX = info->locationx();
+		ptank->locationY = info->locationy();
+		ptank->direction = info->direction();
+		ptank->tank_style = (TankStyle)info->tank_style();
+		ptank->Set_Parameter_byStyle(ptank->tank_style);
 	}
-	else return;
-	while (ch[cur_loc] == '{' && ch[cur_loc + sizeof(int) * 3 + sizeof(BulletStyle) + 1] == '}')
+}
+
+void Game::refreash_bullet(Header& header, char* content)
+{
+	Message::Game_bulletinfo_Response Res;
+	Res.ParseFromArray(content, header.length);
+
+	for (int i = 0; i < Res.info_size(); i++)
 	{
-		cur_loc++;
-		if (temp->next == NULL)
+
+		Message::Game_bulletinfo_Response_Info info = Res.info(i);
+		Tank* ptank = Tank_info[info.tankid()];
+		if (ptank == ptank1) continue;
+		bullet* newhead = new bullet();
+		bullet* temp = newhead;
+
+		for (int i = 0; i < info.bulletinfo_size(); i++)
 		{
-			temp->next = new bullet();
+			Message::bulletinfo binfo = info.bulletinfo(i);
+
+			temp->next = new bullet(binfo.locationx(), binfo.locationy(), binfo.direction(), (BulletStyle)binfo.bullet_style());
 			temp = temp->next;
-			memcpy(&(temp->locationX), &ch[cur_loc], sizeof(int) * 3 + sizeof(BulletStyle));
-			cur_loc += sizeof(int) * 3 + sizeof(BulletStyle) + 1;
-			temp->Set_Parameter_byStyle(temp->bullet_style);
 		}
+		ptank->bullet_head = newhead->next;
+		delete(newhead);
 	}
-	Tank_info[id]->bullet_head = newhead->next;
+
 
 	//to_destroyed_bulletinfo.push(optank->bullet_head);
 	//cv.notify_one();
 }
 
-void Game::recv_hitbrick(char buf[])
+void Game::recv_hitbrick(Header& header, char* content)
 {
-	int hited_brick_id = -1;
-	int cur_loc = 9;
-	int health = 1;
-	if (buf[cur_loc] == '(' && buf[cur_loc + 2 * sizeof(int) + 1] == ')')
-	{
-		cur_loc++;
-		memcpy(&hited_brick_id, &buf[cur_loc], sizeof(int));
-		memcpy(&health, &buf[cur_loc + sizeof(int)], sizeof(int));
-	}
+	Message::Game_brick_hited_Response Res;
+	Res.ParseFromArray(content, header.length);
+
+	int hited_brick_id = Res.hited_brick_id();
+	int health = Res.health();
 
 	auto iter = map_info.Brick_info.begin();
 	while (iter != map_info.Brick_info.end())
@@ -509,6 +485,7 @@ void Game::recv_hitbrick(char buf[])
 	}
 	if (iter == map_info.Brick_info.end())
 		return;
+
 	if (health <= 0)
 	{
 		map_info.Brick_info.erase(iter);
@@ -518,17 +495,14 @@ void Game::recv_hitbrick(char buf[])
 	pwall->health = health;
 }
 
-void Game::recv_hited(char buf[])
+void Game::recv_hited(Header& header, char* content)
 {
-	int hited_id = -1;
-	int cur_loc = 6;
-	if (buf[cur_loc] == '(' && buf[cur_loc + sizeof(int) + 1] == ')')
-	{
-		cur_loc++;
-		memcpy(&hited_id, &buf[cur_loc], sizeof(int));
-	}
-	if (hited_id != -1)
-		Tank_info[hited_id]->health -= 21;
+	Message::Game_tank_hited_Response Res;
+	Res.ParseFromArray(content, header.length);
+
+	int hited_id = Res.hited_tank_id();
+	if (Tank_info[hited_id])
+		Tank_info[hited_id]->health = Res.health();
 }
 
 void Game::recv_myhited()
@@ -536,16 +510,15 @@ void Game::recv_myhited()
 	ptank1->health -= 21;
 }
 
-void Game::recv_destoryed(char buf[])
+void Game::recv_destoryed(Header& header, char* content)
 {
-	int hited_id = -1;
-	int cur_loc = 10;
-	if (buf[cur_loc] == '(' && buf[cur_loc + sizeof(int) + 1] == ')')
-	{
-		cur_loc++;
-		memcpy(&hited_id, &buf[cur_loc], sizeof(int));
-	}
-	Tank_info[hited_id]->isalive = false;
+	Message::Game_destroyed_tank_Response Res;
+	Res.ParseFromArray(content, header.length);
+
+	int hited_id = Res.destroyed_tank_id();
+
+	if (Tank_info[hited_id])
+		Tank_info[hited_id]->isalive = false;
 }
 
 void Game::recv_mydestoryed()

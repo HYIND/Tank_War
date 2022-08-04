@@ -1,4 +1,4 @@
-#include "Style.h"
+ï»¿#include "Style.h"
 
 map<TankStyle, Style_info*> Tank_Style_info;
 map<BulletStyle, Style_info*> Bullet_Style_info;
@@ -10,7 +10,7 @@ ID2D1Bitmap* Green_Bullet_pBitmap;
 ID2D1Bitmap* Purple_Bullet_pBitmap;
 
 
-/* ÒÔÏÂÎªÍâ²¿ÉùÃ÷ */
+/* ä»¥ä¸‹ä¸ºå¤–éƒ¨å£°æ˜ */
 extern HINSTANCE hInst;
 
 void Init_Style_Resource()
@@ -30,12 +30,12 @@ void Init_Style()
 {
 	Init_Style_Resource();
 
-	/* Tank·ç¸ñ×ÊÔ´ */
+	/* Tanké£æ ¼èµ„æº */
 	{
 		Tank_Style_info[TankStyle::DEFAULT] = new Style_info(50, 50, 5, Def_Tank_pBitmap);
 	}
 
-	/* bullet·ç¸ñ×ÊÔ´ */
+	/* bulleté£æ ¼èµ„æº */
 	{
 		Bullet_Style_info[BulletStyle::DEFAULT] = new Style_info(25, 25, 7, Def_Bullet_pBitmap);
 		Bullet_Style_info[BulletStyle::ORANGE] = new Style_info(50, 95, 7, Orange_Bullet_pBitmap);
