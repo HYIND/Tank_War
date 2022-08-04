@@ -36,7 +36,7 @@ Room_Process::Room_Process(int socket)
 
     addfd(recv_epoll, recv_pipe[0], false);
 
-    memset(buffer, '\0', 1024);
+    memset(buffer, '\0', 100);
 
     bool stop = false;
 
@@ -118,10 +118,11 @@ void Room_Process::Add_player(int socket)
     addfd(recv_epoll, socket);
     user_count++;
     info[socket]->tank_id = user_count;
-    string send_str = "tankid:" + to_string(user_count);
-    char send_ch[1024] = {'\0'};
-    strcpy(send_ch, send_str.c_str());
-    socket_messageinfo *pmsginfo = new socket_messageinfo(socket, send_ch);
+
+    Message::Room_Set_tankid_Response Res;
+    Res.set_id(user_count);
+
+    socket_sendinfo *pmsginfo = new socket_sendinfo(socket, Res);
     unique_lock<mutex> slck(sendqueue_mtx);
     send_queue.emplace(pmsginfo);
     sendqueue_mtx.unlock();
@@ -147,7 +148,7 @@ void Room_Process::recv_process()
             break;
         if (num < 0 && (errno != EINTR))
         {
-            cout << "epoll for game failed!";
+            cout << "recvepoll for room failed!";
             break;
         }
         for (int i = 0; i < num; i++)
@@ -176,8 +177,6 @@ void Room_Process::recv_process()
                 //     }
                 // }
             }
-            // int mysocket = socket_host;
-            // int opsocket = socket2;
             if (events[i].events & EPOLLRDHUP)
             {
                 stop = true;
@@ -187,18 +186,35 @@ void Room_Process::recv_process()
             }
             else if (events[i].events & EPOLLIN)
             {
-                re_num = recv(socket, buffer, 1023, 0);
+                int recv_length = 0;
+                int re_num = recv(socket, buffer, sizeof(Header), 0);
                 while (re_num > 0)
                 {
-                    if (stop)
-                        break;
-                    socket_messageinfo *pinfo = new socket_messageinfo(socket, buffer);
+                    socket_messageinfo *pinfo = new socket_messageinfo(socket);
+                    int count = 0;
+
+                    //获取头
+                    recv_length += sizeof(Header);
+                    Header *header = &(pinfo->header);
+                    memcpy(header, buffer, recv_length);
+
+                    //获取内容（可能为空）
+                    char **content = &(pinfo->content);
+                    if (header->length > 0)
+                    {
+                        *content = new char[header->length];
+                        re_num = recv(socket, *content, header->length, 0);
+                    }
+
                     unique_lock<mutex> rlck(recvqueue_mtx);
                     recv_queue.emplace(pinfo);
                     rlck.unlock();
-                    memset(buffer, '\0', 1024);
+                    memset(buffer, '\0', 100);
                     process_cv.notify_one();
-                    re_num = recv(socket, buffer, 1023, 0);
+                    if (count == 10 || stop)
+                        break;
+                    recv_length = 0;
+                    re_num = recv(socket, buffer, sizeof(Header), 0);
                 }
                 if (re_num == 0)
                 {
@@ -259,7 +275,6 @@ void Room_Process::room_process()
 {
     socket_messageinfo *messageinfo = NULL;
     bool RP_stop = false;
-    string str;
     string ret;
     while (!RP_stop)
     {
@@ -281,10 +296,7 @@ void Room_Process::room_process()
             recv_queue.pop();
             qlck.unlock();
 
-            int socket = messageinfo->socket;
-            str = messageinfo->ch;
-
-            ret = return_class(socket, str);
+            ret = return_class_room(messageinfo->socket, messageinfo->header, messageinfo->content);
             if (ret == "StartGame" || ret == "disband")
             {
                 RP_stop = true;
@@ -305,48 +317,96 @@ void Room_Process::room_process()
     }
 }
 
-string Room_Process::return_class(int socket, string &str)
+// string Room_Process::return_class(int socket, string &str)
+// {
+//     string::const_iterator iterStart = str.begin();
+//     string::const_iterator iterEnd = str.end();
+//     smatch m;
+//     regex reg("^[A-Z|a-z]+");
+//     regex_search(iterStart, iterEnd, m, reg);
+//     string temp;
+//     temp = m[0];
+//     if (temp == "ping")
+//     {
+//         send(socket, (const char *)&(str[0]), 1023, 0);
+//     }
+//     else if (temp == "GetRoominfo")
+//     {
+//         Return_Room_info(socket);
+//     }
+//     else if (temp == "Ready")
+//     {
+//         Ready(socket);
+//     }
+//     else if (temp == "CancelReady")
+//     {
+//         Cancel_Ready(socket);
+//     }
+//     else if (temp == "RoomSend")
+//     {
+//         string send_str(m[0].second + 1, iterEnd);
+//         Room_Message(socket, send_str);
+//     }
+//     else if (temp == "QuitRoom")
+//     {
+//         return Quit_Room(socket);
+//     }
+//     else if (temp == "StartGame")
+//     {
+//         return Start_Game(socket);
+//     }
+//     else if (temp == "ChangeMap")
+//     {
+//         string send_str(m[0].second + 1, iterEnd);
+//         Change_Map(socket, send_str);
+//     }
+//     return "NULL";
+// }
+
+string Room_Process::return_class_room(int socket, Header &header, char *content)
 {
-    string::const_iterator iterStart = str.begin();
-    string::const_iterator iterEnd = str.end();
-    smatch m;
-    regex reg("^[A-Z|a-z]+");
-    regex_search(iterStart, iterEnd, m, reg);
-    string temp;
-    temp = m[0];
-    if (temp == "ping")
+    switch (header.type)
     {
-        send(socket, (const char *)&(str[0]), 1023, 0);
-    }
-    else if (temp == "GetRoominfo")
+    case 106:
     {
-        Return_Room_info(socket);
+        header.type = 206;
+        char buf[sizeof(Header) + header.length] = {'\0'};
+        memcpy(buf, &header, sizeof(Header));
+        memcpy(buf + sizeof(Header), content, header.length);
+        Message::Ping_info P;
+        P.ParseFromArray(content, header.length);
+        int i = P.ping_id();
+        send(socket, buf, sizeof(Header) + header.length, 0);
+        break;
     }
-    else if (temp == "Ready")
+    case 110:
+    {
+        Return_Roominfo(socket);
+        break;
+    }
+    case 111:
     {
         Ready(socket);
+        break;
     }
-    else if (temp == "CancelReady")
+    case 112:
     {
         Cancel_Ready(socket);
+        break;
     }
-    else if (temp == "RoomSend")
+    case 113:
     {
-        string send_str(m[0].second + 1, iterEnd);
-        Room_Message(socket, send_str);
+        Room_Message(socket, header, content);
+        break;
     }
-    else if (temp == "QuitRoom")
+    case 116:
     {
         return Quit_Room(socket);
     }
-    else if (temp == "StartGame")
+    case 115:
     {
         return Start_Game(socket);
     }
-    else if (temp == "ChangeMap")
-    {
-        string send_str(m[0].second + 1, iterEnd);
-        Change_Map(socket, send_str);
     }
     return "NULL";
 }
@@ -357,37 +417,37 @@ void Room_Process::Set_Map(int id)
     this->map_info = Map_list[id];
 }
 
-void Room_Process::Change_Map(int socket, string &recv_str) //房主切换地图
-{
-    if (socket != socket_host)
-        return;
-    string new_id_str;
-    try
-    {
-        string::const_iterator iterStart = recv_str.begin();
-        string::const_iterator iterEnd = recv_str.end();
-        smatch m;
-        regex id_reg("[0-9]+");
-        regex_search(iterStart, iterEnd, m, id_reg);
-        new_id_str = m[0];
-        int new_map_id = atoi(new_id_str.c_str());
-        Set_Map(new_map_id);
-    }
-    catch (exception &e)
-    {
-        return;
-    }
-    string send_str = "ChangeMapto:" + new_id_str;
-    char send_ch[1024] = {'\0'};
-    strcpy(send_ch, send_str.c_str());
-    for (auto &v : info)
-    {
-        socket_messageinfo *pmsginfo = new socket_messageinfo(socket, send_ch);
-        unique_lock<mutex> slck(sendqueue_mtx);
-        send_queue.emplace(pmsginfo);
-        sendqueue_mtx.unlock();
-    }
-}
+// void Room_Process::Change_Map(int socket, string &recv_str) //房主切换地图
+// {
+//     if (socket != socket_host)
+//         return;
+//     string new_id_str;
+//     try
+//     {
+//         string::const_iterator iterStart = recv_str.begin();
+//         string::const_iterator iterEnd = recv_str.end();
+//         smatch m;
+//         regex id_reg("[0-9]+");
+//         regex_search(iterStart, iterEnd, m, id_reg);
+//         new_id_str = m[0];
+//         int new_map_id = atoi(new_id_str.c_str());
+//         Set_Map(new_map_id);
+//     }
+//     catch (exception &e)
+//     {
+//         return;
+//     }
+//     string send_str = "ChangeMapto:" + new_id_str;
+//     char send_ch[1024] = {'\0'};
+//     strcpy(send_ch, send_str.c_str());
+//     for (auto &v : info)
+//     {
+//         socket_messageinfo *pmsginfo = new socket_messageinfo(socket, send_ch);
+//         unique_lock<mutex> slck(sendqueue_mtx);
+//         send_queue.emplace(pmsginfo);
+//         sendqueue_mtx.unlock();
+//     }
+// }
 
 void Room_Process::Ready(int socket)
 {
@@ -414,6 +474,14 @@ string Room_Process::Start_Game(int socket)
     //检查人数
     if (info.size() < 2)
     {
+        Message::Room_Start_Response Res;
+        Res.set_result(-1);
+
+        socket_sendinfo *psendinfo = new socket_sendinfo(socket, Res);
+        unique_lock<mutex> slck(sendqueue_mtx);
+        send_queue.emplace(psendinfo);
+        sendqueue_mtx.unlock();
+
         return "NULL";
     }
 
@@ -426,18 +494,28 @@ string Room_Process::Start_Game(int socket)
         {
             info[socket_host]->Ready = false;
             infolck.unlock();
+
+            Message::Room_Start_Response Res;
+            Res.set_result(0);
+
+            socket_sendinfo *psendinfo = new socket_sendinfo(socket, Res);
+            unique_lock<mutex> slck(sendqueue_mtx);
+            send_queue.emplace(psendinfo);
+            sendqueue_mtx.unlock();
+
             return "NULL";
-            // send()
         }
     }
-    //变更用户状态
+
+    // 符合条件，开始游戏
+    // 变更用户状态
     for (auto &v : info)
     {
         v.second->sockinfo->states = gaming;
     }
     infolck.unlock();
 
-    //返回启动game_process信息
+    // 返回启动game_process的信息
     return "StartGame";
 }
 
@@ -452,8 +530,11 @@ string Room_Process::Quit_Room(int socket)
         {
             if (v.first != socket_host)
             {
+                socket_sendinfo *psendinfo = new socket_sendinfo(socket, str);
+                unique_lock<mutex> slck(sendqueue_mtx);
+                send_queue.emplace(psendinfo);
+                sendqueue_mtx.unlock();
                 v.second->sockinfo->states = hall;
-                send(v.first, (const char *)&str[0], 1023, 0);
             }
         }
         infolck.unlock();
@@ -472,13 +553,16 @@ string Room_Process::Quit_Room(int socket)
     }
 }
 
-void Room_Process::Room_Message(int socket, string &send_str)
+void Room_Process::Room_Message(int socket, Header &header, char *content)
 {
+    Message::Room_Message_Request Req;
+    Req.ParseFromArray(content, header.length);
+    string i = Req.content();
+    Message::Room_Message_Response Res;
+    Res.set_content(i);
     unique_lock<mutex> infolck1(info_mtx);
-    send_str = "RoomMessage:" + info[socket]->sockinfo->userid + "_content:" + send_str;
+    Res.set_name(info[socket]->sockinfo->userid);
     infolck1.unlock();
-    char send_ch[1024] = {'\0'};
-    strcpy(send_ch, send_str.c_str());
 
     unique_lock<mutex> infolck2(info_mtx);
     for (auto &v : info)
@@ -487,11 +571,10 @@ void Room_Process::Room_Message(int socket, string &send_str)
             continue;
         try
         {
-            socket_messageinfo *pmsginfo = new socket_messageinfo(v.first, send_ch);
+            socket_sendinfo *pmsginfo = new socket_sendinfo(v.first, Res);
             unique_lock<mutex> slck(sendqueue_mtx);
             send_queue.emplace(pmsginfo);
             sendqueue_mtx.unlock();
-            // send(socket, (const char *)&(send_str[0]), 1023, 0);
         }
         catch (exception &e)
         {
@@ -500,37 +583,36 @@ void Room_Process::Room_Message(int socket, string &send_str)
     }
     infolck2.unlock();
 }
-void Room_Process::Return_Room_info(int socket)
+
+void Room_Process::Return_Roominfo(int socket)
 {
-    string send_str = "Roomuser:";
+    Message::Room_info_Response Res;
+
     unique_lock<mutex> infolck(info_mtx);
     for (auto &v : info)
     {
         if (v.first == socket)
             continue;
-        send_str += "#";
-        send_str = send_str + v.second->sockinfo->userid;
+        Message::Room_info_Response_User *info = Res.add_userinfo();
+        info->set_name(v.second->sockinfo->userid);
         if (v.first == socket_host)
-            send_str += "::2;";
+            info->set_status(2);
         else if (v.second->Ready)
-            send_str += "::1;";
+            info->set_status(1);
         else
-            send_str += "::0;";
+            info->set_status(0);
     }
     infolck.unlock();
 
-    char send_ch[1024] = {'\0'};
-    strcpy(send_ch, send_str.c_str());
-    socket_messageinfo *pmsginfo = new socket_messageinfo(socket, send_ch);
+    socket_sendinfo *psendinfo = new socket_sendinfo(socket, Res);
     unique_lock<mutex> slck(sendqueue_mtx);
-    send_queue.emplace(pmsginfo);
+    send_queue.emplace(psendinfo);
     sendqueue_mtx.unlock();
-    // send(socket, (const char *)&(send_str[0]), 1023, 0);
 }
 
 void Room_Process::send_process()
 {
-    socket_messageinfo *info = NULL;
+    socket_sendinfo *info = nullptr;
     while (!stop)
     {
         unique_lock<mutex> lck(send_mtx);
@@ -545,10 +627,11 @@ void Room_Process::send_process()
             info = send_queue.front();
             send_queue.pop();
             sendqueue_mtx.unlock();
+            if(!info) continue;
             try
             {
                 signal(SIGPIPE, SIG_IGN);
-                send(info->socket, (const char *)info->ch, 1023, 0);
+                send(info->socket, (const char *)info->send_ch, info->len, 0);
             }
             catch (const exception &e)
             {
@@ -558,75 +641,4 @@ void Room_Process::send_process()
         }
         lck.unlock();
     }
-    int i = 0;
 }
-
-// void return_game_class(int mysocket, int opsocket, string &option, char buf[])
-// {
-//     if (option == "ping")
-//     {
-//         string s = buf;
-//         send(mysocket, (const char *)buf, 1023, 0);
-//     }
-//     if (option == "mylocation")
-//     {
-//         try
-//         {
-//             Tank *mytank = Tank_info[mysocket];
-//             if (mytank->isalive)
-//             {
-//                 memcpy(mytank, &buf[11], 24);
-//                 char send_ch[1024] = "oplocation:";
-//                 memcpy(&send_ch[11], &buf[11], 24);
-//                 send(opsocket, (const char *)&(send_ch[0]), 1023, 0);
-//                 memset(buf, '\0', 1024);
-//             }
-//         }
-//         catch (exception &e)
-//         {
-//             return;
-//         }
-//     }
-//     else if (option == "mybullet")
-//     {
-//         char send_ch[1024] = "opbullet:";
-//         memcpy(&send_ch[9], &buf[9], 1011);
-//         send(opsocket, (const char *)&(send_ch[0]), 1023, 0);
-//     }
-//     // destory:{111,222}
-//     else if (option == "destroy")
-//     {
-//         Tank *optank = Tank_info[opsocket];
-//         if (optank->isalive)
-//         {
-//             try
-//             {
-//                 regex loc_reg("[0-9]+");
-//                 string temp = buf;
-//                 string::const_iterator iterStart = temp.begin();
-//                 string::const_iterator iterEnd = temp.end();
-//                 sregex_iterator iter(iterStart, iterEnd, loc_reg);
-//                 string s_loc_X = ((*iter)[0]);
-//                 iter++;
-//                 string s_loc_Y = ((*iter)[0]);
-//                 int loc_X = atoi(s_loc_X.c_str());
-//                 int loc_Y = atoi(s_loc_Y.c_str());
-//                 int half_height = optank->height / 2;
-//                 int half_width = optank->width / 2;
-//                 if (loc_Y < optank->locationY + half_height && loc_Y > optank->locationY - half_height && loc_X < optank->locationX + half_width && loc_X > optank->locationX - half_width)
-//                 {
-//                     optank->isalive = false;
-//                     string str = "destroy";
-//                     send(opsocket, (const char *)&(str[0]), 1023, 0);
-//                     str = "opdestroy";
-//                     send(mysocket, (const char *)&(str[0]), 1023, 0);
-//                     memset(buf, '\0', 1024);
-//                 }
-//             }
-//             catch (exception &e)
-//             {
-//                 return;
-//             }
-//         }
-//     }
-// }

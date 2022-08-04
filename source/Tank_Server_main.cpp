@@ -30,7 +30,7 @@ unordered_map<int, int> Room;
 
 void server_hall()
 {
-    char buffer[1024];
+    char buffer[100];
     memset(buffer, '\0', 1024);
     bool stop = false;
     while (!stop)
@@ -74,10 +74,6 @@ void server_hall()
                 {
                     if ((*it)->accept == socket)
                     {
-                        if ((*it)->states == room)
-                        {
-                            // Quit_Room(socket);
-                        }
                         user_list.erase(it);
                         break;
                     }
@@ -86,14 +82,32 @@ void server_hall()
             }
             if (hall_events->events & EPOLLIN)
             {
-                int re_num = recv(socket, buffer, 1023, 0);
+                int recv_length = 0;
+                int re_num = recv(socket, buffer, sizeof(Header), 0);
                 while (re_num > 0)
                 {
-                    string re = buffer;
-                    string ret = return_class(socket, re);
-                    if (ret != "NULL")
-                        send(socket, (const char *)&(ret[0]), 1023, 0);
-                    re_num = recv(socket, buffer, 1023, 0);
+                    int count = 0;
+
+                    //获取头
+                    recv_length += sizeof(Header);
+                    Header header;
+                    memcpy(&header, buffer, recv_length);
+
+                    //获取内容（可能为空）
+                    char *content = nullptr;
+                    if (header.length > 0)
+                    {
+                        content = new char[header.length];
+                        re_num = recv(socket, content, header.length, 0);
+                    }
+
+                    return_class(socket, header, content); //获取标头和内容，处理
+
+                    if (count == 10) //计数，防止持续占用
+                        break;
+
+                    recv_length = 0;
+                    re_num = recv(socket, buffer, sizeof(Header), 0);
                 }
                 if (re_num == 0)
                 {
@@ -142,7 +156,7 @@ void server_listen(int mysocket)
                         continue;
                     else
                     {
-                        for (i = 0; i < ret; i++)
+                        for (int i = 0; i < ret; i++)
                         {
                             switch (signals[i])
                             {
@@ -218,6 +232,29 @@ int get_local_ip(const char *eth_inf, char *out)
 
 int main(int argc, char *argv[])
 {
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+    // SearchResponse sr;
+
+    // SearchResponse_Result *SRresult = sr.add_results();
+    // SRresult->set_url("url ...");
+
+    // string str;
+
+    // Header head;
+    // head.type = 0;
+
+    // Hall_Roomlist_Response Response;
+    // tohead.ParseFromString(str);
+    // cout << tohead.socket();
+    // char buff[1024] = {'\0'};
+    // Response.SerializeToArray(buff, 1024);
+    // cout << "mypoint_pro.ByteSizeLong() " << Response.ByteSizeLong() << endl;
+    // cout << "sizeof(buff) :" << sizeof(buff) << endl;
+    // cout << "strlen(buff) :" << strlen(buff) << endl;
+
+    // Send(1,Response);
+    // return 0;
+
     sockaddr_in sock_addr;
     bzero(&sock_addr, sizeof(sock_addr));
     sock_addr.sin_family = AF_INET;

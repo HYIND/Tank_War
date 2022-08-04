@@ -1,0 +1,130 @@
+syntax = "proto3"; 
+package Message;
+// message SearchResponse {
+//   message Result {
+//     string url = 1;
+//     string title = 2;
+//     int64  telephone = 3;
+//     repeated string snippets = 4;
+//   }
+//   repeated Result results = 1;
+// }
+
+message Hall_info_Response{   // 201
+  message User {
+    string name = 1;
+  } repeated User userinfo = 1;
+  message Roominfo{
+    int32 room_id = 1;
+    string host_name = 2;
+  } repeated Roominfo roominfo = 2;
+}
+
+message Hall_Message_Request{  // 103
+  string content = 1;
+}
+message Hall_Message_Response{  // 203
+  string name = 1;
+  string content = 2;
+}
+
+message Hall_EnterRoom_Request{    //105
+  int32 room_id = 1;
+}
+
+message Hall_EnterRoom_Response{    //205
+  int32 room_id = 1;
+  int32 result = 2;
+}
+
+message Ping_info{   //106
+  int32 ping_id = 1;
+}
+
+message Set_User_id{  //107
+  string name = 1;
+}
+
+message Room_info_Response{   //210
+  message User{
+    string name = 1;
+    int32 status = 2;
+  } repeated User userinfo = 1;
+}
+message Room_Message_Request{  // 113
+  string content = 1;
+}
+
+message Room_Message_Response{  // 213
+  string name = 1;
+  string content = 2;
+}
+
+message Room_Set_tankid{     //114
+  int32 id = 1;
+}
+
+message Room_Set_tankid_Response{ //214
+  int32 id = 1;
+}
+
+message Room_Start_Response{   //215
+  int32 result = 1;
+}
+
+message Game_tankinfo_Request{  //120
+  int32 locationX = 1;
+	int32 locationY = 2;
+	int32 direction = 3;
+	int32 tank_style = 4;
+}
+
+message Game_tankinfo_Response{  //220
+  message tankinfo{
+    int32 id = 1;
+    Game_tankinfo_Request tankinfo = 2;
+    int32 health =3;
+  } repeated tankinfo info = 1;
+}
+
+message bulletinfo{
+  int32 locationX = 1;
+	int32 locationY = 2;
+	int32 direction = 3;
+	int32 bullet_style = 4;
+}
+
+message Game_bulletinfo_Request{   //121
+  repeated bulletinfo bulletinfo=2;
+}
+
+message Game_bulletinfo_Response{  //221
+  message Info{
+  int32 tankid=1;
+  repeated bulletinfo bulletinfo=2;
+  } repeated Info info=1;
+}
+
+message Game_hit_brick_Request{  //122
+  int32 hited_brick_id=1;
+  bulletinfo bulletinfo=2;
+}
+
+message Game_brick_hited_Response{  //222
+  int32 hited_brick_id=1;
+  int32 health=2;
+}
+
+message Game_hit_tank_Request{  //123
+  int32 hited_tank_id=1;
+  bulletinfo bulletinfo=2;
+}
+
+message Game_tank_hited_Response{  //223
+  int32 hited_tank_id=1;
+  int32 health=2;
+}
+
+message Game_destroyed_tank_Response{  //225
+  int32 destroyed_tank_id=1;
+}

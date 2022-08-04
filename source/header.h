@@ -22,6 +22,16 @@
 #include <condition_variable>
 #include <stdio.h>
 #include <stdlib.h>
+#include <type_traits>
+#include "../protobuf/myprotocol.pb.h"
+
+struct Header
+{
+    int type = 0;
+    int length = 0;
+    Header(){};
+    Header(int type) : type(type){};
+};
 
 void setnonblocking(int fd);
 

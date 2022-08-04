@@ -62,9 +62,36 @@ void addsig(int sig)
     assert(sigaction(sig, &sa, NULL) != -1);
 }
 
-void Hall_Message(int sock_accept, string &send_str)
+int Get_Header_Type_bystring(string &str)
 {
-    send_str = "HallMessage:" + get_userid(sock_accept) + "_content:" + send_str;
+    if (str == "disband")
+        return 216;
+    else
+        return 0;
+}
+
+void send_string(int socket, string s)
+{
+    Header header;
+    header.type = Get_Header_Type_bystring(s);
+    if (header.type == 0)
+        return;
+    header.length = 0;
+    char send_buf[sizeof(Header)] = {'\0'};
+    memcpy(send_buf, &header, sizeof(Header));
+    send(socket, send_buf, sizeof(Header), 0);
+}
+
+void Hall_Message(int sock_accept, Header &header, char *content)
+{
+    Message::Hall_Message_Request Req;
+    Req.ParseFromArray(content, header.length);
+
+    Message::Hall_Message_Response Res;
+
+    Res.set_content(Req.content());
+    Res.set_name(get_userid(sock_accept));
+
     for (auto &v : user_list)
     {
         if (v->states == hall)
@@ -74,7 +101,7 @@ void Hall_Message(int sock_accept, string &send_str)
                 continue;
             try
             {
-                send(send_sock, (const char *)&(send_str[0]), 1023, 0);
+                Send(send_sock, Res);
             }
             catch (exception &e)
             {
@@ -84,43 +111,25 @@ void Hall_Message(int sock_accept, string &send_str)
     }
 }
 
-// 3user:aaa,bbb,ccc;
-void Get_hall_user(int sock_accept, string &s)
+void Get_hall_info(int sock_accept)
 {
-    string re = "user:";
+    Message::Hall_info_Response Res;
+
     for (auto &v : user_list)
     {
         if (v->accept == sock_accept)
             continue;
-        re += "#";
-        re += v->userid;
-        re += ";";
+        Message::Hall_info_Response_User *info = Res.add_userinfo();
+        info->set_name(v->userid);
     }
-    send(sock_accept, (const char *)&(re[0]), 1023, 0);
-}
-void Get_hall_room(int sock_accept, string &s)
-{
-    string re_id = "roomid:";
-    string re = "room:";
     for (auto &v : room_list)
     {
-        re_id += to_string(v->room_id);
-        re_id += ";";
-
-        re += "#";
-        re += get_userid(v->socket_host);
-        re += ";";
+        Message::Hall_info_Response_Roominfo *info = Res.add_roominfo();
+        info->set_room_id(v->room_id);
+        info->set_host_name(get_userid(v->socket_host));
     }
-    send(sock_accept, (const char *)&(re_id[0]), 1023, 0);
-    // for (auto &v : room_user)
-    // {
-    //     if (v == sock_accept)
-    //         continue;
-    //     re += "#";
-    //     re += get_userid(v);
-    //     re += ";";
-    // }
-    send(sock_accept, (const char *)&(re[0]), 1023, 0);
+
+    Send(sock_accept, Res);
 }
 
 void Create_Room(int sock_accept)
@@ -137,77 +146,130 @@ void Create_Room(int sock_accept)
     T.detach();
 }
 
-void Enter_Room(int sock_accept, string s)
+void Enter_Room(int sock_accept, Header &header, char *content)
 {
-    int id = atoi(s.c_str());
+    Message::Hall_EnterRoom_Request Req;
+    Req.ParseFromArray(content, header.length);
+    int id = Req.room_id();
+
+    Message::Hall_EnterRoom_Response Res;
+    Res.set_room_id(id);
     for (auto &v : room_list)
     {
-        if (v->room_id == id)
+        if (v->room_id == id) //房间可加入
         {
             if (v->user_count < v->user_limited)
             {
-                string send_str = "EnterRoom:" + s;
-                send(sock_accept, (const char *)&(send_str[0]), 1023, 0);
+                Res.set_result(1);
+                Send(sock_accept, Res);
                 v->Add_player(sock_accept);
             }
-            //房间人数已满
-            else
+            else //房间人数已满
             {
+                Res.set_result(0);
+                Send(sock_accept, Res);
             }
         }
-        //房间不存在/已解散
-        else
+        else //房间不存在/已解散
         {
+            Res.set_result(-1);
+            Send(sock_accept, Res);
         }
     }
 }
 
-void setuserid(int &socket, string &userid)
+void set_user_id(int &socket, Header &header, char *content)
 {
+    Message::Set_User_id Req;
+    Req.ParseFromArray(content, header.length);
     for (auto &v : user_list)
     {
         if (v->accept == socket)
         {
-            v->userid = userid;
+            v->userid = Req.name();
         }
     }
 }
 
-string return_class(int &sock_accept, string &s)
+void return_class(int &sock_accept, Header &header, char *content)
 {
-    string::const_iterator iterStart = s.begin();
-    string::const_iterator iterEnd = s.end();
-    smatch m;
-    regex reg("^[A-Z|a-z]+");
-    regex_search(iterStart, iterEnd, m, reg);
-    string temp;
-    temp = m[0];
-    if (temp == "ping")
+    switch (header.type)
     {
-        send(sock_accept, (const char *)&(s[0]), 1023, 0);
-    }
-    if (temp == "myuserid")
+    case 101:
     {
-        string id_str(m[0].second + 1, iterEnd);
-        setuserid(sock_accept, id_str);
+        Get_hall_info(sock_accept);
+        break;
     }
-    else if (temp == "Getroom")
-        Get_hall_room(sock_accept, s);
-    else if (temp == "Getuser")
-        Get_hall_user(sock_accept, s);
-    else if (temp == "HallSend")
+    case 103:
     {
-        string send_str(m[0].second + 1, iterEnd);
-        Hall_Message(sock_accept, send_str);
+        Hall_Message(sock_accept, header, content);
+        break;
     }
-    else if (s == "CreateRoom")
+    case 104:
     {
         Create_Room(sock_accept);
+        break;
     }
-    else if (temp == "EnterRoom")
+    case 105:
     {
-        string send_str(m[0].second + 1, iterEnd);
-        Enter_Room(sock_accept, send_str);
+        Enter_Room(sock_accept, header, content);
+        break;
     }
-    return "NULL";
+    case 106:
+    {
+        header.type = 206;
+        char buf[sizeof(Header) + header.length] = {'\0'};
+        memcpy(buf, &header, sizeof(Header));
+        memcpy(buf + sizeof(Header), content, header.length);
+                Message::Ping_info P;
+        P.ParseFromArray(content, header.length);
+        int i = P.ping_id();
+        send(sock_accept, buf, sizeof(Header) + header.length, 0);
+        break;
+    }
+    case 107:
+    {
+        set_user_id(sock_accept, header, content);
+        break;
+    }
+    }
 }
+
+// string return_class(int &sock_accept, string &s)
+// {
+//     string::const_iterator iterStart = s.begin();
+//     string::const_iterator iterEnd = s.end();
+//     smatch m;
+//     regex reg("^[A-Z|a-z]+");
+//     regex_search(iterStart, iterEnd, m, reg);
+//     string temp;
+//     temp = m[0];
+//     if (temp == "ping")
+//     {
+//         send(sock_accept, (const char *)&(s[0]), 1023, 0);
+//     }
+//     if (temp == "myuserid")
+//     {
+//         string id_str(m[0].second + 1, iterEnd);
+//         setuserid(sock_accept, id_str);
+//     }
+//     else if (temp == "Getroom")
+//         Get_hall_room(sock_accept, s);
+//     else if (temp == "Getuser")
+//         Get_hall_user(sock_accept, s);
+//     else if (temp == "HallSend")
+//     {
+//         string send_str(m[0].second + 1, iterEnd);
+//         Hall_Message(sock_accept, send_str);
+//     }
+//     else if (s == "CreateRoom")
+//     {
+//         Create_Room(sock_accept);
+//     }
+//     else if (temp == "EnterRoom")
+//     {
+//         string send_str(m[0].second + 1, iterEnd);
+//         Enter_Room(sock_accept, send_str);
+//     }
+//     return "NULL";
+// }

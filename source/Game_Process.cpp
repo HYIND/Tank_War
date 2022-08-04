@@ -16,75 +16,75 @@ bool collision(int x1, int y1, int width1, int height1, int x2, int y2, int widt
 
 void Room_Process::confim()
 {
-    clock_t start, now, timeout;
-    timeout = 20 * CLOCKS_PER_SEC;
+    // clock_t start, now, timeout;
+    // timeout = 20 * CLOCKS_PER_SEC;
 
-    map<int, bool> confim;
-    string send_str = "ConfimMapid:" + to_string(map_id);
-    for (auto &v : info)
-    {
-        confim[v.first] = false;
-        send(v.first, (const char *)&(send_str[0]), 1023, 0);
-    }
+    // map<int, bool> confim;
+    // string send_str = "ConfimMapid:" + to_string(map_id);
+    // for (auto &v : info)
+    // {
+    //     confim[v.first] = false;
+    //     send(v.first, (const char *)&(send_str[0]), 1023, 0);
+    // }
 
-    socket_messageinfo *messageinfo = nullptr;
-    string str;
-    char *buf;
-    int cur_socket;
-    start = clock();
-    while (!recv_queue.empty())
-    {
-        now = clock();
-        if (now - start > timeout)
-            break;
-        unique_lock<mutex> qlck(recvqueue_mtx);
-        messageinfo = recv_queue.front();
-        recv_queue.pop();
-        qlck.unlock();
-        cur_socket = messageinfo->socket;
-        buf = messageinfo->ch;
-        str = messageinfo->ch;
-        string::const_iterator iterStart = str.begin();
-        string::const_iterator iterEnd = str.end();
-        smatch m;
-        regex reg("^[A-Z|a-z]+");
-        regex_search(iterStart, iterEnd, m, reg);
-        string option;
-        option = m[0];
-        if (option == "ConfimMapid")
-        {
-            try
-            {
-                string recv_id(m[0].second + 1, iterEnd);
-                if (map_id == atoi(recv_id.c_str()))
-                {
-                    confim[cur_socket] = true;
-                }
-            }
-            catch (exception &e)
-            {
-                continue;
-            }
-        }
-        delete messageinfo;
-        messageinfo = nullptr;
-    }
-    for (auto &v : confim)
-    {
-        if (v.second == false)
-        {
-            info.erase(v.first);
-            for (auto it = user_list.begin(); it != user_list.end(); it++)
-            {
-                if ((*it)->accept == v.first)
-                {
-                    user_list.erase(it);
-                    break;
-                }
-            }
-            user_count--;
-        }
-    }
+    // socket_messageinfo *messageinfo = nullptr;
+    // string str;
+    // char *buf;
+    // int cur_socket;
+    // start = clock();
+    // while (!recv_queue.empty())
+    // {
+    //     now = clock();
+    //     if (now - start > timeout)
+    //         break;
+    //     unique_lock<mutex> qlck(recvqueue_mtx);
+    //     messageinfo = recv_queue.front();
+    //     recv_queue.pop();
+    //     qlck.unlock();
+    //     cur_socket = messageinfo->socket;
+    //     buf = messageinfo->ch;
+    //     str = messageinfo->ch;
+    //     string::const_iterator iterStart = str.begin();
+    //     string::const_iterator iterEnd = str.end();
+    //     smatch m;
+    //     regex reg("^[A-Z|a-z]+");
+    //     regex_search(iterStart, iterEnd, m, reg);
+    //     string option;
+    //     option = m[0];
+    //     if (option == "ConfimMapid")
+    //     {
+    //         try
+    //         {
+    //             string recv_id(m[0].second + 1, iterEnd);
+    //             if (map_id == atoi(recv_id.c_str()))
+    //             {
+    //                 confim[cur_socket] = true;
+    //             }
+    //         }
+    //         catch (exception &e)
+    //         {
+    //             continue;
+    //         }
+    //     }
+    //     delete messageinfo;
+    //     messageinfo = nullptr;
+    // }
+    // for (auto &v : confim)
+    // {
+    //     if (v.second == false)
+    //     {
+    //         info.erase(v.first);
+    //         for (auto it = user_list.begin(); it != user_list.end(); it++)
+    //         {
+    //             if ((*it)->accept == v.first)
+    //             {
+    //                 user_list.erase(it);
+    //                 break;
+    //             }
+    //         }
+    //         user_count--;
+    //     }
+    // }
 }
 
 void Room_Process::Init_Game()
@@ -113,187 +113,135 @@ void Room_Process::Init_Game()
     string send_str = "Start"; //开始游戏
     for (auto &v : info)
     {
-        send(v.first, (const char *)&(send_str[0]), 1023, 0);
+        Message::Room_Start_Response Res;
+        Res.set_result(1);
+        Send(v.first, Res);
     }
 }
 
 void Room_Process::EndGame()
 {
-    char ch_win[1024] = "wingame";
-    char ch_fail[1024] = "failgame";
     for (auto &v : info)
     {
         if (Tank_info[v.first]->isalive)
         {
-            socket_messageinfo *pmsginfo = new socket_messageinfo(v.first, ch_win);
+            socket_sendinfo *psendinfo = new socket_sendinfo(v.first, 227);
             unique_lock<mutex> slck(sendqueue_mtx);
-            send_queue.emplace(pmsginfo);
+            send_queue.emplace(psendinfo);
             sendqueue_mtx.unlock();
         }
         else
         {
-            socket_messageinfo *pmsginfo = new socket_messageinfo(v.first, ch_fail);
+            socket_sendinfo *psendinfo = new socket_sendinfo(v.first, 228);
             unique_lock<mutex> slck(sendqueue_mtx);
-            send_queue.emplace(pmsginfo);
+            send_queue.emplace(psendinfo);
             sendqueue_mtx.unlock();
         }
     }
 }
 
-bool Room_Process::hittank(char buf[])
+bool Room_Process::Hit_tank(int socket, Header &header, char *content)
 {
-    try
+    Message::Game_hit_tank_Request Req;
+    Req.ParseFromArray(content, header.length);
+
+    const Message::bulletinfo *pbinfo = &(Req.bulletinfo());
+    int hited_tank_id = Req.hited_tank_id();
+    int bullet_x = pbinfo->locationx();
+    int bullet_y = pbinfo->locationy();
+    int direction = pbinfo->direction();
+    BulletStyle style = (BulletStyle)pbinfo->bullet_style();
+
+    int hited_socket;
+    for (auto &v : info)
     {
-        int hited_tank_id;
-        int cur_loc = 8;
-        if (buf[cur_loc] == '(' && buf[cur_loc + sizeof(int) + 1] == ')')
+        if (v.second->tank_id == hited_tank_id)
         {
-            cur_loc++;
-            memcpy(&hited_tank_id, &buf[cur_loc], sizeof(int));
+            hited_socket = v.first;
+            break;
         }
-        else
-            return false;
-        cur_loc += sizeof(int) + 1;
-        int hited_socket;
-        for (auto &v : info)
-        {
-            if (v.second->tank_id == hited_tank_id)
-            {
-                hited_socket = v.first;
-                break;
-            }
-        }
-        Tank *hited_tank = Tank_info[hited_socket];
-        int bullet_x, bullet_y, direction;
-        BulletStyle style;
-        if (buf[cur_loc] == '{' && buf[cur_loc + sizeof(int) * 3 + sizeof(BulletStyle) + 1] == '}')
-        {
-            cur_loc++;
-            memcpy(&bullet_x, &buf[cur_loc], sizeof(int));
-            cur_loc += sizeof(int);
-            memcpy(&bullet_y, &buf[cur_loc], sizeof(int));
-            cur_loc += sizeof(int);
-            memcpy(&direction, &buf[cur_loc], sizeof(int));
-            cur_loc += sizeof(int);
-            memcpy(&style, &buf[cur_loc], sizeof(BulletStyle));
-            cur_loc += sizeof(BulletStyle);
-        }
-        int width = Bullet_Style_info[style]->width;
-        if (collision(bullet_x,
-                      bullet_y,
-                      Bullet_Style_info[style]->width,
-                      Bullet_Style_info[style]->height,
-                      hited_tank->locationX,
-                      hited_tank->locationY,
-                      hited_tank->width,
-                      hited_tank->height))
-        {
-            hited_tank->health -= 21;
-            hittank_notify(hited_socket, hited_tank_id);
-            if (hited_tank->health <= 0)
-            {
-                hited_tank->isalive = false;
-                destroy(hited_socket, hited_tank_id);
-                return true;
-            }
-        }
-        return false;
     }
-    catch (exception &e)
+    Tank *hited_tank = Tank_info[hited_socket];
+    if (collision(bullet_x,
+                  bullet_y,
+                  Bullet_Style_info[style]->width,
+                  Bullet_Style_info[style]->height,
+                  hited_tank->locationX,
+                  hited_tank->locationY,
+                  Tank_Style_info[hited_tank->tank_style]->width,
+                  Tank_Style_info[hited_tank->tank_style]->height))
     {
-        return false;
+        hited_tank->health -= 21;
+        hittank_notify(hited_socket, hited_tank_id, hited_tank->health);
+        if (hited_tank->health <= 0)
+        {
+            hited_tank->isalive = false;
+            destroy(hited_socket, hited_tank_id);
+            return true;
+        }
     }
+    return false;
 }
 
-bool Room_Process::hitbrick(char buf[])
+bool Room_Process::Hit_brick(int socket, Header &header, char *content)
 {
-    try
+    Message::Game_hit_brick_Request Req;
+    Req.ParseFromArray(content, header.length);
+
+    const Message::bulletinfo *info = &(Req.bulletinfo());
+    int hited_brick_id = Req.hited_brick_id();
+    int bullet_x = info->locationx();
+    int bullet_y = info->locationy();
+    int direction = info->direction();
+    BulletStyle style = (BulletStyle)info->bullet_style();
+
+    auto iter = map_info.Brick_info.begin();
+    while (iter != map_info.Brick_info.end())
     {
-        int hited_brick_id;
-        int cur_loc = 9;
-        if (buf[cur_loc] == '(' && buf[cur_loc + sizeof(int) + 1] == ')')
-        {
-            cur_loc++;
-            memcpy(&hited_brick_id, &buf[cur_loc], sizeof(int));
-        }
-        else
-            return false;
-        cur_loc += sizeof(int) + 1;
-        auto iter = map_info.Brick_info.begin();
-        while (iter != map_info.Brick_info.end())
-        {
-            if (iter->id == hited_brick_id)
-                break;
-            iter++;
-        }
-        if (iter == map_info.Brick_info.end())
-            return false;
-        Brick_Wall *pwall = &(*iter);
-        int bullet_x, bullet_y, direction;
-        BulletStyle style;
-        if (buf[cur_loc] == '{' && buf[cur_loc + sizeof(int) * 3 + sizeof(BulletStyle) + 1] == '}')
-        {
-            cur_loc++;
-            memcpy(&bullet_x, &buf[cur_loc], sizeof(int));
-            cur_loc += sizeof(int);
-            memcpy(&bullet_y, &buf[cur_loc], sizeof(int));
-            cur_loc += sizeof(int);
-            memcpy(&direction, &buf[cur_loc], sizeof(int));
-            cur_loc += sizeof(int);
-            memcpy(&style, &buf[cur_loc], sizeof(BulletStyle));
-            cur_loc += sizeof(BulletStyle);
-        }
-        if (collision(bullet_x,
-                      bullet_y,
-                      Bullet_Style_info[style]->width,
-                      Bullet_Style_info[style]->height,
-                      pwall->locationX,
-                      pwall->locationY,
-                      pwall->width,
-                      pwall->height))
-        {
-            pwall->health -= 21;
-            hitbrick_notify(hited_brick_id, pwall->health);
-            if (pwall->health <= 0)
-            {
-                map_info.Brick_info.erase(iter);
-                return true;
-            }
-        }
-        return false;
+        if (iter->id == hited_brick_id)
+            break;
+        iter++;
     }
-    catch (exception &e)
+    if (iter == map_info.Brick_info.end())
+        return false;
+    Brick_Wall *pwall = &(*iter);
+
+    if (collision(bullet_x,
+                  bullet_y,
+                  Bullet_Style_info[style]->width,
+                  Bullet_Style_info[style]->height,
+                  pwall->locationX,
+                  pwall->locationY,
+                  pwall->width,
+                  pwall->height))
     {
-        return false;
+        pwall->health -= 21;
+        hitbrick_notify(hited_brick_id, pwall->health);
+        if (pwall->health <= 0)
+        {
+            map_info.Brick_info.erase(iter);
+            return true;
+        }
     }
+    return false;
 }
 
-void Room_Process::hittank_notify(int hited_socket, int hited_id)
+void Room_Process::hittank_notify(int hited_socket, int hited_id, int health)
 {
-    static const string str_hited = "youhited";
-    static const string str_other = "hited:";
-    char ch_hited[1024] = {'\0'};
-    char ch_other[1024] = {'\0'};
-
-    strcpy(ch_hited, str_hited.c_str());
-
-    strcpy(ch_other, str_other.c_str());
-    int cur_loc = 6;
-    ch_other[cur_loc] = '(';
-    cur_loc++;
-    memcpy(&ch_other[cur_loc], &hited_id, sizeof(int));
-    cur_loc += sizeof(int);
-    ch_other[cur_loc] = ')';
-
-    socket_messageinfo *pmsginfo = new socket_messageinfo(hited_socket, ch_hited);
+    socket_sendinfo *psendinfo = new socket_sendinfo(hited_socket, 224);
     unique_lock<mutex> slck(sendqueue_mtx);
-    send_queue.emplace(pmsginfo);
+    send_queue.emplace(psendinfo);
     sendqueue_mtx.unlock();
+
+    Message::Game_tank_hited_Response Res;
+    Res.set_hited_tank_id(hited_id);
+    Res.set_health(health);
+
     for (auto &v : info)
     {
         if (v.first != hited_socket)
         {
-            socket_messageinfo *pmsginfo = new socket_messageinfo(v.first, ch_other);
+            socket_sendinfo *pmsginfo = new socket_sendinfo(v.first, Res);
             unique_lock<mutex> slck(sendqueue_mtx);
             send_queue.emplace(pmsginfo);
             sendqueue_mtx.unlock();
@@ -301,69 +249,198 @@ void Room_Process::hittank_notify(int hited_socket, int hited_id)
     }
 }
 
-// hitbrick:([INT][INT])
 void Room_Process::hitbrick_notify(int hited_brick_id, int health)
 {
-    static const string str_send = "hitbrick:";
-    char ch_send[1024] = {'\0'};
-
-    strcpy(ch_send, str_send.c_str());
-    int cur_loc = 9;
-    ch_send[cur_loc] = '(';
-    cur_loc++;
-    memcpy(&ch_send[cur_loc], &hited_brick_id, sizeof(int));
-    cur_loc += sizeof(int);
-    memcpy(&ch_send[cur_loc], &health, sizeof(int));
-    cur_loc += sizeof(int);
-    ch_send[cur_loc] = ')';
-
+    Message::Game_brick_hited_Response Res;
+    Res.set_hited_brick_id(hited_brick_id);
+    Res.set_health(health);
     for (auto &v : info)
     {
-        socket_messageinfo *pmsginfo = new socket_messageinfo(v.first, ch_send);
+        socket_sendinfo *psendinfo = new socket_sendinfo(v.first, Res);
         unique_lock<mutex> slck(sendqueue_mtx);
-        send_queue.emplace(pmsginfo);
+        send_queue.emplace(psendinfo);
         sendqueue_mtx.unlock();
     }
 }
 
 void Room_Process::destroy(int hited_socket, int hited_id)
 {
-    static const string str_hited = "youdestroyed";
-    static const string str_other = "destroyed:";
-    char ch_hited[1024] = {'\0'};
-    char ch_other[1024] = {'\0'};
-
-    strcpy(ch_hited, str_hited.c_str());
-
-    strcpy(ch_other, str_other.c_str());
-    int cur_loc = 10;
-    ch_other[cur_loc] = '(';
-    cur_loc++;
-    memcpy(&ch_other[cur_loc], &hited_id, sizeof(int));
-    cur_loc += sizeof(int);
-    ch_other[cur_loc] = ')';
-
-    socket_messageinfo *pmsginfo = new socket_messageinfo(hited_socket, ch_hited);
+    socket_sendinfo *psendinfo = new socket_sendinfo(hited_socket, 226);
     unique_lock<mutex> slck(sendqueue_mtx);
-    send_queue.emplace(pmsginfo);
+    send_queue.emplace(psendinfo);
     sendqueue_mtx.unlock();
+
+    Message::Game_destroyed_tank_Response Res;
+    Res.set_destroyed_tank_id(hited_id);
+
     for (auto &v : info)
     {
         if (v.first != hited_socket)
         {
-            socket_messageinfo *pmsginfo = new socket_messageinfo(v.first, ch_other);
+            socket_sendinfo *psendinfo = new socket_sendinfo(v.first, Res);
             unique_lock<mutex> slck(sendqueue_mtx);
-            send_queue.emplace(pmsginfo);
+            send_queue.emplace(psendinfo);
             sendqueue_mtx.unlock();
         }
     }
+}
+
+void Room_Process::Refreash_tankinfo(int socket, Header &header, char *content)
+{
+    Message::Game_tankinfo_Request Req;
+    Req.ParseFromArray(content, header.length);
+
+    Tank *tank = Tank_info[socket];
+    if (tank->isalive)
+    {
+        tank->locationX = Req.locationx();
+        tank->locationY = Req.locationy();
+        tank->direction = Req.direction();
+        tank->tank_style = (TankStyle)Req.tank_style();
+    }
+}
+
+void Room_Process::Refreash_bulletinfo(int socket, Header &header, char *content)
+{
+    Tank *tank = Tank_info[socket];
+    if (!tank)
+        return;
+    Message::Game_bulletinfo_Request Req;
+    Req.ParseFromArray(content, header.length);
+
+    bullet *newhead = new bullet();
+    bullet *temp = newhead;
+
+    for (int i = 0; i < Req.bulletinfo_size(); i++)
+    {
+        const Message::bulletinfo info = Req.bulletinfo(i);
+        temp->next = new bullet(info.locationx(), info.locationy(), info.direction(), (BulletStyle)info.bullet_style());
+        temp = temp->next;
+    }
+    tank->bullet_head = newhead->next;
+    delete newhead;
+}
+
+void Room_Process::Refreash_Tank_process(bool *end)
+{
+    while (!stop && !(*end))
+    {
+        struct timeval temp;
+        temp.tv_usec = 18000;
+        select(0, NULL, NULL, NULL, &temp);
+        Message::Game_tankinfo_Response tank_Res;
+        for (auto v : Tank_info)
+        {
+            Tank *tank = v.second;
+            Message::Game_tankinfo_Response_tankinfo *Res_tankinfo = tank_Res.add_info();
+
+            Res_tankinfo->set_id(info[v.first]->tank_id);
+            Res_tankinfo->set_health(tank->health);
+            Message::Game_tankinfo_Request *tankinfo = new Message::Game_tankinfo_Request();
+            tankinfo->set_locationx(tank->locationX);
+            tankinfo->set_locationy(tank->locationY);
+            tankinfo->set_direction(tank->direction);
+            tankinfo->set_tank_style((int)tank->tank_style);
+            Res_tankinfo->set_allocated_tankinfo(tankinfo);
+        }
+        for (auto v : info)
+        {
+            socket_sendinfo *psendinfo = new socket_sendinfo(v.first, tank_Res);
+            unique_lock<mutex> slck(sendqueue_mtx);
+            send_queue.emplace(psendinfo);
+            sendqueue_mtx.unlock();
+            send_cv.notify_one();
+        }
+    }
+}
+
+void Room_Process::Refreash_Bullet_process(bool *end)
+{
+    timespec delay;
+    delay.tv_nsec = 9000;
+    nanosleep(&delay, &delay);
+
+    while (!stop && !(*end))
+    {
+        struct timeval temp;
+        temp.tv_usec = 18000;
+        select(0, NULL, NULL, NULL, &temp);
+        Message::Game_bulletinfo_Response bullet_Res;
+        for (auto v : Tank_info)
+        {
+            Tank *tank = v.second;
+            Message::Game_bulletinfo_Response_Info *Res_bulletinfo = bullet_Res.add_info();
+
+            Res_bulletinfo->set_tankid(info[v.first]->tank_id);
+
+            bullet *cur = tank->bullet_head;
+            while (cur != NULL)
+            {
+                Message::bulletinfo *bulletinfo = Res_bulletinfo->add_bulletinfo();
+                bulletinfo->set_locationx(cur->locationX);
+                bulletinfo->set_locationy(cur->locationY);
+                bulletinfo->set_direction(cur->direction);
+                bulletinfo->set_bullet_style((int)cur->bullet_style);
+                cur = cur->next;
+            }
+        }
+        for (auto v : info)
+        {
+            socket_sendinfo *psendinfo = new socket_sendinfo(v.first, bullet_Res);
+            unique_lock<mutex> slck(sendqueue_mtx);
+            send_queue.emplace(psendinfo);
+            sendqueue_mtx.unlock();
+            send_cv.notify_one();
+        }
+    }
+}
+
+int Room_Process::return_class_game(int socket, Header &header, char *content)
+{
+    switch (header.type)
+    {
+    case 106:
+    {
+        header.type = 206;
+        char buf[sizeof(Header) + header.length] = {'\0'};
+        memcpy(buf, &header, sizeof(Header));
+        memcpy(buf + sizeof(Header), content, header.length);
+        send(socket, buf, sizeof(Header) + header.length, 0);
+        break;
+    }
+    case 120:
+        Refreash_tankinfo(socket, header, content);
+        break;
+    case 121:
+        Refreash_bulletinfo(socket, header, content);
+        break;
+    case 122:
+        Hit_brick(socket, header, content);
+        break;
+    case 123:
+    {
+        if (Hit_tank(socket, header, content))
+        {
+            return 1;
+        }
+        break;
+    }
+    case 129:
+        unique_lock<mutex> infolck(info_mtx);
+        info[socket]->sockinfo->states = hall;
+        delfd(recv_epoll, socket);
+        addfd(hall_epoll, socket);
+        info.erase(socket);
+        infolck.unlock();
+        break;
+    }
+    return 0;
 }
 
 void Room_Process::game_process()
 {
     socket_messageinfo *messageinfo = NULL;
     string str;
-    char *buf;
     int cur_socket;
 
     // confim();
@@ -376,6 +453,10 @@ void Room_Process::game_process()
 
     bool end = false;
     int player_alive = user_count;
+
+    thread Tankinfo_thread(&Room_Process::Refreash_Tank_process, this, &end);
+    thread Bulletinfo_thread(&Room_Process::Refreash_Bullet_process, this, &end);
+
     while (!end && !stop)
     {
         try
@@ -393,16 +474,7 @@ void Room_Process::game_process()
                 messageinfo = recv_queue.front();
                 recv_queue.pop();
                 qlck.unlock();
-                cur_socket = messageinfo->socket;
-                buf = messageinfo->ch;
-                str = messageinfo->ch;
-                string::const_iterator iterStart = str.begin();
-                string::const_iterator iterEnd = str.end();
-                smatch m;
-                regex reg("^[A-Z|a-z]+");
-                regex_search(iterStart, iterEnd, m, reg);
-                string option;
-                option = m[0];
+
                 // {
                 //     try
                 //     {
@@ -454,110 +526,12 @@ void Room_Process::game_process()
                 //         break;
                 //     }
                 // }
-                if (option == "ping")
-                {
-                    unique_lock<mutex> slck(sendqueue_mtx);
-                    send_queue.emplace(messageinfo);
-                    sendqueue_mtx.unlock();
-                    // string s = buf;
-                    // send(mysocket, (const char *)buf, 1023, 0);
-                }
-                else if (option == "mytankinfo")
-                {
-                    try
-                    {
-                        Tank *mytank = Tank_info[cur_socket];
-                        if (mytank->isalive)
-                        {
-                            memcpy(mytank, &buf[11], 21);
-                            int id = info[cur_socket]->tank_id;
-                            char send_ch[1024] = "tankinfo:(";
-                            int cur_loc = 10;
-                            memcpy(&send_ch[cur_loc], &id, sizeof(int));
-                            cur_loc += sizeof(int);
-                            send_ch[cur_loc] = ')';
-                            cur_loc++;
-                            send_ch[cur_loc] = '{';
-                            cur_loc++;
-                            memcpy(&send_ch[cur_loc], &buf[11], 21);
-                            cur_loc += 21;
-                            send_ch[cur_loc] = '}';
-                            for (auto &v : info)
-                            {
-                                if (v.first == cur_socket)
-                                    continue;
-                                unique_lock<mutex> slck(sendqueue_mtx);
-                                socket_messageinfo *pmsginfo = new socket_messageinfo(v.first, send_ch);
-                                send_queue.emplace(pmsginfo);
-                                sendqueue_mtx.unlock();
-                            }
-                            // send(opsocket, (const char *)&(buf[0]), 1023, 0);
-                            // memset(buf, '\0', 1024);
-                        }
-                    }
-                    catch (exception &e)
-                    {
-                        return;
-                    }
-                }
-                else if (option == "mybullet")
-                {
-                    try
-                    {
-                        int id = info[cur_socket]->tank_id;
-                        char send_ch[1024] = "bulletinfo:(";
-                        int cur_loc = 12;
-                        memcpy(&send_ch[cur_loc], &id, sizeof(int));
-                        cur_loc += sizeof(int);
-                        if (id < 10)
-                        {
-                            send_ch[cur_loc] = ')';
-                            cur_loc++;
-                        }
-                        memcpy(&send_ch[cur_loc], &buf[9], 900);
-                        for (auto &v : info)
-                        {
-                            if (v.first == cur_socket)
-                                continue;
-                            unique_lock<mutex> slck(sendqueue_mtx);
-                            socket_messageinfo *pmsginfo = new socket_messageinfo(v.first, send_ch);
-                            send_queue.emplace(pmsginfo);
-                            sendqueue_mtx.unlock();
-                        }
-                    }
-                    catch (exception &e)
-                    {
-                        return;
-                    }
-                }
-                // destroytank:(INT){INT,INT,bulletStyle}
-                else if (option == "hittank")
-                {
-                    if (hittank(buf))
-                    {
-                        player_alive--;
-                    }
-                    release = true;
-                }
-                else if (option == "hitbrick")
-                {
-                    hitbrick(buf);
-                    release = true;
-                }
-                else if (option == "returntohall")
-                {
-                    unique_lock<mutex> infolck(info_mtx);
-                    info[cur_socket]->sockinfo->states = hall;
-                    delfd(recv_epoll, cur_socket);
-                    addfd(hall_epoll, cur_socket);
-                    info.erase(cur_socket);
-                    infolck.unlock();
-                }
+                if (return_class_game(messageinfo->socket, messageinfo->header, messageinfo->content))
+                    player_alive--;
+
                 send_cv.notify_one();
-                if (release)
-                {
-                    delete (messageinfo);
-                }
+
+                delete (messageinfo);
                 messageinfo = NULL;
                 if (player_alive == 1)
                 {
@@ -573,6 +547,8 @@ void Room_Process::game_process()
             break;
         }
     }
+    Tankinfo_thread.join();
+    Bulletinfo_thread.join();
     //正常结束游戏、将消息处理移交给处理进程
     if (end)
     {
