@@ -1,6 +1,5 @@
 ﻿// WindowsProject1.cpp : 定义应用程序的入口点。
 //
-//#include "box2d/box2d.h"
 #include "Render.h"
 
 #define MAX_LOADSTRING 100
@@ -252,9 +251,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				if (!Init_Hall())
 					break;
 				set_my_userid();
-				Show_Hall(true);
-				CurScene = SHall;
-				status = STATUS::Hall_Status;
+				Set_CurScene(STATUS::Hall_Status);
 				SetTimer(hWnd, reconnect, 5000, NULL);
 				SetTimer(hWnd, hall_refreash, 4000, NULL);
 				SetTimer(hWnd, ping, 2000, NULL);
@@ -333,7 +330,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			// 离开大厅
 			case IDB_EXITHALL:
-				closesocket(mysocket);
+				close_connect();
 				KillTimer(hWnd, reconnect);
 				KillTimer(hWnd, hall_refreash);
 				KillTimer(hWnd, ping);

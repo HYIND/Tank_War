@@ -121,6 +121,7 @@ void Room_Ready();
 void Room_CancelReady();
 void Set_CurScene(STATUS status_in);
 
+void close_connect();
 
 template <typename T>
 int Get_Header_Type(T& message)

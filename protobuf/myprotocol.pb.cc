@@ -236,7 +236,7 @@ PROTOBUF_CONSTEXPR Game_tankinfo_Request::Game_tankinfo_Request(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.locationx_)*/0
   , /*decltype(_impl_.locationy_)*/0
-  , /*decltype(_impl_.direction_)*/0
+  , /*decltype(_impl_.rotate_)*/0
   , /*decltype(_impl_.tank_style_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct Game_tankinfo_RequestDefaultTypeInternal {
@@ -280,7 +280,7 @@ PROTOBUF_CONSTEXPR bulletinfo::bulletinfo(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.locationx_)*/0
   , /*decltype(_impl_.locationy_)*/0
-  , /*decltype(_impl_.direction_)*/0
+  , /*decltype(_impl_.rotate_)*/0
   , /*decltype(_impl_.bullet_style_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct bulletinfoDefaultTypeInternal {
@@ -3737,7 +3737,7 @@ Game_tankinfo_Request::Game_tankinfo_Request(const Game_tankinfo_Request& from)
   new (&_impl_) Impl_{
       decltype(_impl_.locationx_){}
     , decltype(_impl_.locationy_){}
-    , decltype(_impl_.direction_){}
+    , decltype(_impl_.rotate_){}
     , decltype(_impl_.tank_style_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
@@ -3755,7 +3755,7 @@ inline void Game_tankinfo_Request::SharedCtor(
   new (&_impl_) Impl_{
       decltype(_impl_.locationx_){0}
     , decltype(_impl_.locationy_){0}
-    , decltype(_impl_.direction_){0}
+    , decltype(_impl_.rotate_){0}
     , decltype(_impl_.tank_style_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
@@ -3796,27 +3796,27 @@ const char* Game_tankinfo_Request::_InternalParse(const char* ptr, ::_pbi::Parse
     uint32_t tag;
     ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
-      // int32 locationX = 1;
+      // double locationX = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
-          _impl_.locationx_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 9)) {
+          _impl_.locationx_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
         } else
           goto handle_unusual;
         continue;
-      // int32 locationY = 2;
+      // double locationY = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
-          _impl_.locationy_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 17)) {
+          _impl_.locationy_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
         } else
           goto handle_unusual;
         continue;
-      // int32 direction = 3;
+      // double rotate = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
-          _impl_.direction_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 25)) {
+          _impl_.rotate_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
         } else
           goto handle_unusual;
         continue;
@@ -3857,22 +3857,34 @@ uint8_t* Game_tankinfo_Request::_InternalSerialize(
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // int32 locationX = 1;
-  if (this->_internal_locationx() != 0) {
+  // double locationX = 1;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationx = this->_internal_locationx();
+  uint64_t raw_locationx;
+  memcpy(&raw_locationx, &tmp_locationx, sizeof(tmp_locationx));
+  if (raw_locationx != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(1, this->_internal_locationx(), target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(1, this->_internal_locationx(), target);
   }
 
-  // int32 locationY = 2;
-  if (this->_internal_locationy() != 0) {
+  // double locationY = 2;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationy = this->_internal_locationy();
+  uint64_t raw_locationy;
+  memcpy(&raw_locationy, &tmp_locationy, sizeof(tmp_locationy));
+  if (raw_locationy != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_locationy(), target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(2, this->_internal_locationy(), target);
   }
 
-  // int32 direction = 3;
-  if (this->_internal_direction() != 0) {
+  // double rotate = 3;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_rotate = this->_internal_rotate();
+  uint64_t raw_rotate;
+  memcpy(&raw_rotate, &tmp_rotate, sizeof(tmp_rotate));
+  if (raw_rotate != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(3, this->_internal_direction(), target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(3, this->_internal_rotate(), target);
   }
 
   // int32 tank_style = 4;
@@ -3897,19 +3909,31 @@ size_t Game_tankinfo_Request::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // int32 locationX = 1;
-  if (this->_internal_locationx() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_locationx());
+  // double locationX = 1;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationx = this->_internal_locationx();
+  uint64_t raw_locationx;
+  memcpy(&raw_locationx, &tmp_locationx, sizeof(tmp_locationx));
+  if (raw_locationx != 0) {
+    total_size += 1 + 8;
   }
 
-  // int32 locationY = 2;
-  if (this->_internal_locationy() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_locationy());
+  // double locationY = 2;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationy = this->_internal_locationy();
+  uint64_t raw_locationy;
+  memcpy(&raw_locationy, &tmp_locationy, sizeof(tmp_locationy));
+  if (raw_locationy != 0) {
+    total_size += 1 + 8;
   }
 
-  // int32 direction = 3;
-  if (this->_internal_direction() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_direction());
+  // double rotate = 3;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_rotate = this->_internal_rotate();
+  uint64_t raw_rotate;
+  memcpy(&raw_rotate, &tmp_rotate, sizeof(tmp_rotate));
+  if (raw_rotate != 0) {
+    total_size += 1 + 8;
   }
 
   // int32 tank_style = 4;
@@ -3938,14 +3962,26 @@ void Game_tankinfo_Request::MergeFrom(const Game_tankinfo_Request& from) {
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from._internal_locationx() != 0) {
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationx = from._internal_locationx();
+  uint64_t raw_locationx;
+  memcpy(&raw_locationx, &tmp_locationx, sizeof(tmp_locationx));
+  if (raw_locationx != 0) {
     _this->_internal_set_locationx(from._internal_locationx());
   }
-  if (from._internal_locationy() != 0) {
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationy = from._internal_locationy();
+  uint64_t raw_locationy;
+  memcpy(&raw_locationy, &tmp_locationy, sizeof(tmp_locationy));
+  if (raw_locationy != 0) {
     _this->_internal_set_locationy(from._internal_locationy());
   }
-  if (from._internal_direction() != 0) {
-    _this->_internal_set_direction(from._internal_direction());
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_rotate = from._internal_rotate();
+  uint64_t raw_rotate;
+  memcpy(&raw_rotate, &tmp_rotate, sizeof(tmp_rotate));
+  if (raw_rotate != 0) {
+    _this->_internal_set_rotate(from._internal_rotate());
   }
   if (from._internal_tank_style() != 0) {
     _this->_internal_set_tank_style(from._internal_tank_style());
@@ -4439,7 +4475,7 @@ bulletinfo::bulletinfo(const bulletinfo& from)
   new (&_impl_) Impl_{
       decltype(_impl_.locationx_){}
     , decltype(_impl_.locationy_){}
-    , decltype(_impl_.direction_){}
+    , decltype(_impl_.rotate_){}
     , decltype(_impl_.bullet_style_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
@@ -4457,7 +4493,7 @@ inline void bulletinfo::SharedCtor(
   new (&_impl_) Impl_{
       decltype(_impl_.locationx_){0}
     , decltype(_impl_.locationy_){0}
-    , decltype(_impl_.direction_){0}
+    , decltype(_impl_.rotate_){0}
     , decltype(_impl_.bullet_style_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
@@ -4498,27 +4534,27 @@ const char* bulletinfo::_InternalParse(const char* ptr, ::_pbi::ParseContext* ct
     uint32_t tag;
     ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
-      // int32 locationX = 1;
+      // double locationX = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
-          _impl_.locationx_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 9)) {
+          _impl_.locationx_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
         } else
           goto handle_unusual;
         continue;
-      // int32 locationY = 2;
+      // double locationY = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
-          _impl_.locationy_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 17)) {
+          _impl_.locationy_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
         } else
           goto handle_unusual;
         continue;
-      // int32 direction = 3;
+      // double rotate = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
-          _impl_.direction_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 25)) {
+          _impl_.rotate_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
         } else
           goto handle_unusual;
         continue;
@@ -4559,22 +4595,34 @@ uint8_t* bulletinfo::_InternalSerialize(
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // int32 locationX = 1;
-  if (this->_internal_locationx() != 0) {
+  // double locationX = 1;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationx = this->_internal_locationx();
+  uint64_t raw_locationx;
+  memcpy(&raw_locationx, &tmp_locationx, sizeof(tmp_locationx));
+  if (raw_locationx != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(1, this->_internal_locationx(), target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(1, this->_internal_locationx(), target);
   }
 
-  // int32 locationY = 2;
-  if (this->_internal_locationy() != 0) {
+  // double locationY = 2;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationy = this->_internal_locationy();
+  uint64_t raw_locationy;
+  memcpy(&raw_locationy, &tmp_locationy, sizeof(tmp_locationy));
+  if (raw_locationy != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_locationy(), target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(2, this->_internal_locationy(), target);
   }
 
-  // int32 direction = 3;
-  if (this->_internal_direction() != 0) {
+  // double rotate = 3;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_rotate = this->_internal_rotate();
+  uint64_t raw_rotate;
+  memcpy(&raw_rotate, &tmp_rotate, sizeof(tmp_rotate));
+  if (raw_rotate != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(3, this->_internal_direction(), target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(3, this->_internal_rotate(), target);
   }
 
   // int32 bullet_style = 4;
@@ -4599,19 +4647,31 @@ size_t bulletinfo::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // int32 locationX = 1;
-  if (this->_internal_locationx() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_locationx());
+  // double locationX = 1;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationx = this->_internal_locationx();
+  uint64_t raw_locationx;
+  memcpy(&raw_locationx, &tmp_locationx, sizeof(tmp_locationx));
+  if (raw_locationx != 0) {
+    total_size += 1 + 8;
   }
 
-  // int32 locationY = 2;
-  if (this->_internal_locationy() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_locationy());
+  // double locationY = 2;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationy = this->_internal_locationy();
+  uint64_t raw_locationy;
+  memcpy(&raw_locationy, &tmp_locationy, sizeof(tmp_locationy));
+  if (raw_locationy != 0) {
+    total_size += 1 + 8;
   }
 
-  // int32 direction = 3;
-  if (this->_internal_direction() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_direction());
+  // double rotate = 3;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_rotate = this->_internal_rotate();
+  uint64_t raw_rotate;
+  memcpy(&raw_rotate, &tmp_rotate, sizeof(tmp_rotate));
+  if (raw_rotate != 0) {
+    total_size += 1 + 8;
   }
 
   // int32 bullet_style = 4;
@@ -4640,14 +4700,26 @@ void bulletinfo::MergeFrom(const bulletinfo& from) {
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from._internal_locationx() != 0) {
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationx = from._internal_locationx();
+  uint64_t raw_locationx;
+  memcpy(&raw_locationx, &tmp_locationx, sizeof(tmp_locationx));
+  if (raw_locationx != 0) {
     _this->_internal_set_locationx(from._internal_locationx());
   }
-  if (from._internal_locationy() != 0) {
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationy = from._internal_locationy();
+  uint64_t raw_locationy;
+  memcpy(&raw_locationy, &tmp_locationy, sizeof(tmp_locationy));
+  if (raw_locationy != 0) {
     _this->_internal_set_locationy(from._internal_locationy());
   }
-  if (from._internal_direction() != 0) {
-    _this->_internal_set_direction(from._internal_direction());
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_rotate = from._internal_rotate();
+  uint64_t raw_rotate;
+  memcpy(&raw_rotate, &tmp_rotate, sizeof(tmp_rotate));
+  if (raw_rotate != 0) {
+    _this->_internal_set_rotate(from._internal_rotate());
   }
   if (from._internal_bullet_style() != 0) {
     _this->_internal_set_bullet_style(from._internal_bullet_style());

@@ -1,6 +1,8 @@
 ﻿#include"Network.h"
 #include"Game.h"
 
+#define NumberOfRecvThread 8
+
 extern STATUS status;
 
 wstring my_userid = L"unname";
@@ -21,7 +23,7 @@ char buffer[1024];
 
 
 HANDLE hIOCP;
-PPER_IO_DATA pPerIO;
+
 
 queue<Ping_info> ping_queue;
 int delay = 0;
@@ -30,6 +32,7 @@ int ping_id = 0;
 queue<socket_messageinfo*> message_queue;
 mutex messagequeue_mutex;
 bool Process_Stop = false;
+bool Recv_Stop = false;
 
 
 //void SIG_IO(int sig) {
@@ -262,7 +265,7 @@ void Return_Class(socket_messageinfo* info)
 		case 228:
 			SendMessage(_hwnd, WM_COMMAND, FAIL, (LPARAM)_hwnd);
 			break;
-		case 229:
+		case 216:
 			SendMessage(_hwnd, WM_COMMAND, DISBANDINEND, (LPARAM)_hwnd);
 			break;
 		}
@@ -381,7 +384,7 @@ void Send_Hall_Message(wstring& w_content) {
 	string strTime = charTime;
 
 	//string user_head = "(您)  " + strTime + ":\r\n";
-	wstring w_user_head = my_userid + L"(您)  " +utf82wstring(strTime)+L":\r\n";
+	wstring w_user_head = my_userid + L"(您)  " + utf82wstring(strTime) + L":\r\n";
 
 	//清空输入文本框
 	SendMessage(SHall->Hall_edit_in, WM_SETTEXT, 0, (LPARAM)L"");
@@ -418,11 +421,18 @@ DWORD WINAPI Process_Thread() {
 }
 
 DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam) {
-	thread T2(Process_Thread);
 	HANDLE hIOCP = (HANDLE)lpParam;
 	DWORD dwBytesTranfered = 0;
+
+	WSABUF buf;
+	buf.buf = pPerIO->buf;
+	buf.len = 1023;
+	pPerIO->nOperationType = OP_READ;
+	DWORD nFlags = 0;
+	::WSARecv(mysocket, &buf, 1, &dwBytesTranfered, &nFlags, &pPerIO->ol, NULL);
+
 	unsigned long long pPerHandle;
-	while (true) {
+	while (!Recv_Stop) {
 		bool bl = ::GetQueuedCompletionStatus(hIOCP, &dwBytesTranfered, (PULONG_PTR)&pPerHandle, (LPOVERLAPPED*)&pPerIO, WSA_INFINITE);
 		if (!bl)
 		{
@@ -433,12 +443,13 @@ DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam) {
 		if (dwBytesTranfered == 0 && (pPerIO->nOperationType == OP_READ || pPerIO->nOperationType == OP_WRITE)) {
 			closesocket(mysocket);
 			GlobalFree(pPerIO);
-			continue;
+			break;
 		}
 		switch (pPerIO->nOperationType)
 		{   //通过per-IO数据中的nOperationType域查看有什么I/O请求完成了
 		case OP_READ:  //完成一个接收请求
 		{
+
 			socket_messageinfo* pinfo = new socket_messageinfo(pPerIO->buf);
 			if (sizeof(Header) + pinfo->header.length == dwBytesTranfered)
 			{
@@ -463,9 +474,6 @@ DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam) {
 		case OP_WRITE:break;
 		}
 	}
-	Process_Stop = true;
-	process_cv.notify_one();
-	T2.join();
 	return 0;
 }
 
@@ -506,18 +514,20 @@ bool Init_Hall()
 	ioctlsocket(mysocket, FIONBIO, &ul);
 
 	hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
-	CreateIoCompletionPort((HANDLE)mysocket, hIOCP, NULL, 0);
-	pPerIO = (PPER_IO_DATA)::GlobalAlloc(GPTR, sizeof(PER_IO_DATA));
-	pPerIO->nOperationType = OP_READ;
-	WSABUF buf;
-	buf.buf = pPerIO->buf;
-	buf.len = 1023;
-	DWORD dwRecv;
-	DWORD dwFlags = 0;
-	WSARecv(mysocket, &buf, 1, &dwRecv, &dwFlags, &pPerIO->ol, NULL);
+	CreateIoCompletionPort((HANDLE)mysocket, hIOCP, NULL, NumberOfRecvThread);
+
 	Process_Stop = false;
-	thread T1(Recv_Thread, pPerIO, LPVOID(hIOCP));
+	thread T1(Process_Thread);
 	T1.detach();
+
+	Recv_Stop = false;
+	for (int i = 0; i < NumberOfRecvThread; i++)
+	{
+		PPER_IO_DATA pPerIO = (PPER_IO_DATA)::GlobalAlloc(GPTR, sizeof(PER_IO_DATA));
+		pPerIO->nOperationType = OP_READ;
+		thread T2(Recv_Thread, pPerIO, LPVOID(hIOCP));
+		T2.detach();
+	}
 	return true;
 }
 
@@ -751,4 +761,12 @@ void win_game()
 void lost_game()
 {
 	SendMessage(_hwnd, WM_COMMAND, FAIL, (LPARAM)_hwnd);
+}
+
+void close_connect()
+{
+	Recv_Stop = true;
+	Process_Stop = true;
+	process_cv.notify_one();
+	closesocket(mysocket);
 }

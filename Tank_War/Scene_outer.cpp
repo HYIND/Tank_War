@@ -306,22 +306,22 @@ void Load_SHall(RECT& rect)
 
 	{
 		SHall->Hall_room_list = CreateWindowW(L"LISTBOX", L"",
-			WS_CHILD,
+			WS_CHILD | WS_VSCROLL | WS_HSCROLL,
 			broder1 + len_x, broder2 + len_y - 5,
 			len_x * 4, len_y * 4,
 			_hwnd, (HMENU)HALL_ROOM_LIST, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 		SHall->Hall_user_list = CreateWindowW(L"LISTBOX", L"",
-			WS_CHILD,
+			WS_CHILD | WS_VSCROLL | WS_HSCROLL,
 			broder1 + len_x * 7, broder2 + len_y + 5,
 			len_x * 2, len_y * 3,
 			_hwnd, (HMENU)HALL_USER_LIST, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 		SHall->edit_hall = CreateWindowW(L"EDIT", L"",
-			WS_CHILD | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | ES_LEFT | WS_VSCROLL | ES_READONLY,
+			WS_CHILD | ES_MULTILINE | ES_LEFT | WS_VSCROLL | ES_READONLY,
 			broder1 + len_x, broder2 + len_y * 5,
 			len_x * 5, len_y * 3 - 10,
 			_hwnd, (HMENU)EDIT_HALL, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 		SHall->Hall_edit_in = CreateWindowW(L"EDIT", L"",
-			WS_CHILD | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | ES_LEFT | WS_VSCROLL,
+			WS_CHILD | ES_MULTILINE | ES_LEFT | WS_VSCROLL,
 			broder1 + len_x, broder2 + len_y * 8,
 			len_x * 5, len_y * 2 - 10,
 			_hwnd, (HMENU)HALL_EDIT_IN, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
@@ -561,16 +561,16 @@ void Load_SRoom(RECT& rect)
 				broder1 + len_x * 4, broder2 + len_y - 3,
 				L"当前房间内玩家情况", pHall_Brush, pHall_Brush, pHall_Format);
 
-			SRoom_host->LoadText(broder1 +len_x*0.5, broder2 + len_y * 5.5,
+			SRoom_host->LoadText(broder1 + len_x * 0.5, broder2 + len_y * 5.5,
 				broder1 + len_x, broder2 + len_y * 6,
 				L"房", pWhite_Brush, pWhite_Brush, pHall_Format);
-			SRoom_host->LoadText(broder1 +len_x*0.5, broder2 + len_y * 6,
+			SRoom_host->LoadText(broder1 + len_x * 0.5, broder2 + len_y * 6,
 				broder1 + len_x, broder2 + len_y * 6.5,
 				L"间", pWhite_Brush, pWhite_Brush, pHall_Format);
-			SRoom_host->LoadText(broder1 +len_x*0.5, broder2 + len_y * 6.5,
+			SRoom_host->LoadText(broder1 + len_x * 0.5, broder2 + len_y * 6.5,
 				broder1 + len_x, broder2 + len_y * 7,
 				L"频", pWhite_Brush, pWhite_Brush, pHall_Format);
-			SRoom_host->LoadText(broder1 +len_x*0.5, broder2 + len_y * 7,
+			SRoom_host->LoadText(broder1 + len_x * 0.5, broder2 + len_y * 7,
 				broder1 + len_x, broder2 + len_y * 7.5,
 				L"道", pWhite_Brush, pWhite_Brush, pHall_Format);
 		}
@@ -597,16 +597,16 @@ void Load_SRoom(RECT& rect)
 				broder1 + len_x * 4, broder2 + len_y - 3,
 				L"当前房间内玩家情况", pHall_Brush, pHall_Brush, pHall_Format);
 
-			SRoom_nothost->LoadText(broder1 +len_x*0.5, broder2 + len_y * 5.5,
+			SRoom_nothost->LoadText(broder1 + len_x * 0.5, broder2 + len_y * 5.5,
 				broder1 + len_x, broder2 + len_y * 6,
 				L"房", pWhite_Brush, pWhite_Brush, pHall_Format);
-			SRoom_nothost->LoadText(broder1 +len_x*0.5, broder2 + len_y * 6,
+			SRoom_nothost->LoadText(broder1 + len_x * 0.5, broder2 + len_y * 6,
 				broder1 + len_x, broder2 + len_y * 6.5,
 				L"间", pWhite_Brush, pWhite_Brush, pHall_Format);
-			SRoom_nothost->LoadText(broder1 +len_x*0.5, broder2 + len_y * 6.5,
+			SRoom_nothost->LoadText(broder1 + len_x * 0.5, broder2 + len_y * 6.5,
 				broder1 + len_x, broder2 + len_y * 7,
 				L"频", pWhite_Brush, pWhite_Brush, pHall_Format);
-			SRoom_nothost->LoadText(broder1 +len_x*0.5, broder2 + len_y * 7,
+			SRoom_nothost->LoadText(broder1 + len_x * 0.5, broder2 + len_y * 7,
 				broder1 + len_x, broder2 + len_y * 7.5,
 				L"道", pWhite_Brush, pWhite_Brush, pHall_Format);
 		}
@@ -633,17 +633,17 @@ void Load_SRoom(RECT& rect)
 	{
 
 		Scene_Room::Room_user_list = CreateWindowW(L"LISTBOX", L"",
-			WS_CHILD,
+			WS_CHILD | WS_VSCROLL | WS_HSCROLL,
 			broder1 + len_x, broder2 + len_y - 5,
 			len_x * 4, len_y * 4,
 			_hwnd, (HMENU)ROOM_USER_LIST, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 		Scene_Room::edit_room = CreateWindowW(L"EDIT", L"",
-			WS_CHILD | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | ES_LEFT | WS_VSCROLL | ES_READONLY,
+			WS_CHILD | ES_MULTILINE | ES_LEFT | WS_VSCROLL | ES_READONLY,
 			broder1 + len_x, broder2 + len_y * 5,
 			len_x * 5, len_y * 3 - 10,
 			_hwnd, (HMENU)EDIT_HALL, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 		Scene_Room::Room_edit_in = CreateWindowW(L"EDIT", L"",
-			WS_CHILD | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | ES_LEFT | WS_VSCROLL,
+			WS_CHILD | ES_MULTILINE | ES_LEFT | WS_VSCROLL,
 			broder1 + len_x, broder2 + len_y * 8,
 			len_x * 5, len_y * 2 - 10,
 			_hwnd, (HMENU)ROOM_EDIT_IN, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
@@ -966,6 +966,7 @@ void Set_CurScene(STATUS status_in)
 			CurScene = SRoom_host;
 		}
 		Show_Room(TRUE);
+		Get_Room_Info();
 		break;
 	}
 	case STATUS::Main:

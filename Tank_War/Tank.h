@@ -14,22 +14,23 @@ enum Direction :int { DOWN, LEFT, UP, RIGHT };
 class bullet
 {
 public:
-	int locationX;
-	int locationY;
-	int direction;
+	double locationX;
+	double locationY;
+	double rotate = 0;
 	BulletStyle bullet_style = BulletStyle::DEFAULT;
 
 	int width = 2;
 	int height = 2;
 	int speed;
 
+
 	Tank* owner = NULL;
 	bullet* next = NULL;
 	bullet* last = NULL;
 
 	bullet() {};
-	bullet(int locationX, int locationY, int direction, BulletStyle bulletstyle = BulletStyle::DEFAULT, Tank* owner = NULL, bullet* last = NULL)
-		:locationX(locationX), locationY(locationY), direction(direction), owner(owner), last(last), bullet_style(bulletstyle)
+	bullet(double locationX, double locationY, double rotate, BulletStyle bulletstyle = BulletStyle::DEFAULT, Tank* owner = NULL, bullet* last = NULL)
+		:locationX(locationX), locationY(locationY), rotate(rotate), owner(owner), last(last), bullet_style(bulletstyle)
 	{
 		Set_Parameter_byStyle(bulletstyle);
 	}
@@ -42,11 +43,11 @@ public:
 class Tank
 {
 public:
-	int locationX = 0;
-	int locationY = 0;
+	double locationX = 0;
+	double locationY = 0;
 	int width = 0;
 	int height = 0;
-	int direction = UP;
+	double rotate = 0;
 	TankStyle tank_style = TankStyle::DEFAULT;
 
 	bool isalive = true;
@@ -59,6 +60,7 @@ public:
 	int bullet_last = 0;
 	int bullet_now = 0;
 
+
 	bullet* bullet_head = NULL;
 
 public:
@@ -66,13 +68,14 @@ public:
 	Tank() {}
 	Tank(const Tank& t) {}
 	Tank(int width, int height);
-	Tank(int X, int Y, int width, int height, int direction, int speed, bool alive = true);
+	Tank(double X, double Y, int width, int height, double rotate, int speed, bool alive = true);
 	void Set_Parameter_byStyle(TankStyle tankstyle);
 	void DrawTankHP(ID2D1HwndRenderTarget* pRenderTarget = ::pRenderTarget);
 	void DrawTank(ID2D1HwndRenderTarget* pRenderTarget = ::pRenderTarget);
 	void Addbullet(BulletStyle bulletstyle);
 
 	friend class bullet;
+
 };
 
 void destory_bulletinfo();

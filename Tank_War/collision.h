@@ -1,6 +1,16 @@
 ﻿#pragma once
 
-bool collision(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2);
+bool collision(
+	double x1,double y1, int width1, int height1,
+	double x2,double y2, int width2, int height2
+);
+
+bool collision_obb(
+	double x1, double y1, int width1, int height1, double rotate1,
+	double x2, double y2, int width2, int height2, double rotate2 = 90
+);
+
+bool collision_broader(double x, double y, int width, int height, double rotate=90);
 
 #define  Object_Check(A,B) collision(A->locationX, A->locationY,A->width, A->height,B->locationX, B->locationY,B->width, B->height)
 

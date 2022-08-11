@@ -28,7 +28,8 @@ public:
 	void Draw();
 	void Get_keymap();		//获取/重新获取 键位
 	void Tank_Input();		//响应玩家输入
-	void Tank_Move(Tank* ptank);	//移动坦克，同时检查移动合法性（碰撞检查）
+	void Tank_Move(Tank* ptank, bool forward);		//移动坦克，同时检查移动合法性（碰撞检查）
+	void Tank_Rotate(Tank* ptank, bool forward);	//旋转坦克，同时检查移动合法性（碰撞检查）
 	void Bullet_Move(bullet* pbullet);		//子弹自移动
 
 

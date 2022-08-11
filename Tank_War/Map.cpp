@@ -18,8 +18,8 @@ void Init_Map_Zero()
 	LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"JPG", MAKEINTRESOURCE(BK_SAND), &Zero_BK);
 	Default_Map.BK_pBitmap = Zero_BK;
 
-	Default_Map.Init_Location.emplace_back(1, 50, 280, UP, TankStyle::DEFAULT);
-	Default_Map.Init_Location.emplace_back(2, _rect.right - 50, 280, UP, TankStyle::DEFAULT);
+	Default_Map.Init_Location.emplace_back(1, 50, 280, 0, TankStyle::DEFAULT);
+	Default_Map.Init_Location.emplace_back(2, _rect.right - 50, 280, 0, TankStyle::DEFAULT);
 
 	int brick_count = 1;
 	int icon_count = 1;
