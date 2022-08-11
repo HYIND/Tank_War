@@ -239,7 +239,7 @@ PROTOBUF_CONSTEXPR Game_tankinfo_Request::Game_tankinfo_Request(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.locationx_)*/0
   , /*decltype(_impl_.locationy_)*/0
-  , /*decltype(_impl_.direction_)*/0
+  , /*decltype(_impl_.rotate_)*/0
   , /*decltype(_impl_.tank_style_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct Game_tankinfo_RequestDefaultTypeInternal {
@@ -283,7 +283,7 @@ PROTOBUF_CONSTEXPR bulletinfo::bulletinfo(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.locationx_)*/0
   , /*decltype(_impl_.locationy_)*/0
-  , /*decltype(_impl_.direction_)*/0
+  , /*decltype(_impl_.rotate_)*/0
   , /*decltype(_impl_.bullet_style_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct bulletinfoDefaultTypeInternal {
@@ -536,7 +536,7 @@ const uint32_t TableStruct_myprotocol_2eproto::offsets[] PROTOBUF_SECTION_VARIAB
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::Message::Game_tankinfo_Request, _impl_.locationx_),
   PROTOBUF_FIELD_OFFSET(::Message::Game_tankinfo_Request, _impl_.locationy_),
-  PROTOBUF_FIELD_OFFSET(::Message::Game_tankinfo_Request, _impl_.direction_),
+  PROTOBUF_FIELD_OFFSET(::Message::Game_tankinfo_Request, _impl_.rotate_),
   PROTOBUF_FIELD_OFFSET(::Message::Game_tankinfo_Request, _impl_.tank_style_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::Message::Game_tankinfo_Response_tankinfo, _internal_metadata_),
@@ -562,7 +562,7 @@ const uint32_t TableStruct_myprotocol_2eproto::offsets[] PROTOBUF_SECTION_VARIAB
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::Message::bulletinfo, _impl_.locationx_),
   PROTOBUF_FIELD_OFFSET(::Message::bulletinfo, _impl_.locationy_),
-  PROTOBUF_FIELD_OFFSET(::Message::bulletinfo, _impl_.direction_),
+  PROTOBUF_FIELD_OFFSET(::Message::bulletinfo, _impl_.rotate_),
   PROTOBUF_FIELD_OFFSET(::Message::bulletinfo, _impl_.bullet_style_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::Message::Game_bulletinfo_Request, _internal_metadata_),
@@ -709,35 +709,35 @@ const char descriptor_table_protodef_myprotocol_2eproto[] PROTOBUF_SECTION_VARIA
   "\017\n\007content\030\002 \001(\t\"\035\n\017Room_Set_tankid\022\n\n\002i"
   "d\030\001 \001(\005\"&\n\030Room_Set_tankid_Response\022\n\n\002i"
   "d\030\001 \001(\005\"%\n\023Room_Start_Response\022\016\n\006result"
-  "\030\001 \001(\005\"d\n\025Game_tankinfo_Request\022\021\n\tlocat"
-  "ionX\030\001 \001(\005\022\021\n\tlocationY\030\002 \001(\005\022\021\n\tdirecti"
-  "on\030\003 \001(\005\022\022\n\ntank_style\030\004 \001(\005\"\252\001\n\026Game_ta"
-  "nkinfo_Response\0226\n\004info\030\001 \003(\0132(.Message."
-  "Game_tankinfo_Response.tankinfo\032X\n\010tanki"
-  "nfo\022\n\n\002id\030\001 \001(\005\0220\n\010tankinfo\030\002 \001(\0132\036.Mess"
-  "age.Game_tankinfo_Request\022\016\n\006health\030\003 \001("
-  "\005\"[\n\nbulletinfo\022\021\n\tlocationX\030\001 \001(\005\022\021\n\tlo"
-  "cationY\030\002 \001(\005\022\021\n\tdirection\030\003 \001(\005\022\024\n\014bull"
-  "et_style\030\004 \001(\005\"B\n\027Game_bulletinfo_Reques"
-  "t\022\'\n\nbulletinfo\030\002 \003(\0132\023.Message.bulletin"
-  "fo\"\221\001\n\030Game_bulletinfo_Response\0224\n\004info\030"
-  "\001 \003(\0132&.Message.Game_bulletinfo_Response"
-  ".Info\032\?\n\004Info\022\016\n\006tankid\030\001 \001(\005\022\'\n\nbulleti"
-  "nfo\030\002 \003(\0132\023.Message.bulletinfo\"Y\n\026Game_h"
-  "it_brick_Request\022\026\n\016hited_brick_id\030\001 \001(\005"
-  "\022\'\n\nbulletinfo\030\002 \001(\0132\023.Message.bulletinf"
-  "o\"C\n\031Game_brick_hited_Response\022\026\n\016hited_"
-  "brick_id\030\001 \001(\005\022\016\n\006health\030\002 \001(\005\"W\n\025Game_h"
-  "it_tank_Request\022\025\n\rhited_tank_id\030\001 \001(\005\022\'"
-  "\n\nbulletinfo\030\002 \001(\0132\023.Message.bulletinfo\""
-  "A\n\030Game_tank_hited_Response\022\025\n\rhited_tan"
-  "k_id\030\001 \001(\005\022\016\n\006health\030\002 \001(\005\"9\n\034Game_destr"
-  "oyed_tank_Response\022\031\n\021destroyed_tank_id\030"
-  "\001 \001(\005b\006proto3"
+  "\030\001 \001(\005\"a\n\025Game_tankinfo_Request\022\021\n\tlocat"
+  "ionX\030\001 \001(\001\022\021\n\tlocationY\030\002 \001(\001\022\016\n\006rotate\030"
+  "\003 \001(\001\022\022\n\ntank_style\030\004 \001(\005\"\252\001\n\026Game_tanki"
+  "nfo_Response\0226\n\004info\030\001 \003(\0132(.Message.Gam"
+  "e_tankinfo_Response.tankinfo\032X\n\010tankinfo"
+  "\022\n\n\002id\030\001 \001(\005\0220\n\010tankinfo\030\002 \001(\0132\036.Message"
+  ".Game_tankinfo_Request\022\016\n\006health\030\003 \001(\005\"X"
+  "\n\nbulletinfo\022\021\n\tlocationX\030\001 \001(\001\022\021\n\tlocat"
+  "ionY\030\002 \001(\001\022\016\n\006rotate\030\003 \001(\001\022\024\n\014bullet_sty"
+  "le\030\004 \001(\005\"B\n\027Game_bulletinfo_Request\022\'\n\nb"
+  "ulletinfo\030\002 \003(\0132\023.Message.bulletinfo\"\221\001\n"
+  "\030Game_bulletinfo_Response\0224\n\004info\030\001 \003(\0132"
+  "&.Message.Game_bulletinfo_Response.Info\032"
+  "\?\n\004Info\022\016\n\006tankid\030\001 \001(\005\022\'\n\nbulletinfo\030\002 "
+  "\003(\0132\023.Message.bulletinfo\"Y\n\026Game_hit_bri"
+  "ck_Request\022\026\n\016hited_brick_id\030\001 \001(\005\022\'\n\nbu"
+  "lletinfo\030\002 \001(\0132\023.Message.bulletinfo\"C\n\031G"
+  "ame_brick_hited_Response\022\026\n\016hited_brick_"
+  "id\030\001 \001(\005\022\016\n\006health\030\002 \001(\005\"W\n\025Game_hit_tan"
+  "k_Request\022\025\n\rhited_tank_id\030\001 \001(\005\022\'\n\nbull"
+  "etinfo\030\002 \001(\0132\023.Message.bulletinfo\"A\n\030Gam"
+  "e_tank_hited_Response\022\025\n\rhited_tank_id\030\001"
+  " \001(\005\022\016\n\006health\030\002 \001(\005\"9\n\034Game_destroyed_t"
+  "ank_Response\022\031\n\021destroyed_tank_id\030\001 \001(\005b"
+  "\006proto3"
   ;
 static ::_pbi::once_flag descriptor_table_myprotocol_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_myprotocol_2eproto = {
-    false, false, 1773, descriptor_table_protodef_myprotocol_2eproto,
+    false, false, 1767, descriptor_table_protodef_myprotocol_2eproto,
     "myprotocol.proto",
     &descriptor_table_myprotocol_2eproto_once, nullptr, 0, 28,
     schemas, file_default_instances, TableStruct_myprotocol_2eproto::offsets,
@@ -4053,7 +4053,7 @@ Game_tankinfo_Request::Game_tankinfo_Request(const Game_tankinfo_Request& from)
   new (&_impl_) Impl_{
       decltype(_impl_.locationx_){}
     , decltype(_impl_.locationy_){}
-    , decltype(_impl_.direction_){}
+    , decltype(_impl_.rotate_){}
     , decltype(_impl_.tank_style_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
@@ -4071,7 +4071,7 @@ inline void Game_tankinfo_Request::SharedCtor(
   new (&_impl_) Impl_{
       decltype(_impl_.locationx_){0}
     , decltype(_impl_.locationy_){0}
-    , decltype(_impl_.direction_){0}
+    , decltype(_impl_.rotate_){0}
     , decltype(_impl_.tank_style_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
@@ -4112,27 +4112,27 @@ const char* Game_tankinfo_Request::_InternalParse(const char* ptr, ::_pbi::Parse
     uint32_t tag;
     ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
-      // int32 locationX = 1;
+      // double locationX = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
-          _impl_.locationx_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 9)) {
+          _impl_.locationx_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
         } else
           goto handle_unusual;
         continue;
-      // int32 locationY = 2;
+      // double locationY = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
-          _impl_.locationy_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 17)) {
+          _impl_.locationy_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
         } else
           goto handle_unusual;
         continue;
-      // int32 direction = 3;
+      // double rotate = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
-          _impl_.direction_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 25)) {
+          _impl_.rotate_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
         } else
           goto handle_unusual;
         continue;
@@ -4173,22 +4173,34 @@ uint8_t* Game_tankinfo_Request::_InternalSerialize(
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // int32 locationX = 1;
-  if (this->_internal_locationx() != 0) {
+  // double locationX = 1;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationx = this->_internal_locationx();
+  uint64_t raw_locationx;
+  memcpy(&raw_locationx, &tmp_locationx, sizeof(tmp_locationx));
+  if (raw_locationx != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(1, this->_internal_locationx(), target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(1, this->_internal_locationx(), target);
   }
 
-  // int32 locationY = 2;
-  if (this->_internal_locationy() != 0) {
+  // double locationY = 2;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationy = this->_internal_locationy();
+  uint64_t raw_locationy;
+  memcpy(&raw_locationy, &tmp_locationy, sizeof(tmp_locationy));
+  if (raw_locationy != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_locationy(), target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(2, this->_internal_locationy(), target);
   }
 
-  // int32 direction = 3;
-  if (this->_internal_direction() != 0) {
+  // double rotate = 3;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_rotate = this->_internal_rotate();
+  uint64_t raw_rotate;
+  memcpy(&raw_rotate, &tmp_rotate, sizeof(tmp_rotate));
+  if (raw_rotate != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(3, this->_internal_direction(), target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(3, this->_internal_rotate(), target);
   }
 
   // int32 tank_style = 4;
@@ -4213,19 +4225,31 @@ size_t Game_tankinfo_Request::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // int32 locationX = 1;
-  if (this->_internal_locationx() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_locationx());
+  // double locationX = 1;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationx = this->_internal_locationx();
+  uint64_t raw_locationx;
+  memcpy(&raw_locationx, &tmp_locationx, sizeof(tmp_locationx));
+  if (raw_locationx != 0) {
+    total_size += 1 + 8;
   }
 
-  // int32 locationY = 2;
-  if (this->_internal_locationy() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_locationy());
+  // double locationY = 2;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationy = this->_internal_locationy();
+  uint64_t raw_locationy;
+  memcpy(&raw_locationy, &tmp_locationy, sizeof(tmp_locationy));
+  if (raw_locationy != 0) {
+    total_size += 1 + 8;
   }
 
-  // int32 direction = 3;
-  if (this->_internal_direction() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_direction());
+  // double rotate = 3;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_rotate = this->_internal_rotate();
+  uint64_t raw_rotate;
+  memcpy(&raw_rotate, &tmp_rotate, sizeof(tmp_rotate));
+  if (raw_rotate != 0) {
+    total_size += 1 + 8;
   }
 
   // int32 tank_style = 4;
@@ -4251,14 +4275,26 @@ void Game_tankinfo_Request::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, 
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from._internal_locationx() != 0) {
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationx = from._internal_locationx();
+  uint64_t raw_locationx;
+  memcpy(&raw_locationx, &tmp_locationx, sizeof(tmp_locationx));
+  if (raw_locationx != 0) {
     _this->_internal_set_locationx(from._internal_locationx());
   }
-  if (from._internal_locationy() != 0) {
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationy = from._internal_locationy();
+  uint64_t raw_locationy;
+  memcpy(&raw_locationy, &tmp_locationy, sizeof(tmp_locationy));
+  if (raw_locationy != 0) {
     _this->_internal_set_locationy(from._internal_locationy());
   }
-  if (from._internal_direction() != 0) {
-    _this->_internal_set_direction(from._internal_direction());
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_rotate = from._internal_rotate();
+  uint64_t raw_rotate;
+  memcpy(&raw_rotate, &tmp_rotate, sizeof(tmp_rotate));
+  if (raw_rotate != 0) {
+    _this->_internal_set_rotate(from._internal_rotate());
   }
   if (from._internal_tank_style() != 0) {
     _this->_internal_set_tank_style(from._internal_tank_style());
@@ -4749,7 +4785,7 @@ bulletinfo::bulletinfo(const bulletinfo& from)
   new (&_impl_) Impl_{
       decltype(_impl_.locationx_){}
     , decltype(_impl_.locationy_){}
-    , decltype(_impl_.direction_){}
+    , decltype(_impl_.rotate_){}
     , decltype(_impl_.bullet_style_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
@@ -4767,7 +4803,7 @@ inline void bulletinfo::SharedCtor(
   new (&_impl_) Impl_{
       decltype(_impl_.locationx_){0}
     , decltype(_impl_.locationy_){0}
-    , decltype(_impl_.direction_){0}
+    , decltype(_impl_.rotate_){0}
     , decltype(_impl_.bullet_style_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
@@ -4808,27 +4844,27 @@ const char* bulletinfo::_InternalParse(const char* ptr, ::_pbi::ParseContext* ct
     uint32_t tag;
     ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
-      // int32 locationX = 1;
+      // double locationX = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
-          _impl_.locationx_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 9)) {
+          _impl_.locationx_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
         } else
           goto handle_unusual;
         continue;
-      // int32 locationY = 2;
+      // double locationY = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
-          _impl_.locationy_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 17)) {
+          _impl_.locationy_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
         } else
           goto handle_unusual;
         continue;
-      // int32 direction = 3;
+      // double rotate = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
-          _impl_.direction_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 25)) {
+          _impl_.rotate_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<double>(ptr);
+          ptr += sizeof(double);
         } else
           goto handle_unusual;
         continue;
@@ -4869,22 +4905,34 @@ uint8_t* bulletinfo::_InternalSerialize(
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // int32 locationX = 1;
-  if (this->_internal_locationx() != 0) {
+  // double locationX = 1;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationx = this->_internal_locationx();
+  uint64_t raw_locationx;
+  memcpy(&raw_locationx, &tmp_locationx, sizeof(tmp_locationx));
+  if (raw_locationx != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(1, this->_internal_locationx(), target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(1, this->_internal_locationx(), target);
   }
 
-  // int32 locationY = 2;
-  if (this->_internal_locationy() != 0) {
+  // double locationY = 2;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationy = this->_internal_locationy();
+  uint64_t raw_locationy;
+  memcpy(&raw_locationy, &tmp_locationy, sizeof(tmp_locationy));
+  if (raw_locationy != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_locationy(), target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(2, this->_internal_locationy(), target);
   }
 
-  // int32 direction = 3;
-  if (this->_internal_direction() != 0) {
+  // double rotate = 3;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_rotate = this->_internal_rotate();
+  uint64_t raw_rotate;
+  memcpy(&raw_rotate, &tmp_rotate, sizeof(tmp_rotate));
+  if (raw_rotate != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(3, this->_internal_direction(), target);
+    target = ::_pbi::WireFormatLite::WriteDoubleToArray(3, this->_internal_rotate(), target);
   }
 
   // int32 bullet_style = 4;
@@ -4909,19 +4957,31 @@ size_t bulletinfo::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // int32 locationX = 1;
-  if (this->_internal_locationx() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_locationx());
+  // double locationX = 1;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationx = this->_internal_locationx();
+  uint64_t raw_locationx;
+  memcpy(&raw_locationx, &tmp_locationx, sizeof(tmp_locationx));
+  if (raw_locationx != 0) {
+    total_size += 1 + 8;
   }
 
-  // int32 locationY = 2;
-  if (this->_internal_locationy() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_locationy());
+  // double locationY = 2;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationy = this->_internal_locationy();
+  uint64_t raw_locationy;
+  memcpy(&raw_locationy, &tmp_locationy, sizeof(tmp_locationy));
+  if (raw_locationy != 0) {
+    total_size += 1 + 8;
   }
 
-  // int32 direction = 3;
-  if (this->_internal_direction() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_direction());
+  // double rotate = 3;
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_rotate = this->_internal_rotate();
+  uint64_t raw_rotate;
+  memcpy(&raw_rotate, &tmp_rotate, sizeof(tmp_rotate));
+  if (raw_rotate != 0) {
+    total_size += 1 + 8;
   }
 
   // int32 bullet_style = 4;
@@ -4947,14 +5007,26 @@ void bulletinfo::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PRO
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from._internal_locationx() != 0) {
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationx = from._internal_locationx();
+  uint64_t raw_locationx;
+  memcpy(&raw_locationx, &tmp_locationx, sizeof(tmp_locationx));
+  if (raw_locationx != 0) {
     _this->_internal_set_locationx(from._internal_locationx());
   }
-  if (from._internal_locationy() != 0) {
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_locationy = from._internal_locationy();
+  uint64_t raw_locationy;
+  memcpy(&raw_locationy, &tmp_locationy, sizeof(tmp_locationy));
+  if (raw_locationy != 0) {
     _this->_internal_set_locationy(from._internal_locationy());
   }
-  if (from._internal_direction() != 0) {
-    _this->_internal_set_direction(from._internal_direction());
+  static_assert(sizeof(uint64_t) == sizeof(double), "Code assumes uint64_t and double are the same size.");
+  double tmp_rotate = from._internal_rotate();
+  uint64_t raw_rotate;
+  memcpy(&raw_rotate, &tmp_rotate, sizeof(tmp_rotate));
+  if (raw_rotate != 0) {
+    _this->_internal_set_rotate(from._internal_rotate());
   }
   if (from._internal_bullet_style() != 0) {
     _this->_internal_set_bullet_style(from._internal_bullet_style());

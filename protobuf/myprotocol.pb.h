@@ -2803,34 +2803,34 @@ class Game_tankinfo_Request final :
   enum : int {
     kLocationXFieldNumber = 1,
     kLocationYFieldNumber = 2,
-    kDirectionFieldNumber = 3,
+    kRotateFieldNumber = 3,
     kTankStyleFieldNumber = 4,
   };
-  // int32 locationX = 1;
+  // double locationX = 1;
   void clear_locationx();
-  int32_t locationx() const;
-  void set_locationx(int32_t value);
+  double locationx() const;
+  void set_locationx(double value);
   private:
-  int32_t _internal_locationx() const;
-  void _internal_set_locationx(int32_t value);
+  double _internal_locationx() const;
+  void _internal_set_locationx(double value);
   public:
 
-  // int32 locationY = 2;
+  // double locationY = 2;
   void clear_locationy();
-  int32_t locationy() const;
-  void set_locationy(int32_t value);
+  double locationy() const;
+  void set_locationy(double value);
   private:
-  int32_t _internal_locationy() const;
-  void _internal_set_locationy(int32_t value);
+  double _internal_locationy() const;
+  void _internal_set_locationy(double value);
   public:
 
-  // int32 direction = 3;
-  void clear_direction();
-  int32_t direction() const;
-  void set_direction(int32_t value);
+  // double rotate = 3;
+  void clear_rotate();
+  double rotate() const;
+  void set_rotate(double value);
   private:
-  int32_t _internal_direction() const;
-  void _internal_set_direction(int32_t value);
+  double _internal_rotate() const;
+  void _internal_set_rotate(double value);
   public:
 
   // int32 tank_style = 4;
@@ -2850,9 +2850,9 @@ class Game_tankinfo_Request final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
-    int32_t locationx_;
-    int32_t locationy_;
-    int32_t direction_;
+    double locationx_;
+    double locationy_;
+    double rotate_;
     int32_t tank_style_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
@@ -3322,34 +3322,34 @@ class bulletinfo final :
   enum : int {
     kLocationXFieldNumber = 1,
     kLocationYFieldNumber = 2,
-    kDirectionFieldNumber = 3,
+    kRotateFieldNumber = 3,
     kBulletStyleFieldNumber = 4,
   };
-  // int32 locationX = 1;
+  // double locationX = 1;
   void clear_locationx();
-  int32_t locationx() const;
-  void set_locationx(int32_t value);
+  double locationx() const;
+  void set_locationx(double value);
   private:
-  int32_t _internal_locationx() const;
-  void _internal_set_locationx(int32_t value);
+  double _internal_locationx() const;
+  void _internal_set_locationx(double value);
   public:
 
-  // int32 locationY = 2;
+  // double locationY = 2;
   void clear_locationy();
-  int32_t locationy() const;
-  void set_locationy(int32_t value);
+  double locationy() const;
+  void set_locationy(double value);
   private:
-  int32_t _internal_locationy() const;
-  void _internal_set_locationy(int32_t value);
+  double _internal_locationy() const;
+  void _internal_set_locationy(double value);
   public:
 
-  // int32 direction = 3;
-  void clear_direction();
-  int32_t direction() const;
-  void set_direction(int32_t value);
+  // double rotate = 3;
+  void clear_rotate();
+  double rotate() const;
+  void set_rotate(double value);
   private:
-  int32_t _internal_direction() const;
-  void _internal_set_direction(int32_t value);
+  double _internal_rotate() const;
+  void _internal_set_rotate(double value);
   public:
 
   // int32 bullet_style = 4;
@@ -3369,9 +3369,9 @@ class bulletinfo final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
-    int32_t locationx_;
-    int32_t locationy_;
-    int32_t direction_;
+    double locationx_;
+    double locationy_;
+    double rotate_;
     int32_t bullet_style_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
@@ -5539,64 +5539,64 @@ inline void Room_Start_Response::set_result(int32_t value) {
 
 // Game_tankinfo_Request
 
-// int32 locationX = 1;
+// double locationX = 1;
 inline void Game_tankinfo_Request::clear_locationx() {
   _impl_.locationx_ = 0;
 }
-inline int32_t Game_tankinfo_Request::_internal_locationx() const {
+inline double Game_tankinfo_Request::_internal_locationx() const {
   return _impl_.locationx_;
 }
-inline int32_t Game_tankinfo_Request::locationx() const {
+inline double Game_tankinfo_Request::locationx() const {
   // @@protoc_insertion_point(field_get:Message.Game_tankinfo_Request.locationX)
   return _internal_locationx();
 }
-inline void Game_tankinfo_Request::_internal_set_locationx(int32_t value) {
+inline void Game_tankinfo_Request::_internal_set_locationx(double value) {
   
   _impl_.locationx_ = value;
 }
-inline void Game_tankinfo_Request::set_locationx(int32_t value) {
+inline void Game_tankinfo_Request::set_locationx(double value) {
   _internal_set_locationx(value);
   // @@protoc_insertion_point(field_set:Message.Game_tankinfo_Request.locationX)
 }
 
-// int32 locationY = 2;
+// double locationY = 2;
 inline void Game_tankinfo_Request::clear_locationy() {
   _impl_.locationy_ = 0;
 }
-inline int32_t Game_tankinfo_Request::_internal_locationy() const {
+inline double Game_tankinfo_Request::_internal_locationy() const {
   return _impl_.locationy_;
 }
-inline int32_t Game_tankinfo_Request::locationy() const {
+inline double Game_tankinfo_Request::locationy() const {
   // @@protoc_insertion_point(field_get:Message.Game_tankinfo_Request.locationY)
   return _internal_locationy();
 }
-inline void Game_tankinfo_Request::_internal_set_locationy(int32_t value) {
+inline void Game_tankinfo_Request::_internal_set_locationy(double value) {
   
   _impl_.locationy_ = value;
 }
-inline void Game_tankinfo_Request::set_locationy(int32_t value) {
+inline void Game_tankinfo_Request::set_locationy(double value) {
   _internal_set_locationy(value);
   // @@protoc_insertion_point(field_set:Message.Game_tankinfo_Request.locationY)
 }
 
-// int32 direction = 3;
-inline void Game_tankinfo_Request::clear_direction() {
-  _impl_.direction_ = 0;
+// double rotate = 3;
+inline void Game_tankinfo_Request::clear_rotate() {
+  _impl_.rotate_ = 0;
 }
-inline int32_t Game_tankinfo_Request::_internal_direction() const {
-  return _impl_.direction_;
+inline double Game_tankinfo_Request::_internal_rotate() const {
+  return _impl_.rotate_;
 }
-inline int32_t Game_tankinfo_Request::direction() const {
-  // @@protoc_insertion_point(field_get:Message.Game_tankinfo_Request.direction)
-  return _internal_direction();
+inline double Game_tankinfo_Request::rotate() const {
+  // @@protoc_insertion_point(field_get:Message.Game_tankinfo_Request.rotate)
+  return _internal_rotate();
 }
-inline void Game_tankinfo_Request::_internal_set_direction(int32_t value) {
+inline void Game_tankinfo_Request::_internal_set_rotate(double value) {
   
-  _impl_.direction_ = value;
+  _impl_.rotate_ = value;
 }
-inline void Game_tankinfo_Request::set_direction(int32_t value) {
-  _internal_set_direction(value);
-  // @@protoc_insertion_point(field_set:Message.Game_tankinfo_Request.direction)
+inline void Game_tankinfo_Request::set_rotate(double value) {
+  _internal_set_rotate(value);
+  // @@protoc_insertion_point(field_set:Message.Game_tankinfo_Request.rotate)
 }
 
 // int32 tank_style = 4;
@@ -5801,64 +5801,64 @@ Game_tankinfo_Response::info() const {
 
 // bulletinfo
 
-// int32 locationX = 1;
+// double locationX = 1;
 inline void bulletinfo::clear_locationx() {
   _impl_.locationx_ = 0;
 }
-inline int32_t bulletinfo::_internal_locationx() const {
+inline double bulletinfo::_internal_locationx() const {
   return _impl_.locationx_;
 }
-inline int32_t bulletinfo::locationx() const {
+inline double bulletinfo::locationx() const {
   // @@protoc_insertion_point(field_get:Message.bulletinfo.locationX)
   return _internal_locationx();
 }
-inline void bulletinfo::_internal_set_locationx(int32_t value) {
+inline void bulletinfo::_internal_set_locationx(double value) {
   
   _impl_.locationx_ = value;
 }
-inline void bulletinfo::set_locationx(int32_t value) {
+inline void bulletinfo::set_locationx(double value) {
   _internal_set_locationx(value);
   // @@protoc_insertion_point(field_set:Message.bulletinfo.locationX)
 }
 
-// int32 locationY = 2;
+// double locationY = 2;
 inline void bulletinfo::clear_locationy() {
   _impl_.locationy_ = 0;
 }
-inline int32_t bulletinfo::_internal_locationy() const {
+inline double bulletinfo::_internal_locationy() const {
   return _impl_.locationy_;
 }
-inline int32_t bulletinfo::locationy() const {
+inline double bulletinfo::locationy() const {
   // @@protoc_insertion_point(field_get:Message.bulletinfo.locationY)
   return _internal_locationy();
 }
-inline void bulletinfo::_internal_set_locationy(int32_t value) {
+inline void bulletinfo::_internal_set_locationy(double value) {
   
   _impl_.locationy_ = value;
 }
-inline void bulletinfo::set_locationy(int32_t value) {
+inline void bulletinfo::set_locationy(double value) {
   _internal_set_locationy(value);
   // @@protoc_insertion_point(field_set:Message.bulletinfo.locationY)
 }
 
-// int32 direction = 3;
-inline void bulletinfo::clear_direction() {
-  _impl_.direction_ = 0;
+// double rotate = 3;
+inline void bulletinfo::clear_rotate() {
+  _impl_.rotate_ = 0;
 }
-inline int32_t bulletinfo::_internal_direction() const {
-  return _impl_.direction_;
+inline double bulletinfo::_internal_rotate() const {
+  return _impl_.rotate_;
 }
-inline int32_t bulletinfo::direction() const {
-  // @@protoc_insertion_point(field_get:Message.bulletinfo.direction)
-  return _internal_direction();
+inline double bulletinfo::rotate() const {
+  // @@protoc_insertion_point(field_get:Message.bulletinfo.rotate)
+  return _internal_rotate();
 }
-inline void bulletinfo::_internal_set_direction(int32_t value) {
+inline void bulletinfo::_internal_set_rotate(double value) {
   
-  _impl_.direction_ = value;
+  _impl_.rotate_ = value;
 }
-inline void bulletinfo::set_direction(int32_t value) {
-  _internal_set_direction(value);
-  // @@protoc_insertion_point(field_set:Message.bulletinfo.direction)
+inline void bulletinfo::set_rotate(double value) {
+  _internal_set_rotate(value);
+  // @@protoc_insertion_point(field_set:Message.bulletinfo.rotate)
 }
 
 // int32 bullet_style = 4;

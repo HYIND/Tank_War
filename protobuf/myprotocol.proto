@@ -73,9 +73,9 @@ message Room_Start_Response{   //215
 }
 
 message Game_tankinfo_Request{  //120
-  int32 locationX = 1;
-	int32 locationY = 2;
-	int32 direction = 3;
+  double locationX = 1;
+	double locationY = 2;
+	double rotate = 3;
 	int32 tank_style = 4;
 }
 
@@ -88,9 +88,9 @@ message Game_tankinfo_Response{  //220
 }
 
 message bulletinfo{
-  int32 locationX = 1;
-	int32 locationY = 2;
-	int32 direction = 3;
+  double locationX = 1;
+	double locationY = 2;
+	double rotate = 3;
 	int32 bullet_style = 4;
 }
 
