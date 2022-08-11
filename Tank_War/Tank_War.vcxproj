@@ -219,6 +219,7 @@
     <Image Include="Tank_War.ico" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\README.md" />
     <None Include="..\x64\Debug\Resource\Cursor.cur" />
     <None Include="..\x64\debug\resource\jpg1.bin" />
     <None Include="..\x64\debug\resource\jpg2.bin" />
