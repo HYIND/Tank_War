@@ -4,4 +4,4 @@
 
 客户端（Client分支）运行在Windows上
 
-该项目使用了[google protobuf](https://github.com/protocolbuffers/protobuf) 进行序列化数据，构建前请确保安装了protobuf。
+该项目使用了[Google protobuf](https://github.com/protocolbuffers/protobuf) 进行序列化数据，构建前请确保安装了protobuf。
