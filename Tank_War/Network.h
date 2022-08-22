@@ -36,19 +36,20 @@ struct socket_messageinfo
 {
 	Header header;
 	char* content = nullptr;
-	socket_messageinfo(char* ch) :content(nullptr)
-	{
-		//获取头
-		int	recv_length = sizeof(Header);
-		memcpy(&header, ch, recv_length);
+	socket_messageinfo() :content(nullptr) {}
 
+	void get_header(char* ch) {
+		memcpy(&header, ch, sizeof(Header));
+	}
+	void get_content(char* ch) {
 		//获取内容（可能为空）
 		if (header.length > 0)
 		{
 			content = new char[header.length];
-			memcpy(content, ch + recv_length, header.length);
+			memcpy(content, ch, header.length);
 		}
 	}
+
 };
 
 

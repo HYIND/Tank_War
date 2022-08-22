@@ -128,7 +128,7 @@ void destory_bulletinfo()
 {
 	bullet* cur = NULL;
 	bullet* temp = NULL;
-	while (1) {
+	while (TRUE) {
 		std::unique_lock<std::mutex> lck(mtx);
 		cv.wait(lck);
 		while (!to_destroyed_bulletinfo.empty())
@@ -143,6 +143,5 @@ void destory_bulletinfo()
 			}
 			to_destroyed_bulletinfo.pop();
 		}
-		lck.unlock();
 	}
 }

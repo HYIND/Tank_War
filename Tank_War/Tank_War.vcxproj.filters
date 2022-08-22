@@ -16,7 +16,7 @@
     <Filter Include="资源文件\Resource">
       <UniqueIdentifier>{8be8d9cd-e014-4b6f-8c88-5a3eaf31eeee}</UniqueIdentifier>
     </Filter>
-    <Filter Include="docx">
+    <Filter Include="doc">
       <UniqueIdentifier>{14759265-64af-4f9b-9320-8341ee3d0835}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -207,7 +207,7 @@
       <Filter>资源文件\Resource</Filter>
     </None>
     <None Include="..\README.md">
-      <Filter>docx</Filter>
+      <Filter>doc</Filter>
     </None>
   </ItemGroup>
 </Project>

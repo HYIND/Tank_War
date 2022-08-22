@@ -411,11 +411,10 @@ DWORD WINAPI Process_Thread() {
 			unique_lock<mutex> qlck(messagequeue_mutex);
 			socket_messageinfo* pinfo = message_queue.front();
 			message_queue.pop();
-			qlck.unlock();
+			qlck.release()->unlock();
 			Return_Class(pinfo);
 			delete pinfo;
 		}
-		lck.unlock();
 	}
 	return 0;
 }
@@ -430,6 +429,14 @@ DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam) {
 	pPerIO->nOperationType = OP_READ;
 	DWORD nFlags = 0;
 	::WSARecv(mysocket, &buf, 1, &dwBytesTranfered, &nFlags, &pPerIO->ol, NULL);
+
+	socket_messageinfo* pinfo = nullptr;
+	int cur = 0;
+	int pack_flag = 0;	// 分包/黏包标志	0:正常 1:需要黏包(黏包起点为header)  2:需要黏包(黏包起点为content)
+
+
+	//AllocConsole();	//测试用控制台输出
+	//HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
 
 	unsigned long long pPerHandle;
 	while (!Recv_Stop) {
@@ -449,23 +456,105 @@ DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam) {
 		{   //通过per-IO数据中的nOperationType域查看有什么I/O请求完成了
 		case OP_READ:  //完成一个接收请求
 		{
+			// dwBytesTranfered表示接收到的字节数，cur表示缓冲区剩余字节数（因为需要黏包而残留在缓冲区中）
+			// 新的dwBytesTranfered表示缓冲区总共字节数
+			dwBytesTranfered = dwBytesTranfered + cur;
+			cur = 0;
 
-			socket_messageinfo* pinfo = new socket_messageinfo(pPerIO->buf);
-			if (sizeof(Header) + pinfo->header.length == dwBytesTranfered)
+			// 粘包标志不为0，表示需要黏包
+			if (pack_flag == 1 && dwBytesTranfered - cur >= sizeof(Header))
 			{
+				pinfo = new socket_messageinfo();
+				pinfo->get_header(&(pPerIO->buf[cur]));
+
+				//{	// 测试用控制台输出
+				//	wstring wstr = to_wstring(pinfo->header.type) + L"\n";
+				//	wchar_t szOutputTest[MAX_PATH];
+				//	lstrcpy(szOutputTest, wstr.c_str());
+				//	DWORD dwStringLength = wcslen(szOutputTest);
+				//	DWORD dwBytesWritten = 0;
+				//	DWORD dwErrorCode = 0;
+				//	WriteConsole(hStdout, szOutputTest, dwStringLength, &dwBytesWritten, NULL);
+				//}
+
+				cur += sizeof(Header);
+				pack_flag = 0;
+			}
+			else if (pack_flag == 2 && dwBytesTranfered - cur >= pinfo->header.length)
+			{
+				pinfo->get_content(&(pPerIO->buf[cur]));
+				cur += pinfo->header.length;
 				unique_lock<mutex> qlck(messagequeue_mutex);
 				message_queue.push(pinfo);
-				qlck.unlock();
+				qlck.release()->unlock();
 				process_cv.notify_one();
+				pinfo = nullptr;
+				pack_flag = 0;
 			}
-			else {
-				delete pinfo;
+
+
+			while (!pack_flag)
+			{
+				// pinfo为空则获取包头，若不为空（说明包头在黏包过程中获取了，只需要再获取内容就好了）
+				if (!pinfo)
+				{
+					// 剩余字符已经不够组成新的头部，需要黏包
+					if (dwBytesTranfered - cur < sizeof(Header)) {
+						// 把剩余字符移动至buf起始位置
+						memmove(pPerIO->buf, &(pPerIO->buf[cur]), dwBytesTranfered - cur);
+						cur = dwBytesTranfered - cur;
+						pack_flag = 1;
+						break;
+					}
+					else {
+						//获取头
+						pinfo = new socket_messageinfo();
+						pinfo->get_header(&(pPerIO->buf[cur]));
+
+						//{		// 测试用控制台输出
+						//	wstring wstr = to_wstring(pinfo->header.type) + L"\n";
+						//	wchar_t szOutputTest[MAX_PATH];
+						//	lstrcpy(szOutputTest, wstr.c_str());
+						//	DWORD dwStringLength = wcslen(szOutputTest);
+						//	DWORD dwBytesWritten = 0;
+						//	DWORD dwErrorCode = 0;
+						//	WriteConsole(hStdout, szOutputTest, dwStringLength, &dwBytesWritten, NULL);
+						//}
+
+						cur += sizeof(Header);
+					}
+				}
+
+				// 剩余字符已经不够组成新的头部，需要黏包
+				if (dwBytesTranfered - cur < pinfo->header.length)
+				{
+					// 把剩余字符移动至buf起始位置
+					memmove(pPerIO->buf, &(pPerIO->buf[cur]), dwBytesTranfered - cur);
+					cur = dwBytesTranfered - cur;
+					pack_flag = 2;
+					break;
+				}
+				else {
+					pinfo->get_content(&(pPerIO->buf[cur]));
+					cur += pinfo->header.length;
+					unique_lock<mutex> qlck(messagequeue_mutex);
+					message_queue.push(pinfo);
+					qlck.release()->unlock();
+					process_cv.notify_one();
+					pinfo = nullptr;
+				}
+
+				// 相等则说明不需要黏包
+				if (cur == dwBytesTranfered) {
+					cur = 0;
+					break;
+				}
 			}
 
 			/* 重新投递重叠WSARecv请求 */
 			WSABUF buf;
-			buf.buf = pPerIO->buf;
-			buf.len = 1023;
+			buf.buf = &(pPerIO->buf[cur]);
+			buf.len = 1023 - cur;
 			pPerIO->nOperationType = OP_READ;
 			DWORD nFlags = 0;
 			::WSARecv(mysocket, &buf, 1, &dwBytesTranfered, &nFlags, &pPerIO->ol, NULL);
@@ -521,13 +610,19 @@ bool Init_Hall()
 	T1.detach();
 
 	Recv_Stop = false;
-	for (int i = 0; i < NumberOfRecvThread; i++)
-	{
-		PPER_IO_DATA pPerIO = (PPER_IO_DATA)::GlobalAlloc(GPTR, sizeof(PER_IO_DATA));
-		pPerIO->nOperationType = OP_READ;
-		thread T2(Recv_Thread, pPerIO, LPVOID(hIOCP));
-		T2.detach();
-	}
+	//for (int i = 0; i < NumberOfRecvThread; i++)
+	//{
+	//	PPER_IO_DATA pPerIO = (PPER_IO_DATA)::GlobalAlloc(GPTR, sizeof(PER_IO_DATA));
+	//	pPerIO->nOperationType = OP_READ;
+	//	thread T2(Recv_Thread, pPerIO, LPVOID(hIOCP));
+	//	T2.detach();
+	//}
+
+	PPER_IO_DATA pPerIO = (PPER_IO_DATA)::GlobalAlloc(GPTR, sizeof(PER_IO_DATA));
+	pPerIO->nOperationType = OP_READ;
+	thread T2(Recv_Thread, pPerIO, LPVOID(hIOCP));
+	T2.detach();
+
 	return true;
 }
 
