@@ -115,14 +115,12 @@ void Room_Process::EndGame()
             socket_sendinfo *psendinfo = new socket_sendinfo(v.first, 227);
             unique_lock<mutex> slck(sendqueue_mtx);
             send_queue.emplace(psendinfo);
-            sendqueue_mtx.unlock();
         }
         else
         {
             socket_sendinfo *psendinfo = new socket_sendinfo(v.first, 228);
             unique_lock<mutex> slck(sendqueue_mtx);
             send_queue.emplace(psendinfo);
-            sendqueue_mtx.unlock();
         }
     }
 }
@@ -221,7 +219,7 @@ void Room_Process::hittank_notify(int hited_socket, int hited_id, int health)
     socket_sendinfo *psendinfo = new socket_sendinfo(hited_socket, 224);
     unique_lock<mutex> slck(sendqueue_mtx);
     send_queue.emplace(psendinfo);
-    sendqueue_mtx.unlock();
+    slck.release()->unlock();
 
     Message::Game_tank_hited_Response Res;
     Res.set_hited_tank_id(hited_id);
@@ -234,7 +232,6 @@ void Room_Process::hittank_notify(int hited_socket, int hited_id, int health)
             socket_sendinfo *pmsginfo = new socket_sendinfo(v.first, Res);
             unique_lock<mutex> slck(sendqueue_mtx);
             send_queue.emplace(pmsginfo);
-            sendqueue_mtx.unlock();
         }
     }
 }
@@ -249,7 +246,6 @@ void Room_Process::hitbrick_notify(int hited_brick_id, int health)
         socket_sendinfo *psendinfo = new socket_sendinfo(v.first, Res);
         unique_lock<mutex> slck(sendqueue_mtx);
         send_queue.emplace(psendinfo);
-        sendqueue_mtx.unlock();
     }
 }
 
@@ -258,7 +254,7 @@ void Room_Process::destroy(int hited_socket, int hited_id)
     socket_sendinfo *psendinfo = new socket_sendinfo(hited_socket, 226);
     unique_lock<mutex> slck(sendqueue_mtx);
     send_queue.emplace(psendinfo);
-    sendqueue_mtx.unlock();
+    slck.release()->unlock();
 
     Message::Game_destroyed_tank_Response Res;
     Res.set_destroyed_tank_id(hited_id);
@@ -270,7 +266,6 @@ void Room_Process::destroy(int hited_socket, int hited_id)
             socket_sendinfo *psendinfo = new socket_sendinfo(v.first, Res);
             unique_lock<mutex> slck(sendqueue_mtx);
             send_queue.emplace(psendinfo);
-            sendqueue_mtx.unlock();
         }
     }
 }
@@ -339,7 +334,7 @@ void Room_Process::Refreash_Tank_process(bool *end)
             socket_sendinfo *psendinfo = new socket_sendinfo(v.first, tank_Res);
             unique_lock<mutex> slck(sendqueue_mtx);
             send_queue.emplace(psendinfo);
-            sendqueue_mtx.unlock();
+            slck.release()->unlock();
             send_cv.notify_one();
         }
     }
@@ -355,6 +350,7 @@ void Room_Process::Refreash_Bullet_process(bool *end)
     while (!stop && !(*end))
     {
         struct timeval temp;
+        temp.tv_sec = 0;
         temp.tv_usec = 18000;
         select(0, NULL, NULL, NULL, &temp);
         Message::Game_bulletinfo_Response bullet_Res;
@@ -381,7 +377,7 @@ void Room_Process::Refreash_Bullet_process(bool *end)
             socket_sendinfo *psendinfo = new socket_sendinfo(v.first, bullet_Res);
             unique_lock<mutex> slck(sendqueue_mtx);
             send_queue.emplace(psendinfo);
-            sendqueue_mtx.unlock();
+            slck.release()->unlock();
             send_cv.notify_one();
         }
     }
@@ -423,7 +419,6 @@ int Room_Process::return_class_game(int socket, Header &header, char *content)
         delfd(recv_epoll, socket);
         addfd(hall_epoll, socket);
         info.erase(socket);
-        infolck.unlock();
         break;
     }
     return 0;
@@ -465,7 +460,7 @@ void Room_Process::game_process()
                 unique_lock<mutex> qlck(recvqueue_mtx);
                 messageinfo = recv_queue.front();
                 recv_queue.pop();
-                qlck.unlock();
+                qlck.release()->unlock();
 
                 if (return_class_game(messageinfo->socket, messageinfo->header, messageinfo->content))
                     player_alive--;
@@ -482,7 +477,6 @@ void Room_Process::game_process()
                     break;
                 }
             }
-            lck.unlock();
         }
         catch (exception &e)
         {

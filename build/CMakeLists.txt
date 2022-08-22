@@ -3,6 +3,7 @@ cmake_minimum_required (VERSION 3.16)
 project(Tank_War_Server C CXX)
 
 include_directories(../include)
+include_directories(../protobuf)
 aux_source_directory(../src DIR_SRCS)
 aux_source_directory(../protobuf DIR_PROTO)
 

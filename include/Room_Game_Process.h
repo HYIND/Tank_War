@@ -36,6 +36,7 @@ struct socket_sendinfo
         header.length = message.ByteSizeLong();
 
         len = sizeof(Header) + header.length;
+
         send_ch = new char[len];
         memset(send_ch, '\0', len);
 
@@ -51,6 +52,8 @@ struct socket_sendinfo
             return;
         header.length = 0;
         len = sizeof(Header);
+
+
         send_ch = new char[len];
         memset(send_ch, '\0', len);
         memcpy(send_ch, &header, len);
@@ -61,6 +64,7 @@ struct socket_sendinfo
         Header header(type);
         header.length = 0;
         len = sizeof(Header);
+
         send_ch = new char[len];
         memset(send_ch, '\0', len);
         memcpy(send_ch, &header, len);

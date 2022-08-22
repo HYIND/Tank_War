@@ -110,7 +110,6 @@ void Room_Process::Add_player(int socket)
             userinfo->sockinfo = v;
             unique_lock<mutex> infolck(info_mtx);
             info[socket] = userinfo;
-            infolck.unlock();
             break;
         }
     }
@@ -125,7 +124,7 @@ void Room_Process::Add_player(int socket)
     socket_sendinfo *pmsginfo = new socket_sendinfo(socket, Res);
     unique_lock<mutex> slck(sendqueue_mtx);
     send_queue.emplace(pmsginfo);
-    sendqueue_mtx.unlock();
+    slck.release()->unlock();
     send_cv.notify_one();
 }
 
@@ -203,13 +202,15 @@ void Room_Process::recv_process()
                     char **content = &(pinfo->content);
                     if (header->length > 0)
                     {
+                        if (header->length > 1000)
+                            int i = 1;
                         *content = new char[header->length];
                         re_num = recv(socket, *content, header->length, 0);
                     }
 
                     unique_lock<mutex> rlck(recvqueue_mtx);
                     recv_queue.emplace(pinfo);
-                    rlck.unlock();
+                    rlck.release()->unlock();
                     memset(buffer, '\0', 100);
                     process_cv.notify_one();
                     if (count == 10 || stop)
@@ -295,7 +296,7 @@ void Room_Process::room_process()
             unique_lock<mutex> qlck(recvqueue_mtx);
             messageinfo = recv_queue.front();
             recv_queue.pop();
-            qlck.unlock();
+            qlck.release()->unlock();
 
             ret = return_class_room(messageinfo->socket, messageinfo->header, messageinfo->content);
             send_cv.notify_one();
@@ -305,7 +306,6 @@ void Room_Process::room_process()
                 break;
             }
         }
-        lck.unlock();
     }
     if (ret == "StartGame")
     {
@@ -454,14 +454,12 @@ void Room_Process::Ready(int socket)
 {
     unique_lock<mutex> infolck(info_mtx);
     info[socket]->Ready = true;
-    infolck.unlock();
     return;
 };
 void Room_Process::Cancel_Ready(int socket)
 {
     unique_lock<mutex> infolck(info_mtx);
     info[socket]->Ready = false;
-    infolck.unlock();
     return;
 }
 
@@ -481,7 +479,6 @@ string Room_Process::Start_Game(int socket)
         socket_sendinfo *psendinfo = new socket_sendinfo(socket, Res);
         unique_lock<mutex> slck(sendqueue_mtx);
         send_queue.emplace(psendinfo);
-        sendqueue_mtx.unlock();
 
         return "NULL";
     }
@@ -494,7 +491,7 @@ string Room_Process::Start_Game(int socket)
         if (v.second->Ready == false)
         {
             info[socket_host]->Ready = false;
-            infolck.unlock();
+            infolck.release()->unlock();
 
             Message::Room_Start_Response Res;
             Res.set_result(0);
@@ -502,7 +499,6 @@ string Room_Process::Start_Game(int socket)
             socket_sendinfo *psendinfo = new socket_sendinfo(socket, Res);
             unique_lock<mutex> slck(sendqueue_mtx);
             send_queue.emplace(psendinfo);
-            sendqueue_mtx.unlock();
 
             return "NULL";
         }
@@ -515,7 +511,6 @@ string Room_Process::Start_Game(int socket)
         v.second->sockinfo->states = gaming;
     }
     this->gaming = true;
-    infolck.unlock();
 
     // 返回启动game_process的信息
     return "StartGame";
@@ -532,13 +527,12 @@ string Room_Process::Quit_Room(int socket)
             if (v.first != socket_host)
             {
                 socket_sendinfo *psendinfo = new socket_sendinfo(v.first, 216);
-                unique_lock<mutex> slck(sendqueue_mtx);
-                send_queue.emplace(psendinfo);
-                sendqueue_mtx.unlock();
+                send(psendinfo->socket, (const char *)psendinfo->send_ch, psendinfo->len, 0);
+                // unique_lock<mutex> slck(sendqueue_mtx);
+                // send_queue.emplace(psendinfo);
                 v.second->sockinfo->states = hall;
             }
         }
-        infolck.unlock();
         return "disband";
     }
     //非房主退出
@@ -549,7 +543,6 @@ string Room_Process::Quit_Room(int socket)
         delfd(recv_epoll, socket);
         addfd(hall_epoll, socket);
         info.erase(socket);
-        infolck.unlock();
         user_count--;
         return "NULL";
     }
@@ -564,7 +557,7 @@ void Room_Process::Room_Message(int socket, Header &header, char *content)
     Res.set_content(i);
     unique_lock<mutex> infolck1(info_mtx);
     Res.set_name(info[socket]->sockinfo->userid);
-    infolck1.unlock();
+    infolck1.release()->unlock();
 
     unique_lock<mutex> infolck2(info_mtx);
     for (auto &v : info)
@@ -576,14 +569,12 @@ void Room_Process::Room_Message(int socket, Header &header, char *content)
             socket_sendinfo *pmsginfo = new socket_sendinfo(v.first, Res);
             unique_lock<mutex> slck(sendqueue_mtx);
             send_queue.emplace(pmsginfo);
-            sendqueue_mtx.unlock();
         }
         catch (exception &e)
         {
             continue;
         }
     }
-    infolck2.unlock();
 }
 
 void Room_Process::Return_Roominfo(int socket)
@@ -604,12 +595,11 @@ void Room_Process::Return_Roominfo(int socket)
         else
             info->set_status(0);
     }
-    infolck.unlock();
+    infolck.release()->unlock();
 
     socket_sendinfo *psendinfo = new socket_sendinfo(socket, Res);
     unique_lock<mutex> slck(sendqueue_mtx);
     send_queue.emplace(psendinfo);
-    sendqueue_mtx.unlock();
 }
 
 void Room_Process::send_process()
@@ -628,7 +618,7 @@ void Room_Process::send_process()
             unique_lock<mutex> slck(sendqueue_mtx);
             info = send_queue.front();
             send_queue.pop();
-            sendqueue_mtx.unlock();
+            slck.release()->unlock();
             if (!info)
                 continue;
             try
@@ -642,6 +632,5 @@ void Room_Process::send_process()
             }
             delete (info);
         }
-        lck.unlock();
     }
 }
