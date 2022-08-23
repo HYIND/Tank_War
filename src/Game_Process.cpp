@@ -14,7 +14,7 @@ void Room_Process::confim()
     //     send(v.first, (const char *)&(send_str[0]), 1023, 0);
     // }
 
-    // socket_messageinfo *messageinfo = nullptr;
+    // socket_recvinfo *recvinfo = nullptr;
     // string str;
     // char *buf;
     // int cur_socket;
@@ -25,12 +25,12 @@ void Room_Process::confim()
     //     if (now - start > timeout)
     //         break;
     //     unique_lock<mutex> qlck(recvqueue_mtx);
-    //     messageinfo = recv_queue.front();
+    //     recvinfo = recv_queue.front();
     //     recv_queue.pop();
     //     qlck.unlock();
-    //     cur_socket = messageinfo->socket;
-    //     buf = messageinfo->ch;
-    //     str = messageinfo->ch;
+    //     cur_socket = recvinfo->socket;
+    //     buf = recvinfo->ch;
+    //     str = recvinfo->ch;
     //     string::const_iterator iterStart = str.begin();
     //     string::const_iterator iterEnd = str.end();
     //     smatch m;
@@ -53,8 +53,8 @@ void Room_Process::confim()
     //             continue;
     //         }
     //     }
-    //     delete messageinfo;
-    //     messageinfo = nullptr;
+    //     delete recvinfo;
+    //     recvinfo = nullptr;
     // }
     // for (auto &v : confim)
     // {
@@ -426,7 +426,7 @@ int Room_Process::return_class_game(int socket, Header &header, char *content)
 
 void Room_Process::game_process()
 {
-    socket_messageinfo *messageinfo = NULL;
+    socket_recvinfo *recvinfo = NULL;
     string str;
     int cur_socket;
 
@@ -458,17 +458,17 @@ void Room_Process::game_process()
                     break;
                 }
                 unique_lock<mutex> qlck(recvqueue_mtx);
-                messageinfo = recv_queue.front();
+                recvinfo = recv_queue.front();
                 recv_queue.pop();
                 qlck.release()->unlock();
 
-                if (return_class_game(messageinfo->socket, messageinfo->header, messageinfo->content))
+                if (return_class_game(recvinfo->socket, recvinfo->header, recvinfo->content))
                     player_alive--;
 
                 send_cv.notify_one();
 
-                delete (messageinfo);
-                messageinfo = NULL;
+                delete (recvinfo);
+                recvinfo = NULL;
                 if (player_alive == 1)
                 {
                     EndGame();

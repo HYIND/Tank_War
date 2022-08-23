@@ -8,13 +8,13 @@ using namespace std;
 
 extern int Get_Header_Type_bystring(string &str);
 
-struct socket_messageinfo
+struct socket_recvinfo
 {
     int socket;
     Header header;
     char *content = nullptr;
-    socket_messageinfo(int socket) : socket(socket), content(nullptr) {}
-    ~socket_messageinfo()
+    socket_recvinfo(int socket) : socket(socket), content(nullptr) {}
+    ~socket_recvinfo()
     {
         delete content;
     }
@@ -109,7 +109,7 @@ public:
 
     bool stop = false; //控制epoll循环
 
-    queue<socket_messageinfo *> recv_queue; //消息接收队列
+    queue<socket_recvinfo *> recv_queue; //消息接收队列
     queue<socket_sendinfo *> send_queue;    //消息发送队列
 
     // mutex
@@ -164,65 +164,3 @@ public:
 
     ~Room_Process();
 };
-
-// class Room
-// {
-// public:
-//     int host;
-//     map<int, Room_userinfo *>;
-//     room_info *roominfo;
-//     int recv_pipe[2];
-//     char buffer[1024];
-//     int recv_epoll = epoll_create(50);
-//     epoll_event events[100];
-//     //分别检测两个用户是否掉线
-//     bool stop1 = false;
-//     bool stop2 = false;
-//     bool stop = false; //控制epoll循环
-//     queue<socket_messageinfo *> recv_queue;
-//     queue<socket_messageinfo *> send_queue;
-//     // mutex
-//     mutex process_mtx;             //接收线程唤醒处理线程的锁
-//     condition_variable process_cv; //接收线程唤醒处理线程的条件变量
-//     mutex send_mtx;             //处理线程唤醒发送线程的锁
-//     condition_variable send_cv; //处理线程唤醒发送线程的条件变量
-//     mutex recvqueue_mtx; //接收队列的锁
-//     mutex sendqueue_mtx; //发送队列的锁
-// public:
-//     //构造函数，初始化；
-//     Game_Process(int socket1, int socket2, room_info *roominfo);
-// };
-
-// class Game_Process
-// {
-// public:
-//     int room_id;
-
-//     int socket1;
-//     int socket2;
-
-//     bool ready = false;
-
-//     int recv_pipe[2];
-
-//     char buffer[1024];
-//     int recv_epoll = epoll_create(50);
-//     epoll_event events[100];
-
-//     bool stop = false; //控制epoll循环
-
-//     queue<socket_messageinfo *> recv_queue;
-//     queue<socket_messageinfo *> send_queue;
-
-//     // mutex
-//     mutex process_mtx;             //接收线程唤醒处理线程的锁
-//     condition_variable process_cv; //接收线程唤醒处理线程的条件变量
-
-//     mutex send_mtx;             //处理线程唤醒发送线程的锁
-//     condition_variable send_cv; //处理线程唤醒发送线程的条件变量
-
-//     mutex recvqueue_mtx; //接收队列的锁
-//     mutex sendqueue_mtx; //发送队列的锁
-
-// public:
-// };

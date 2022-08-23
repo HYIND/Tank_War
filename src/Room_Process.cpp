@@ -190,7 +190,7 @@ void Room_Process::recv_process()
                 int re_num = recv(socket, buffer, sizeof(Header), 0);
                 while (re_num > 0)
                 {
-                    socket_messageinfo *pinfo = new socket_messageinfo(socket);
+                    socket_recvinfo *pinfo = new socket_recvinfo(socket);
                     int count = 0;
 
                     //获取头
@@ -275,7 +275,7 @@ void Room_Process::recv_process()
 
 void Room_Process::room_process()
 {
-    socket_messageinfo *messageinfo = NULL;
+    socket_recvinfo *recvinfo = NULL;
     bool RP_stop = false;
     string ret;
     while (!RP_stop)
@@ -294,11 +294,11 @@ void Room_Process::room_process()
                 break;
             }
             unique_lock<mutex> qlck(recvqueue_mtx);
-            messageinfo = recv_queue.front();
+            recvinfo = recv_queue.front();
             recv_queue.pop();
             qlck.release()->unlock();
 
-            ret = return_class_room(messageinfo->socket, messageinfo->header, messageinfo->content);
+            ret = return_class_room(recvinfo->socket, recvinfo->header, recvinfo->content);
             send_cv.notify_one();
             if (ret == "StartGame" || ret == "disband")
             {
@@ -443,7 +443,7 @@ void Room_Process::Set_Map(int id)
 //     strcpy(send_ch, send_str.c_str());
 //     for (auto &v : info)
 //     {
-//         socket_messageinfo *pmsginfo = new socket_messageinfo(socket, send_ch);
+//         socket_recvinfo *pmsginfo = new socket_recvinfo(socket, send_ch);
 //         unique_lock<mutex> slck(sendqueue_mtx);
 //         send_queue.emplace(pmsginfo);
 //         sendqueue_mtx.unlock();

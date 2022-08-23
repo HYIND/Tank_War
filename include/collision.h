@@ -1,3 +1,4 @@
+#pragma once
 
 bool collision(
 	double x1,double y1, int width1, int height1,

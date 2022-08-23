@@ -31,27 +31,18 @@ class Room_Process;
 
 extern vector<sock_info *> user_list;
 extern vector<Room_Process *> room_list;
-extern vector<int> room_user;
 extern vector<int> game_pipe_list;
-
-extern unordered_map<int, int> two_user1;
-extern unordered_map<int, int> two_user2;
 
 extern int listen_epoll;
 extern int hall_epoll;
-extern int game_epoll;
 
 extern epoll_event listen_events[100];
 extern epoll_event hall_events[200];
-extern epoll_event game_events[100];
 
 extern int listen_pipe[2];
-extern int con_pipe[2];
-extern int game_pipe[2];
+extern int hall_pipe[2];
 
-int Get_Header_Type_bystring(string &str);
-
-void send_string(int socket, string s);
+extern int room_counter;
 
 void sig_handler(int sig);
 
@@ -59,21 +50,13 @@ void addsig(int sig);
 
 string get_IP(int socket);
 
-void Hall_Message(int sock_accept, string &send_str);
+string get_userid(int socket);
 
-void Get_hall_info(int sock_accept);
+int Get_Header_Type_bystring(string &str);
 
-void Create_Room(int sock_accept);
+void send_string(int socket, string s);
 
-void Enter_Room(int sock_accept, string s);
-
-void Quit_Room(int &user);
-
-void Start_Game(int &user1);
-
-void return_class(int &sock_accept, Header &header, char *content);
-
-void Tank_destroy(int scoket);
+void server_listen(int listen_socket);
 
 template <typename T>
 int Get_Header_Type(T &message)
