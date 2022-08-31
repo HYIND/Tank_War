@@ -41,6 +41,10 @@ DWORD WINAPI Render_Thread()
 				//	MessageBox(NULL, L"Draw failed!", L"Error", 0);
 				//}
 			}
+			if (status == STATUS::Game_Status)
+			{
+				Cur_Game->Draw();
+			}
 			if (status == STATUS::Hall_Status || status == STATUS::Room_Status || (status == STATUS::Game_Status && isonline_game))
 			{
 				wstring ws = to_wstring(delay) + L"ms";
@@ -52,10 +56,6 @@ DWORD WINAPI Render_Thread()
 					DelayRect,
 					pMain_Brush
 				);
-			}
-			if (status == STATUS::Game_Status)
-			{
-				Cur_Game->Draw();
 			}
 			if (CurScene)
 				CurScene->DrawScene();

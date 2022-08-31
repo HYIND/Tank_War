@@ -78,4 +78,4 @@ public:
 
 };
 
-void destory_bulletinfo();
+//void destory_bulletinfo();

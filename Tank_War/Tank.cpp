@@ -122,26 +122,26 @@ void bullet::destroy() {
 	owner->bullet_count--;
 }
 
-mutex mtx;
-condition_variable cv;
-void destory_bulletinfo()
-{
-	bullet* cur = NULL;
-	bullet* temp = NULL;
-	while (TRUE) {
-		std::unique_lock<std::mutex> lck(mtx);
-		cv.wait(lck);
-		while (!to_destroyed_bulletinfo.empty())
-		{
-			cur = to_destroyed_bulletinfo.front();
-			temp = NULL;
-			while (cur)
-			{
-				cur->next = temp;
-				delete(cur);
-				cur = temp;
-			}
-			to_destroyed_bulletinfo.pop();
-		}
-	}
-}
+//mutex mtx;
+//condition_variable cv;
+//void destory_bulletinfo()
+//{
+//	bullet* cur = NULL;
+//	bullet* temp = NULL;
+//	while (TRUE) {
+//		std::unique_lock<std::mutex> lck(mtx);
+//		cv.wait(lck);
+//		while (!to_destroyed_bulletinfo.empty())
+//		{
+//			cur = to_destroyed_bulletinfo.front();
+//			temp = NULL;
+//			while (cur)
+//			{
+//				cur->next = temp;
+//				delete(cur);
+//				cur = temp;
+//			}
+//			to_destroyed_bulletinfo.pop();
+//		}
+//	}
+//}
