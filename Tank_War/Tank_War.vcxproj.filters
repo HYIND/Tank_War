@@ -72,6 +72,9 @@
     <ClInclude Include="..\protobuf\myprotocol.pb.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Tank_AI.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Tank_War.cpp">
@@ -120,6 +123,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\protobuf\myprotocol.pb.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Tank_AI.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

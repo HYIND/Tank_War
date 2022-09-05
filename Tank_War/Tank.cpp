@@ -61,7 +61,6 @@ void Tank::DrawTank(ID2D1HwndRenderTarget* pRenderTarget)
 
 };
 
-
 void bullet::Set_Parameter_byStyle(BulletStyle bulletstyle)
 {
 	this->width = Bullet_Style_info[bulletstyle]->width;

@@ -24,12 +24,14 @@ public:
 	vector<Init_info> Init_Location;
 
 	ID2D1Bitmap* BK_pBitmap;
-	vector<Brick_Wall> Brick_info;
-	vector<Iron_Wall> Iron_info;
+	vector<Game_Component*> Component_info;
+	//vector<Brick_Wall> Brick_info;
+	//vector<Iron_Wall> Iron_info;
 
 public:
 	Map() {}
 	Map(int id, int user_limited) :map_id(id), user_limited(user_limited) {}
+	Map& operator=(Map& map);
 	void DrawMap();
 };
 

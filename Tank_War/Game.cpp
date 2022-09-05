@@ -210,23 +210,22 @@ void Game::recv_hitbrick(Header& header, char* content)
 	int hited_brick_id = Res.hited_brick_id();
 	int health = Res.health();
 
-	auto iter = map_info.Brick_info.begin();
-	while (iter != map_info.Brick_info.end())
+	auto iter = map_info.Component_info.begin();
+	while (iter != map_info.Component_info.end())
 	{
-		if (iter->id == hited_brick_id)
+		if ((*iter)->type == component_type::BRICK && (*iter)->id == hited_brick_id)
 			break;
 		iter++;
 	}
-	if (iter == map_info.Brick_info.end())
+	if (iter == map_info.Component_info.end())
 		return;
 
 	if (health <= 0)
 	{
-		map_info.Brick_info.erase(iter);
+		map_info.Component_info.erase(iter);
 		return;
 	}
-	Brick_Wall* pwall = &(*iter);
-	pwall->health = health;
+	(*iter)->health = health;
 }
 
 void Game::recv_hited(Header& header, char* content)
@@ -359,22 +358,30 @@ void Game::Tank_Move(Tank* ptank, bool forward)
 			return;
 	}
 
-	for (auto& v : map_info.Brick_info)
+	for (auto& v : map_info.Component_info)
 	{
-		Brick_Wall* pBWall = &v;
 		if (collision_obb(
 			new_locationX, new_locationY, ptank->width, ptank->height, ptank->rotate,
-			pBWall->locationX, pBWall->locationY, pBWall->width, pBWall->height))
+			v->locationX, v->locationY, v->width, v->height)
+			)
 			return;
 	}
-	for (auto& v : map_info.Iron_info)
-	{
-		Iron_Wall* pIWall = &v;
-		if (collision_obb(
-			new_locationX, new_locationY, ptank->width, ptank->height, ptank->rotate,
-			pIWall->locationX, pIWall->locationY, pIWall->width, pIWall->height))
-			return;
-	}
+	//for (auto& v : map_info.Brick_info)
+	//{
+	//	Brick_Wall* pBWall = &v;
+	//	if (collision_obb(
+	//		new_locationX, new_locationY, ptank->width, ptank->height, ptank->rotate,
+	//		pBWall->locationX, pBWall->locationY, pBWall->width, pBWall->height))
+	//		return;
+	//}
+	//for (auto& v : map_info.Iron_info)
+	//{
+	//	Iron_Wall* pIWall = &v;
+	//	if (collision_obb(
+	//		new_locationX, new_locationY, ptank->width, ptank->height, ptank->rotate,
+	//		pIWall->locationX, pIWall->locationY, pIWall->width, pIWall->height))
+	//		return;
+	//}
 
 	if (collision_broader(new_locationX, new_locationY, ptank->width, ptank->height, ptank->rotate)) return;
 
@@ -406,20 +413,11 @@ void Game::Tank_Rotate(Tank* ptank, bool forward)
 			return;
 	}
 
-	for (auto& v : map_info.Brick_info)
+	for (auto& v : map_info.Component_info)
 	{
-		Brick_Wall* pBWall = &v;
 		if (collision_obb(
 			ptank->locationX, ptank->locationY, ptank->width, ptank->height, new_rotate,
-			pBWall->locationX, pBWall->locationY, pBWall->width, pBWall->height))
-			return;
-	}
-	for (auto& v : map_info.Iron_info)
-	{
-		Iron_Wall* pIWall = &v;
-		if (collision_obb(
-			ptank->locationX, ptank->locationY, ptank->width, ptank->height, new_rotate,
-			pIWall->locationX, pIWall->locationY, pIWall->width, pIWall->height))
+			v->locationX, v->locationY, v->width, v->height))
 			return;
 	}
 
@@ -459,45 +457,78 @@ void Game::Bullet_Move(bullet* pbullet)
 			return;
 		}
 	}
-	for (auto it = map_info.Brick_info.begin(); it != map_info.Brick_info.end(); it++)
+	//for (auto it = map_info.Brick_info.begin(); it != map_info.Brick_info.end(); it++)
+	//{
+	//	Brick_Wall* pBWall = &(*it);
+	//	if (collision_obb(
+	//		pbullet->locationX, pbullet->locationY, pbullet->width, pbullet->height, pbullet->rotate,
+	//		pBWall->locationX, pBWall->locationY, pBWall->width, pBWall->height))
+	//	{
+	//		if (isonline_game)
+	//		{
+	//			send_hitbrick(pBWall->id, pbullet);
+	//			pbullet->destroy();
+	//			return;
+	//		}
+	//		pbullet->destroy();
+	//		pBWall->health -= 21;
+	//		if (pBWall->health <= 0)
+	//		{
+	//			map_info.Brick_info.erase(it);
+	//		}
+	//		return;
+	//	}
+	//}
+
+	//for (auto it = map_info.Iron_info.begin(); it != map_info.Iron_info.end(); it++)
+	//{
+	//	Iron_Wall* pIWall = &(*it);
+	//	if (collision_obb(
+	//		pbullet->locationX, pbullet->locationY, pbullet->width, pbullet->height, pbullet->rotate,
+	//		pIWall->locationX, pIWall->locationY, pIWall->width, pIWall->height))
+	//	{
+	//		pbullet->destroy();
+	//		return;
+	//	}
+	//}
+	for (auto it = map_info.Component_info.begin(); it != map_info.Component_info.end(); it++)
 	{
-		Brick_Wall* pBWall = &(*it);
+		Game_Component* pWall = (*it);
 		if (collision_obb(
 			pbullet->locationX, pbullet->locationY, pbullet->width, pbullet->height, pbullet->rotate,
-			pBWall->locationX, pBWall->locationY, pBWall->width, pBWall->height))
+			pWall->locationX, pWall->locationY, pWall->width, pWall->height))
 		{
-			if (isonline_game)
+			pbullet->destroy();
+			switch (pWall->type)
 			{
-				send_hitbrick(pBWall->id, pbullet);
-				pbullet->destroy();
+			case component_type::BRICK:
+			{
+				if (isonline_game)
+				{
+					send_hitbrick(pWall->id, pbullet);
+					return;
+				}
+				pWall->health -= 21;
+				if (pWall->health <= 0)
+				{
+					map_info.Component_info.erase(it);
+				}
 				return;
 			}
-			pbullet->destroy();
-			pBWall->health -= 21;
-			if (pBWall->health <= 0)
-			{
-				map_info.Brick_info.erase(it);
+			case component_type::IRON: { return; }
+
+			default:
+				return;
 			}
-			return;
 		}
 	}
 
-	for (auto it = map_info.Iron_info.begin(); it != map_info.Iron_info.end(); it++)
-	{
-		Iron_Wall* pIWall = &(*it);
-		if (collision_obb(
-			pbullet->locationX, pbullet->locationY, pbullet->width, pbullet->height, pbullet->rotate,
-			pIWall->locationX, pIWall->locationY, pIWall->width, pIWall->height))
-		{
-			pbullet->destroy();
-			return;
-		}
-	}
 
 	if (collision_broader(pbullet->locationX, pbullet->locationY, pbullet->width, pbullet->height, pbullet->rotate))
 	{
 		pbullet->destroy();
 	}
+
 	Bullet_Move(pbullet->next);
 }
 
