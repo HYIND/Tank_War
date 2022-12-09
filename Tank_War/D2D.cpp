@@ -11,7 +11,7 @@ double timeInOneFps;
 void Set_Fps(int Fps_in)
 {
 	Fps = double(Fps_in);
-	timeInOneFps = 1.0 / Fps;
+	timeInOneFps = 1000 / Fps;
 }
 
 HRESULT LoadResourceBitmap(

@@ -79,13 +79,13 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\box2d;$(SolutionDir)\protobuf;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\box2d\lib;$(SolutionDir)\protobuf;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\protobuf;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\protobuf;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\box2d;$(SolutionDir)\protobuf;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\box2d\lib;$(SolutionDir)\protobuf;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\protobuf;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\protobuf;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -129,7 +129,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>box2d.lib;libprotobuf-lited.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libprotobuf-lited.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>D:\protobuf;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -144,13 +144,14 @@
       <LanguageStandard>stdcpp14</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>D:\protobuf;$(SolutionDir)\protobuf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Optimization>Disabled</Optimization>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>box2d.lib;libprotobuf-lite.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>libprotobuf-lite.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>D:\protobuf;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -163,6 +164,7 @@
     <ClInclude Include="Game_Component.h" />
     <ClInclude Include="keymap.h" />
     <ClInclude Include="Map.h" />
+    <ClInclude Include="Prop.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Scene.h" />
@@ -178,6 +180,7 @@
     <ClCompile Include="..\protobuf\myprotocol.pb.cc" />
     <ClCompile Include="collision.cpp" />
     <ClCompile Include="D2D.cpp" />
+    <ClCompile Include="Prop.cpp" />
     <ClCompile Include="Scene_outer.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Game_Component.cpp" />
@@ -197,34 +200,31 @@
     <ResourceCompile Include="Tank_War.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\x64\Debug\Resource\BRICK_WALL.png" />
-    <Image Include="..\x64\Debug\Resource\Bullet.png" />
-    <Image Include="..\x64\Debug\Resource\Bullet_Green.png" />
-    <Image Include="..\x64\Debug\Resource\Bullet_Orange.png" />
-    <Image Include="..\x64\Debug\Resource\Bullet_Purple.png" />
-    <Image Include="..\x64\Debug\Resource\Cursor.png" />
-    <Image Include="..\x64\Debug\Resource\Fail.png" />
-    <Image Include="..\x64\Debug\Resource\GAME_BG_SAND.jpg" />
-    <Image Include="..\x64\Debug\Resource\Health_Kit.png" />
-    <Image Include="..\x64\Debug\Resource\IRON_WALL.png" />
-    <Image Include="..\x64\Debug\Resource\jiaran.jpg" />
-    <Image Include="..\x64\Debug\Resource\liangliang.bmp" />
-    <Image Include="..\x64\Debug\Resource\OP_KB.png" />
-    <Image Include="..\x64\Debug\Resource\Pause.png" />
-    <Image Include="..\x64\Debug\Resource\Return.png" />
-    <Image Include="..\x64\Debug\Resource\SNOW.png" />
-    <Image Include="..\x64\Debug\Resource\Tank2.bmp" />
-    <Image Include="..\x64\Debug\Resource\Tank2.png" />
-    <Image Include="..\x64\Debug\Resource\Text_BK.png" />
-    <Image Include="..\x64\Debug\Resource\WATER.png" />
-    <Image Include="..\x64\Debug\Resource\Win.png" />
+    <Image Include="..\Resource\BRICK_WALL.png" />
+    <Image Include="..\Resource\Bullet.png" />
+    <Image Include="..\Resource\Bullet_Green.png" />
+    <Image Include="..\Resource\Bullet_Orange.png" />
+    <Image Include="..\Resource\Bullet_Purple.png" />
+    <Image Include="..\Resource\Fail.png" />
+    <Image Include="..\Resource\GAME_BG_SAND.jpg" />
+    <Image Include="..\Resource\Health_Kit.png" />
+    <Image Include="..\Resource\IRON_WALL.png" />
+    <Image Include="..\Resource\jiaran.jpg" />
+    <Image Include="..\Resource\liangliang.bmp" />
+    <Image Include="..\Resource\OP_KB.png" />
+    <Image Include="..\Resource\Pause.png" />
+    <Image Include="..\Resource\Return.png" />
+    <Image Include="..\Resource\SNOW.png" />
+    <Image Include="..\Resource\Tank2.bmp" />
+    <Image Include="..\Resource\Tank2.png" />
+    <Image Include="..\Resource\Text_BK.png" />
+    <Image Include="..\Resource\WATER.png" />
+    <Image Include="..\Resource\Win.png" />
     <Image Include="Tank_War.ico" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
-    <None Include="..\x64\Debug\Resource\Cursor.cur" />
-    <None Include="..\x64\debug\resource\jpg1.bin" />
-    <None Include="..\x64\debug\resource\jpg2.bin" />
+    <None Include="..\Resource\Cursor.cur" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

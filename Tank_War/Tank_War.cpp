@@ -1,9 +1,10 @@
 ﻿// WindowsProject1.cpp : 定义应用程序的入口点。
 //
 #include "Render.h"
-
+#include "Tank_AI.h"
 #define MAX_LOADSTRING 100
 
+//#define AITEST
 // 全局变量:
 
 HRESULT hr = S_OK;
@@ -22,6 +23,7 @@ void Init_all_Resource()
 	Init_SceneResource();
 	Init_Style();
 	Init_Map();
+	Init_Prop_Resource();
 }
 
 // 此代码模块中包含的函数的前向声明:
@@ -114,8 +116,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	hInst = hInstance; // 将实例句柄存储在全局变量中
 	HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_VISIBLE | WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX | WS_CLIPCHILDREN | WS_EX_COMPOSITED | WS_EX_LAYERED,
 		CW_USEDEFAULT, 0, 1200, 675, nullptr, nullptr, hInstance, nullptr);
-
 	if (!hWnd)
+
 	{
 		return FALSE;
 	}
@@ -175,16 +177,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		case _game:
 		{
+			static int count = 0;
+			count++;
+			if (count > 5)count -= 5;
 			if (GetFocus() == _hwnd)
 			{
 				Cur_Game->Tank_Input();
 				Cur_Game->Move();
-				break;
+				//break;
 			}
 			else if (isonline_game)
 			{
 				Cur_Game->Move();
 			}
+#ifdef AITEST
+			if (count % 5 == 0)
+				AI_calculate();
+			AI_Track();
+#endif // AITEST
+
 			break;
 		}
 		case hall_refreash:
@@ -242,6 +253,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				isonline_game = false;
 				Set_CurScene(STATUS::Game_Status);
 				InvalidateRect(hWnd, NULL, TRUE);
+#ifdef AITEST
+				AI_Init();
+#endif // AITEST
 				break;
 			}
 							  // 联机大厅
@@ -444,6 +458,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					break;
 				case 20:	//重新开始
 					Cur_Game->Init_Game();
+#ifdef AITEST
+					AI_Init();
+#endif // AITEST
 					SetTimer(hWnd, _game, 20, NULL);
 					break;
 				case 30:	//回到主菜单

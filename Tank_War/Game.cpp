@@ -71,7 +71,6 @@ void Game::Move()
 	}
 }
 
-
 void Game::Draw()
 {
 	if (map_info.BK_pBitmap)
@@ -285,16 +284,7 @@ void Game::Tank_Input()
 
 	if (GetAsyncKeyState(key1[4]) & 0x8000)
 	{
-		if (ptank1->bullet_count < ptank1->bullet_limited)
-		{
-			ptank1->bullet_now = clock();
-			if (ptank1->bullet_now - ptank1->bullet_last > 250)
-			{
-				ptank1->Addbullet(BulletStyle::DEFAULT);
-				ptank1->bullet_count++;
-				ptank1->bullet_last = ptank1->bullet_now;
-			}
-		}
+		Tank_shot(ptank1);
 	}
 	if (!isonline_game)
 	{
@@ -318,16 +308,20 @@ void Game::Tank_Input()
 		}
 		if (GetAsyncKeyState(key2[4]) & 0x8000)
 		{
-			if (ptank2->bullet_count < ptank2->bullet_limited)
-			{
-				ptank2->bullet_now = clock();
-				if (ptank2->bullet_now - ptank2->bullet_last > 250)
-				{
-					ptank2->Addbullet(BulletStyle::DEFAULT);
-					ptank2->bullet_count++;
-					ptank2->bullet_last = ptank2->bullet_now;
-				}
-			}
+			Tank_shot(ptank2);
+		}
+	}
+}
+
+void Game::Tank_shot(Tank* ptank) {
+	if (ptank->bullet_count < ptank->bullet_limited)
+	{
+		ptank->bullet_now = clock();
+		if (ptank->bullet_now - ptank->bullet_last > 250)
+		{
+			ptank->Addbullet(BulletStyle::DEFAULT);
+			ptank->bullet_count++;
+			ptank->bullet_last = ptank->bullet_now;
 		}
 	}
 }
@@ -366,25 +360,31 @@ void Game::Tank_Move(Tank* ptank, bool forward)
 			)
 			return;
 	}
-	//for (auto& v : map_info.Brick_info)
-	//{
-	//	Brick_Wall* pBWall = &v;
-	//	if (collision_obb(
-	//		new_locationX, new_locationY, ptank->width, ptank->height, ptank->rotate,
-	//		pBWall->locationX, pBWall->locationY, pBWall->width, pBWall->height))
-	//		return;
-	//}
-	//for (auto& v : map_info.Iron_info)
-	//{
-	//	Iron_Wall* pIWall = &v;
-	//	if (collision_obb(
-	//		new_locationX, new_locationY, ptank->width, ptank->height, ptank->rotate,
-	//		pIWall->locationX, pIWall->locationY, pIWall->width, pIWall->height))
-	//		return;
-	//}
+
+	for (auto it = Prop_info.begin(); it != Prop_info.end(); it++) {
+		Prop* pProp = it->second;
+		if (collision_obb(
+			new_locationX, new_locationY, ptank->width, ptank->height, ptank->rotate,
+			pProp->locationX, pProp->locationY, pProp->width, pProp->height)
+			)
+		{
+			if (isonline_game) {
+				int id = -1;
+				for (auto& v : Tank_info) {
+					if (v.second == ptank)
+					{
+						id = v.first;
+						break;
+					}
+				}
+				pProp->online_get(id);
+				break;
+			}
+			pProp->get(ptank);
+		}
+	}
 
 	if (collision_broader(new_locationX, new_locationY, ptank->width, ptank->height, ptank->rotate)) return;
-
 
 	ptank->locationY = new_locationY;
 	ptank->locationX = new_locationX;
@@ -400,6 +400,42 @@ void Game::Tank_Rotate(Tank* ptank, bool forward)
 	}
 	else {
 		new_rotate -= 5;
+	}
+
+	for (auto& v : Tank_info)
+	{
+		if (v.second == ptank)
+			continue;
+		Tank* pother_tank = v.second;
+		if (collision_obb(
+			ptank->locationX, ptank->locationY, ptank->width, ptank->height, new_rotate,
+			pother_tank->locationX, pother_tank->locationY, pother_tank->width, pother_tank->height, pother_tank->rotate))
+			return;
+	}
+
+	for (auto& v : map_info.Component_info)
+	{
+		if (collision_obb(
+			ptank->locationX, ptank->locationY, ptank->width, ptank->height, new_rotate,
+			v->locationX, v->locationY, v->width, v->height))
+			return;
+	}
+
+	if (collision_broader(ptank->locationX, ptank->locationY, ptank->width, ptank->height, new_rotate)) return;
+
+	ptank->rotate = new_rotate;
+}
+
+void Game::AI_Rotate(AI_control* AI, bool forward) {
+	Tank* ptank = AI->AI_Tank;
+	double new_rotate = ptank->rotate;
+
+	if (forward)
+	{
+		new_rotate += min(5, AI->goal_rotate - new_rotate);
+	}
+	else {
+		new_rotate -= min(5, new_rotate - AI->goal_rotate);
 	}
 
 	for (auto& v : Tank_info)

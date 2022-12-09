@@ -42,6 +42,7 @@
 #define BRICK_WALL                      190
 #define IDB_BITMAP4                     191
 #define HEALTH_KIT                      193
+#define AID_KIT                         193
 #define SNOW                            195
 #define WATER                           196
 #define IDR_JPG2                        197

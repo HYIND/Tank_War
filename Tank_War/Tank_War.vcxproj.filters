@@ -75,6 +75,9 @@
     <ClInclude Include="Tank_AI.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Prop.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Tank_War.cpp">
@@ -128,6 +131,9 @@
     <ClCompile Include="Tank_AI.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Prop.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Tank_War.rc">
@@ -135,85 +141,76 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\x64\Debug\Resource\Bullet.png">
-      <Filter>资源文件\Resource</Filter>
-    </Image>
-    <Image Include="..\x64\Debug\Resource\Bullet_Green.png">
-      <Filter>资源文件\Resource</Filter>
-    </Image>
-    <Image Include="..\x64\Debug\Resource\Bullet_Orange.png">
-      <Filter>资源文件\Resource</Filter>
-    </Image>
-    <Image Include="..\x64\Debug\Resource\Bullet_Purple.png">
-      <Filter>资源文件\Resource</Filter>
-    </Image>
-    <Image Include="..\x64\Debug\Resource\Cursor.png">
-      <Filter>资源文件\Resource</Filter>
-    </Image>
-    <Image Include="..\x64\Debug\Resource\Fail.png">
-      <Filter>资源文件\Resource</Filter>
-    </Image>
-    <Image Include="..\x64\Debug\Resource\jiaran.jpg">
-      <Filter>资源文件\Resource</Filter>
-    </Image>
-    <Image Include="..\x64\Debug\Resource\liangliang.bmp">
-      <Filter>资源文件\Resource</Filter>
-    </Image>
-    <Image Include="..\x64\Debug\Resource\Pause.png">
-      <Filter>资源文件\Resource</Filter>
-    </Image>
-    <Image Include="..\x64\Debug\Resource\Return.png">
-      <Filter>资源文件\Resource</Filter>
-    </Image>
     <Image Include="Tank_War.ico">
       <Filter>资源文件\Resource</Filter>
     </Image>
-    <Image Include="..\x64\Debug\Resource\Tank2.bmp">
-      <Filter>资源文件\Resource</Filter>
+    <Image Include="..\Resource\Tank2.bmp">
+      <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\x64\Debug\Resource\Tank2.png">
-      <Filter>资源文件\Resource</Filter>
+    <Image Include="..\Resource\liangliang.bmp">
+      <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\x64\Debug\Resource\Text_BK.png">
-      <Filter>资源文件\Resource</Filter>
+    <Image Include="..\Resource\Text_BK.png">
+      <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\x64\Debug\Resource\Win.png">
-      <Filter>资源文件\Resource</Filter>
+    <Image Include="..\Resource\Bullet.png">
+      <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\x64\Debug\Resource\BRICK_WALL.png">
-      <Filter>资源文件\Resource</Filter>
+    <Image Include="..\Resource\Fail.png">
+      <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\x64\Debug\Resource\GAME_BG_SAND.jpg">
-      <Filter>资源文件\Resource</Filter>
+    <Image Include="..\Resource\Win.png">
+      <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\x64\Debug\Resource\Health_Kit.png">
-      <Filter>资源文件\Resource</Filter>
+    <Image Include="..\Resource\Bullet_Purple.png">
+      <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\x64\Debug\Resource\IRON_WALL.png">
-      <Filter>资源文件\Resource</Filter>
+    <Image Include="..\Resource\Bullet_Orange.png">
+      <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\x64\Debug\Resource\SNOW.png">
-      <Filter>资源文件\Resource</Filter>
+    <Image Include="..\Resource\Bullet_Green.png">
+      <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\x64\Debug\Resource\WATER.png">
-      <Filter>资源文件\Resource</Filter>
+    <Image Include="..\Resource\Tank2.png">
+      <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\x64\Debug\Resource\OP_KB.png">
-      <Filter>资源文件\Resource</Filter>
+    <Image Include="..\Resource\Pause.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\Return.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\BRICK_WALL.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\Health_Kit.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\IRON_WALL.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\SNOW.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\WATER.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\OP_KB.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\jiaran.jpg">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\GAME_BG_SAND.jpg">
+      <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\x64\Debug\Resource\Cursor.cur">
-      <Filter>资源文件\Resource</Filter>
-    </None>
-    <None Include="..\x64\debug\resource\jpg2.bin">
-      <Filter>资源文件\Resource</Filter>
-    </None>
-    <None Include="..\x64\debug\resource\jpg1.bin">
-      <Filter>资源文件\Resource</Filter>
-    </None>
     <None Include="..\README.md">
       <Filter>doc</Filter>
+    </None>
+    <None Include="..\Resource\Cursor.cur">
+      <Filter>资源文件</Filter>
     </None>
   </ItemGroup>
 </Project>

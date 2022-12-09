@@ -366,4 +366,8 @@ FodyWeavers.xsd
 protoc.exe
 type.txt
 
+#Resource
 liangliang.bmp
+
+#doc
+doc/*

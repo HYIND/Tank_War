@@ -1,8 +1,12 @@
 ﻿#pragma once
 #include "Map.h"
 #include "Network.h"
+#include "Tank_AI.h"
+#include "Prop.h"
+
 
 class Game;
+class AI_control;
 
 extern Game* Cur_Game;
 extern int my_tank_location;
@@ -11,7 +15,9 @@ class Game
 {
 public:
 	Map map_info;
+
 	map<int, Tank*> Tank_info;
+	unordered_map<int, Prop* >Prop_info;
 
 	int my_tankid = 0;
 	int player_alive = 0;
@@ -28,8 +34,10 @@ public:
 	void Draw();
 	void Get_keymap();		//获取/重新获取 键位
 	void Tank_Input();		//响应玩家输入
+	void Tank_shot(Tank* ptank);		//发射子弹
 	void Tank_Move(Tank* ptank, bool forward);		//移动坦克，同时检查移动合法性（碰撞检查）
 	void Tank_Rotate(Tank* ptank, bool forward);	//旋转坦克，同时检查移动合法性（碰撞检查）
+	void AI_Rotate(AI_control* AI, bool forward);	//AI用旋转
 	void Bullet_Move(bullet* pbullet);		//子弹自移动
 
 
