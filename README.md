@@ -5,3 +5,5 @@
 客户端（Client分支）运行在Windows上
 
 该项目使用了[Google protobuf](https://github.com/protocolbuffers/protobuf) 进行序列化数据，构建前请确保安装了protobuf。
+
+![](https://github.com/HYIND/Tank_War/blob/Client/Screenshots/pic1.png)
