@@ -21,119 +21,54 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="framework.h">
+    <ClInclude Include="include\D2D.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="targetver.h">
+    <ClInclude Include="include\Game.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Resource.h">
+    <ClInclude Include="include\Game_Component.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Tank_War.h">
+    <ClInclude Include="include\header.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Tank.h">
+    <ClInclude Include="include\keymap.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Network.h">
+    <ClInclude Include="include\Log.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Scene.h">
+    <ClInclude Include="include\Map.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="header.h">
+    <ClInclude Include="include\Network.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="collision.h">
+    <ClInclude Include="include\Prop.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="D2D.h">
+    <ClInclude Include="include\Render.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Game.h">
+    <ClInclude Include="include\Scene.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Map.h">
+    <ClInclude Include="include\Style.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Style.h">
+    <ClInclude Include="include\Tank.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Game_Component.h">
+    <ClInclude Include="include\Tank_AI.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Render.h">
+    <ClInclude Include="include\Tank_War.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="keymap.h">
+    <ClInclude Include="include\collision.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\protobuf\myprotocol.pb.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Tank_AI.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Prop.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Tank_War.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Tank.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Network.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene_outer.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="collision.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="D2D.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Game.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="header.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Map.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Style.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Game_Component.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="hands.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Render.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene_inner.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="keymap.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\protobuf\myprotocol.pb.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Tank_AI.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Prop.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Tank_War.rc">
@@ -212,5 +147,58 @@
     <None Include="..\Resource\Cursor.cur">
       <Filter>资源文件</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\header.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\keymap.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Map.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Network.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Prop.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Render.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Scene_inner.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Scene_outer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Style.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tank.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tank_AI.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tank_War.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\collision.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\D2D.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Game.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Game_Component.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\protobuf\myprotocol.pb.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
