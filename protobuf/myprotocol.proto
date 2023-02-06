@@ -128,3 +128,27 @@ message Game_tank_hited_Response{  //223
 message Game_destroyed_tank_Response{  //225
   int32 destroyed_tank_id=1;
 }
+
+message Game_create_prop{    //801
+  int32 prop_type=1;
+  double locationX=2;
+  double locationY=3;
+}
+
+message Game_getProp_Request{   //130
+  int32 prop_id=1;
+}
+
+message Game_prop_Response{   //230
+  int32 prop_id=1;
+  int32 tank_id=2;
+}
+
+message UDP_INFO_REQ{   //800
+  string ip=1;
+  int32 port=2;
+}
+
+message UDP_INFO_RES{   //801
+  bool OK=1;
+}

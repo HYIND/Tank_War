@@ -1,30 +1,5 @@
 #include "Room_Game_Process.h"
 
-// Room_Process::Room_Process(int socket1, int socket2, room_info *roominfo)
-//     : socket1(socket1), socket2(socket2), roominfo(roominfo)
-// {
-//     Tank1 = new Tank();
-//     Tank2 = new Tank();
-//     Tank_info[socket1] = Tank1;
-//     Tank_info[socket2] = Tank2;
-
-//     assert(socketpair(PF_UNIX, SOCK_DGRAM, 0, recv_pipe) != -1);
-//     setnonblocking(recv_pipe[1]);
-//     game_pipe_list.emplace_back(recv_pipe[1]);
-
-//     recv_epoll = epoll_create(50);
-
-//     addfd(recv_epoll, recv_pipe[0]);
-//     addfd(recv_epoll, socket1);
-//     addfd(recv_epoll, socket2);
-
-//     memset(buffer, '\0', 1024);
-
-//     bool stop1 = false;
-//     bool stop2 = false;
-//     bool stop = false;
-// }
-
 Room_Process::Room_Process(int socket)
     : socket_host(socket)
 {
@@ -60,11 +35,13 @@ Room_Process::~Room_Process()
         v.second->sockinfo->states = hall;
         delete v.second;
     }
+
     //回收Tank信息
     for (auto &v : Tank_info)
     {
         delete v.second;
     }
+
     //回收消息队列中的消息
     while (!recv_queue.empty())
     {
@@ -76,6 +53,7 @@ Room_Process::~Room_Process()
         delete send_queue.front();
         send_queue.pop();
     }
+
     //移除管道
     for (auto it = game_pipe_list.begin(); it != game_pipe_list.end(); it++)
     {
@@ -88,6 +66,7 @@ Room_Process::~Room_Process()
     //关闭管道
     close(recv_pipe[0]);
     close(recv_pipe[1]);
+
     //把该房间从room_list移除
     for (auto it = room_list.begin(); it != room_list.end(); it++)
     {
@@ -97,13 +76,16 @@ Room_Process::~Room_Process()
             break;
         }
     }
+
+    //关闭epollfd
+    close(recv_epoll);
 }
 
 void Room_Process::Add_player(int socket)
 {
     for (auto &v : user_list)
     {
-        if (v->accept == socket)
+        if (v->tcp_fd == socket)
         {
             v->states = room;
             Room_userinfo *userinfo = new Room_userinfo();
@@ -141,6 +123,7 @@ void Room_Process::run()
 void Room_Process::recv_process()
 {
     int re_num = 0;
+
     while (!stop)
     {
         int num = epoll_wait(recv_epoll, events, 100, 30);
@@ -177,12 +160,26 @@ void Room_Process::recv_process()
                 //     }
                 // }
             }
-            if (events[i].events & EPOLLRDHUP)
+            else if (events[i].events & EPOLLRDHUP)
             {
                 stop = true;
                 //非正常退出，暂时直接回收资源
                 delete (this);
                 break;
+            }
+            else if ((events[i].data.fd == timefd) && (events[i].events & EPOLLIN))
+            {
+                // cout << "timer out!\n";
+                uint64_t exp = 0;
+                int ret = read(timefd, &exp, sizeof(uint64_t));
+                // cout << exp;
+
+                socket_recvinfo *pinfo = new socket_recvinfo(0);
+                pinfo->header=801;
+                
+                unique_lock<mutex> rlck(recvqueue_mtx);
+                recv_queue.emplace(pinfo);
+                rlck.release()->unlock();
             }
             else if (events[i].events & EPOLLIN)
             {
@@ -220,53 +217,6 @@ void Room_Process::recv_process()
                 }
                 if (re_num == 0)
                 {
-                    // for (auto &v : user_list)
-                    // {
-                    //     if (v.accept == mysocket)
-                    //         mysocket = disconnection;
-                    // }
-                    // delfd(recv_epoll, socket);
-                    // close(socket);
-                    // two_user1[socket1] = 0;
-                    // two_user2[socket2] = 0;
-                    // if (mysocket == socket1)
-                    // {
-                    //     roominfo = NULL;
-                    //     auto it = find(room_user.begin(), room_user.end(), socket1);
-                    //     if (it != room_user.end())
-                    //     {
-                    //         room_user.erase(it);
-                    //     }
-                    //     for (auto it = room_list.begin(); it != room_list.end(); it++)
-                    //     {
-                    //         if (it->user1 == socket1)
-                    //         {
-                    //             room_list.erase(it);
-                    //         }
-                    //     }
-                    //     stop1 = true;
-                    //     if (!stop2)
-                    //     {
-                    //         for (auto &v : user_list)
-                    //         {
-                    //             if (v.accept == socket2 && v.states == room)
-                    //             {
-                    //                 v.states = hall;
-                    //                 string str = "disband";
-                    //                 send(socket2, (const char *)&(str[0]), 1023, 0);
-                    //             }
-                    //         }
-                    //     }
-                    // }
-                    // else if (mysocket == socket2)
-                    // {
-                    //     for (auto &v : room_list)
-                    //         if (v.user2 == mysocket)
-                    //             v.user2 = 0;
-                    //     stop2 = true;
-                    // }
-                    // if (stop1 == true && stop2 == true)
-                    //     stop = true;
                 }
             }
         }
@@ -317,52 +267,6 @@ void Room_Process::room_process()
         delete this;
     }
 }
-
-// string Room_Process::return_class(int socket, string &str)
-// {
-//     string::const_iterator iterStart = str.begin();
-//     string::const_iterator iterEnd = str.end();
-//     smatch m;
-//     regex reg("^[A-Z|a-z]+");
-//     regex_search(iterStart, iterEnd, m, reg);
-//     string temp;
-//     temp = m[0];
-//     if (temp == "ping")
-//     {
-//         send(socket, (const char *)&(str[0]), 1023, 0);
-//     }
-//     else if (temp == "GetRoominfo")
-//     {
-//         Return_Room_info(socket);
-//     }
-//     else if (temp == "Ready")
-//     {
-//         Ready(socket);
-//     }
-//     else if (temp == "CancelReady")
-//     {
-//         Cancel_Ready(socket);
-//     }
-//     else if (temp == "RoomSend")
-//     {
-//         string send_str(m[0].second + 1, iterEnd);
-//         Room_Message(socket, send_str);
-//     }
-//     else if (temp == "QuitRoom")
-//     {
-//         return Quit_Room(socket);
-//     }
-//     else if (temp == "StartGame")
-//     {
-//         return Start_Game(socket);
-//     }
-//     else if (temp == "ChangeMap")
-//     {
-//         string send_str(m[0].second + 1, iterEnd);
-//         Change_Map(socket, send_str);
-//     }
-//     return "NULL";
-// }
 
 string Room_Process::return_class_room(int socket, Header &header, char *content)
 {

@@ -18,12 +18,12 @@ void Hall_Message(int sock_accept, Header &header, char *content)
     {
         if (v->states == hall)
         {
-            int send_sock = v->accept;
+            int send_sock = v->tcp_fd;
             if (send_sock == sock_accept)
                 continue;
             try
             {
-                Send(send_sock, Res);
+                Send_TCP(send_sock, Res);
             }
             catch (exception &e)
             {
@@ -39,7 +39,7 @@ void Get_hall_info(int sock_accept)
 
     for (auto &v : user_list)
     {
-        if (v->accept == sock_accept || v->states != hall)
+        if (v->tcp_fd == sock_accept || v->states != hall)
             continue;
         Message::Hall_info_Response_User *info = Res.add_userinfo();
         info->set_name(v->userid);
@@ -54,7 +54,7 @@ void Get_hall_info(int sock_accept)
         }
     }
 
-    Send(sock_accept, Res);
+    Send_TCP(sock_accept, Res);
 }
 
 void Create_Room(int sock_accept)
@@ -79,24 +79,24 @@ void Enter_Room(int sock_accept, Header &header, char *content)
     Res.set_room_id(id);
     for (auto &v : room_list)
     {
-        if (v->room_id == id) //房间可加入
+        if (v->room_id == id) // 房间可加入
         {
             if (v->user_count < v->user_limited)
             {
                 Res.set_result(1);
-                Send(sock_accept, Res);
+                Send_TCP(sock_accept, Res);
                 v->Add_player(sock_accept);
             }
-            else //房间人数已满
+            else // 房间人数已满
             {
                 Res.set_result(0);
-                Send(sock_accept, Res);
+                Send_TCP(sock_accept, Res);
             }
         }
-        else //房间不存在/已解散
+        else // 房间不存在/已解散
         {
             Res.set_result(-1);
-            Send(sock_accept, Res);
+            Send_TCP(sock_accept, Res);
         }
     }
 }
@@ -107,17 +107,17 @@ void set_user_id(int &socket, Header &header, char *content)
     Req.ParseFromArray(content, header.length);
     for (auto &v : user_list)
     {
-        if (v->accept == socket)
+        if (v->tcp_fd == socket)
         {
             v->userid = Req.name();
         }
     }
 }
 
-queue<Hall_Recvinfo *> Hall_recvQueue;  //接收队列
-mutex Hall_Recvinfo_mtx;                //接收队列的锁
-mutex Hall_Recvprocess_mtx;             //唤醒处理线程的锁
-condition_variable Hall_Recvprocess_cv; //唤醒处理线程的条件变量
+queue<Hall_Recvinfo *> Hall_recvQueue;  // 接收队列
+mutex Hall_Recvinfo_mtx;                // 接收队列的锁
+mutex Hall_Recvprocess_mtx;             // 唤醒处理线程的锁
+condition_variable Hall_Recvprocess_cv; // 唤醒处理线程的条件变量
 bool Hall_Process_stop = false;
 
 void Hall_Process()
@@ -146,6 +146,15 @@ void Hall_Process()
 
         switch (header.type)
         {
+        case 800:
+        {
+            for (auto v : user_list)
+            {
+                if (v->tcp_fd == socket)
+                    v->recv_udp_info(header,content);
+            }
+            break;
+        }
         case 101:
         {
             Get_hall_info(socket);
@@ -192,7 +201,8 @@ void Hall_Process()
 void server_hall()
 {
     Hall_Process_stop = false;
-    thread thread_arr[NumOfHallThread];
+
+    thread thread_arr[NumOfHallThread]; // 申请多个处理线程(线程池)，处理大厅信息
     for (int i = 0; i < NumOfHallThread; i++)
     {
         thread_arr[i] = thread(Hall_Process);
@@ -231,17 +241,18 @@ void server_hall()
                         case SIGTERM:
                         {
                             stop = true;
+                            break;
                         }
                         }
                     }
                 }
             }
-            if (hall_events->events & EPOLLRDHUP)
+            else if (hall_events->events & EPOLLRDHUP)
             {
                 delfd(hall_epoll, socket);
                 for (auto it = user_list.begin(); it != user_list.end(); it++)
                 {
-                    if ((*it)->accept == socket)
+                    if ((*it)->tcp_fd == socket)
                     {
                         user_list.erase(it);
                         break;
@@ -249,7 +260,7 @@ void server_hall()
                 }
                 close(socket);
             }
-            if (hall_events->events & EPOLLIN)
+            else if (hall_events->events & EPOLLIN)
             {
                 int recv_length = 0;
                 int re_num = recv(socket, buffer, sizeof(Header), 0);
@@ -258,11 +269,11 @@ void server_hall()
                     int count = 0;
 
                     recvinfo = new Hall_Recvinfo(socket);
-                    //获取头
+                    // 获取头
                     recv_length += sizeof(Header);
                     memcpy(&recvinfo->header, buffer, recv_length);
 
-                    //获取内容（可能为空）
+                    // 获取内容（可能为空）
                     if (recvinfo->header.length > 0)
                     {
                         recvinfo->content = new char[recvinfo->header.length];
@@ -272,7 +283,7 @@ void server_hall()
                     unique_lock<mutex> qlck(Hall_Recvinfo_mtx);
                     Hall_recvQueue.emplace(recvinfo); // 投递消息
                     qlck.release()->unlock();
-                    Hall_Recvprocess_cv.notify_one(); //唤醒其中一个处理线程
+                    Hall_Recvprocess_cv.notify_one(); // 唤醒其中一个处理线程
 
                     if (count == 5) // 计数，防止持续占用
                         break;
@@ -284,7 +295,7 @@ void server_hall()
                 {
                     for (auto it = user_list.begin(); it != user_list.end(); it++)
                     {
-                        if ((*it)->accept == socket)
+                        if ((*it)->tcp_fd == socket)
                         {
                             user_list.erase(it);
                             break;
@@ -296,8 +307,10 @@ void server_hall()
         }
     }
     Hall_Process_stop = true;
+    Hall_Recvprocess_cv.notify_all();
     for (int i = 0; i < NumOfHallThread; i++)
     {
         thread_arr[i].join();
     }
+    close(hall_epoll);
 }

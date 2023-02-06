@@ -1,6 +1,27 @@
 #include "Room_Game_Process.h"
 #include "collision.h"
 
+void Room_Process::Init_Timer(){
+    timefd = timerfd_create(CLOCK_MONOTONIC, 0);
+
+    // timeval now;
+    // gettimeofday(&now, NULL);
+
+    itimerspec timer;
+    timer.it_value.tv_sec =10;
+    timer.it_value.tv_nsec = 0;
+    timer.it_interval.tv_sec = 5;
+    timer.it_interval.tv_nsec = 0;
+
+    timerfd_settime(timefd, TFD_TIMER_ABSTIME, &timer, NULL);
+    addfd(recv_epoll, timefd, true);
+}
+
+void Room_Process::Delete_Timer(){
+    delfd(recv_epoll,timefd);
+    close(timefd);
+}
+
 void Room_Process::confim()
 {
     // clock_t start, now, timeout;
@@ -102,8 +123,9 @@ void Room_Process::Init_Game()
     {
         Message::Room_Start_Response Res;
         Res.set_result(1);
-        Send(v.first, Res);
+        Send_TCP(v.first, Res);
     }
+    // Init_Timer();
 }
 
 void Room_Process::EndGame()
@@ -414,6 +436,7 @@ int Room_Process::return_class_game(int socket, Header &header, char *content)
         break;
     }
     case 129:
+    {
         unique_lock<mutex> infolck(info_mtx);
         info[socket]->sockinfo->states = hall;
         delfd(recv_epoll, socket);
@@ -421,6 +444,15 @@ int Room_Process::return_class_game(int socket, Header &header, char *content)
         info.erase(socket);
         break;
     }
+    case 801:
+    {
+        static int prop_count=1;
+        if(Prop_info.size()<5){
+            Prop* pProp =new Prop(1,prop_count,prop_count*100,prop_count*50);
+        }
+    }
+    }
+
     return 0;
 }
 
@@ -436,10 +468,10 @@ void Room_Process::game_process()
     //     stop = true;
     // }
 
-    Init_Game();
-
     bool end = false;
     int player_alive = user_count;
+
+    Init_Game();
 
     thread Tankinfo_thread(&Room_Process::Refreash_Tank_process, this, &end);
     thread Bulletinfo_thread(&Room_Process::Refreash_Bullet_process, this, &end);
@@ -483,9 +515,20 @@ void Room_Process::game_process()
             break;
         }
     }
+
+    // 回收定时器
+    Delete_Timer();
+
+    // 回收Tank信息
     Tankinfo_thread.join();
     Bulletinfo_thread.join();
-    //正常结束游戏、将消息处理移交给处理进程
+
+    for(auto iter=Tank_info.begin();iter!=Tank_info.end();){
+        delete(iter->second);
+        Tank_info.erase(iter++);
+    }
+
+    // 正常结束游戏、将消息处理移交给房间处理线程
     if (end)
     {
         for (auto &v : info)
