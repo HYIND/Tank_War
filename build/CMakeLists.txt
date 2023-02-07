@@ -4,6 +4,7 @@ project(Tank_War_Server C CXX)
 
 include_directories(../include)
 include_directories(../protobuf)
+include_directories(../spdlog)
 aux_source_directory(../src DIR_SRCS)
 aux_source_directory(../protobuf DIR_PROTO)
 

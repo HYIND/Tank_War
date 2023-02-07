@@ -27,6 +27,9 @@
 #include <sys/timerfd.h>
 #include "../protobuf/myprotocol.pb.h"
 
+#define LOGGERMODE_ON
+#include "Log.h"
+
 #define DEFAULT_TCP_PORT 2336
 #define DEFAULT_UDP_PORT 2336
 

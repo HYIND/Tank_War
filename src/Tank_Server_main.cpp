@@ -38,8 +38,9 @@ int get_local_ip(const char *eth_inf, char *out)
 
 int main(int argc, char *argv[])
 {
+    LOGINFO("Start Server!");
     GOOGLE_PROTOBUF_VERIFY_VERSION;
-
+    
     sockaddr_in sockaddr;
     int listen_socket;
     if (argc > 1)
