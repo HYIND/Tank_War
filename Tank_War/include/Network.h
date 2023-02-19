@@ -1,8 +1,4 @@
 ﻿#pragma once
-//#include "Tank.h"
-//#include <signal.h>
-//#include <regex>
-//#include <thread>
 #include "header.h"
 #include "Scene.h"
 
@@ -107,9 +103,6 @@ void Return_Start(Header& header, char* content);
 
 DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam);
 DWORD WINAPI Process_Thread();
-
-void Show_Hall(bool flag);
-void Show_Room(bool flag);
 
 bool Init_Hall();
 

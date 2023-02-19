@@ -156,7 +156,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="GameSceneManager.h" />
+    <ClInclude Include="include\GameSceneManager.h" />
     <ClInclude Include="include\Bullet.h" />
     <ClInclude Include="include\D2D.h" />
     <ClInclude Include="include\Game.h" />

@@ -33,9 +33,9 @@ void Tank::DrawTankHP(ID2D1HwndRenderTarget* pRenderTarget)
 	float HP_len = (health / 100.f) * HP_halfwidth * 2;
 
 	//画血条框
-	pRenderTarget->DrawRectangle(D2D1::Rect(float(location.x - HP_halfwidth - 2), HP_locY - HP_halfheight - 2, float(location.x + HP_halfwidth + 2), HP_locY + HP_halfheight + 2), pRed_Brush);
+	pRenderTarget->DrawRectangle(D2D1::Rect(float(location.x - HP_halfwidth - 2), HP_locY - HP_halfheight - 2, float(location.x + HP_halfwidth + 2), HP_locY + HP_halfheight + 2), Brush::pRed_Brush);
 	//画血条
-	pRenderTarget->FillRectangle(D2D1::Rect(float(location.x - HP_halfwidth), HP_locY - HP_halfheight, float(location.x - HP_halfwidth + HP_len), HP_locY + HP_halfheight), pRed_Brush);
+	pRenderTarget->FillRectangle(D2D1::Rect(float(location.x - HP_halfwidth), HP_locY - HP_halfheight, float(location.x - HP_halfwidth + HP_len), HP_locY + HP_halfheight), Brush::pRed_Brush);
 }
 
 void Tank::DrawTank(ID2D1HwndRenderTarget* pRenderTarget)
@@ -48,17 +48,7 @@ void Tank::DrawTank(ID2D1HwndRenderTarget* pRenderTarget)
 	DrawTankHP(pRenderTarget);
 	pRenderTarget->SetTransform(D2D1::Matrix3x2F::Rotation(this->rotate + 180, center));
 	pRenderTarget->DrawBitmap(Tank_Style_info[tank_style]->Bitmap, D2D1::RectF(Reloc1, Reloc2, Reloc1 + width, Reloc2 + height));
-	//pRenderTarget->DrawRectangle(D2D1::RectF(Reloc1, Reloc2, Reloc1 + width, Reloc2 + height), pRed_Brush);
 	pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
-
-	//double sin_width1 = sin(rotate * M_PI / 180) * width / 2;
-	//double cos_width1 = cos(rotate * M_PI / 180) * width / 2;
-	//double cos_height1 = cos(rotate * M_PI / 180) * height / 2;
-	//double sin_height1 = sin(rotate * M_PI / 180) * height / 2;
-
-	//pRenderTarget->DrawLine(D2D1::Point2F(location.x - cos_height1, location.y - sin_height1), D2D1::Point2F(location.x + cos_height1, location.y + sin_height1), pRed_Brush);
-	//pRenderTarget->DrawLine(D2D1::Point2F(location.x - sin_width1, location.y + cos_width1), D2D1::Point2F(location.x + sin_width1, location.y - cos_width1), pRed_Brush);
-
 };
 
 void Tank::Addbullet(BulletStyle bulletstyle) {

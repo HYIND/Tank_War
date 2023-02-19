@@ -1,10 +1,8 @@
 #pragma once
 #include "Game_Component.h"
 #include "Object.h"
+#include "Scene.h"
 #include "Map.h"
-
-extern ID2D1SolidColorBrush* pRed_Brush;
-extern ID2D1SolidColorBrush* pGreen_Brush;
 
 class GameSceneManager
 {
@@ -48,9 +46,9 @@ class GameSceneManager
 		{
 			RECT rect = rectobject.toRECT();
 			if (!flag)
-				pRenderTarget->DrawRectangle(D2D1::RectF(rect.left, rect.top, rect.right, rect.bottom), pRed_Brush);
+				pRenderTarget->DrawRectangle(D2D1::RectF(rect.left, rect.top, rect.right, rect.bottom), Brush::pRed_Brush);
 			else
-				pRenderTarget->DrawRectangle(D2D1::RectF(rect.left, rect.top, rect.right, rect.bottom), pGreen_Brush);
+				pRenderTarget->DrawRectangle(D2D1::RectF(rect.left, rect.top, rect.right, rect.bottom), Brush::pGreen_Brush);
 		}
 
 		void remove(Game_Component* com)
@@ -79,8 +77,8 @@ private:
 	void Clear_QuadTree(QuadNode* node);
 	void Load_Map(Map& map);
 	void Draw_QuadTree(QuadNode* node);
-	void Quary_Area(RectObject* object, QuadNode* node, set<Game_Component*>& result,bool draw);
-	void Quary_Area(RoundObject* object, QuadNode* node, set<Game_Component*>& result,bool draw);
+	void Quary_Area(RectObject* object, QuadNode* node, set<Game_Component*>& result, bool draw);
+	void Quary_Area(RoundObject* object, QuadNode* node, set<Game_Component*>& result, bool draw);
 	void remove_com(QuadNode* node, Game_Component* com);
 
 private:

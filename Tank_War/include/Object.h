@@ -53,7 +53,7 @@ struct Pos
 	Vec toVec() {
 		return Vec(this->x, this->y);
 	}
-	void Draw(bool redcolor = true);
+	void Draw(bool isFill = false, bool redcolor = true);
 };
 double distance(Pos pos1, Pos pos2);
 
@@ -194,7 +194,7 @@ public:
 	void set_radius(double radius) { this->radius = radius; }
 	void set_rotate(double rotate) { this->rotate = rotate; }
 
-	void Draw(bool redcolor);
+	void Draw(bool isFill, bool redcolor);
 	virtual void Draw();
 	virtual bool collision(RectObject& other);
 	virtual bool collision(RectObject& other, Pos& ori_RoundPos,

@@ -2,11 +2,9 @@
 
 #include "header.h"
 #include "Style.h"
-#include "D2D.h"
 #include "Object.h"
 #include "Tank.h"
-
-extern ID2D1SolidColorBrush* pRed_Brush;
+#include "Scene.h"
 
 class Tank;
 

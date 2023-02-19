@@ -87,45 +87,6 @@ void Game::Draw()
 		}
 	}
 	map_info.DrawMap();
-
-
-	//GameSceneManager::Instance()->Draw_Collision_Tree();
-	//static RectObject Rect(400, 400, 200, 200, 45.0);
-	//Rect.Draw();
-	//bullet* pbullet = ptank1->bullet_head;
-	//while (pbullet)
-	//{
-	//	::pRenderTarget->DrawLine(
-	//		D2D1::Point2F(pbullet->get_locationX() + sin(pbullet->get_rotate() * M_PI / 180) * 500, pbullet->get_locationY() - cos(pbullet->get_rotate() * M_PI / 180) * 500),
-	//		D2D1::Point2F(pbullet->get_locationX() - sin(pbullet->get_rotate() * M_PI / 180) * 500, pbullet->get_locationY() + cos(pbullet->get_rotate() * M_PI / 180) * 500),
-	//		pRed_Brush);
-	//	Pos ori_location(
-	//		(pbullet->get_locationX() - sin(pbullet->get_rotate() * M_PI / 180) * 200),
-	//		(pbullet->get_locationY() + cos(pbullet->get_rotate() * M_PI / 180) * 200)
-	//	);
-	//	//Line test_line(
-	//	//	Pos(
-	//	//		(pbullet->get_locationX() - sin(pbullet->get_rotate() * M_PI / 180) * 300),
-	//	//		(pbullet->get_locationY() + cos(pbullet->get_rotate() * M_PI / 180) * 300)
-	//	//	),
-	//	//	Pos(
-	//	//		(pbullet->get_locationX() + sin(pbullet->get_rotate() * M_PI / 180) * 300),
-	//	//		(pbullet->get_locationY() - cos(pbullet->get_rotate() * M_PI / 180) * 300)
-	//	//	)
-	//	//);
-	//	Collision_state state;
-	//	if (pbullet->collision(Rect, ori_location, &state))
-	//	{
-	//		pbullet->set_locationX(state.pos.x);
-	//		pbullet->set_locationY(state.pos.y);
-	//		pbullet->set_rotate(state.rotate);
-	//	}
-	//	//Pos cross_pos;
-	//	//if (cross(line, test_line, &cross_pos))
-	//	//	cross_pos.Draw(false);
-	//	pbullet = pbullet->next;
-	//}
-
 	return;
 }
 

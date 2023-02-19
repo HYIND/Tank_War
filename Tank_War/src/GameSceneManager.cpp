@@ -22,21 +22,25 @@ void GameSceneManager::Build_Collision_Tree(Map& map)
 void GameSceneManager::Quary_Collision(RectObject* object, set<Game_Component*>& result, bool draw)
 {
 	Quary_Area(object, root, result, draw);
-	for (auto com : result)
+	if (draw)
 	{
-		RECT rect = com->toRECT();
-		if (draw)
-			pRenderTarget->DrawRectangle(D2D1::RectF(rect.left, rect.top, rect.right, rect.bottom), pGreen_Brush);
+		for (auto com : result)
+		{
+			RectObject rect = com->toRECT();
+			rect.Draw(false);
+		}
 	}
 }
 void GameSceneManager::Quary_Collision(RoundObject* object, set<Game_Component*>& result, bool draw)
 {
 	Quary_Area(object, root, result, draw);
-	for (auto com : result)
+	if (draw)
 	{
-		RECT rect = com->toRECT();
-		if (draw)
-			pRenderTarget->DrawRectangle(D2D1::RectF(rect.left, rect.top, rect.right, rect.bottom), pGreen_Brush);
+		for (auto com : result)
+		{
+			RectObject rect = com->toRECT();
+			rect.Draw(false);
+		}
 	}
 }
 

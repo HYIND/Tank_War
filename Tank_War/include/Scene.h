@@ -63,23 +63,37 @@ class D2D_Button;
 class Scene;
 
 //场景派生类
-class Scene_Option;
+class Scene_Main;
 class Scene_Hall;
+class Scene_Option;
 class Scene_Room;
+class Scene_Room_Host;
+class Scene_Room_NoHost;
+class Scene_Gaming_local;
+class Scene_Gaming_online;
+class Scene_WinGame;
+class Scene_FailGame;
+class Scene_Pause;
 
 /* 以下为内部变量的声明 */
-extern ID2D1SolidColorBrush* pRed_Brush;
-extern ID2D1SolidColorBrush* pGreen_Brush;
+namespace Brush
+{
+	extern ID2D1SolidColorBrush* pRed_Brush;
+	extern ID2D1SolidColorBrush* pGreen_Brush;
 
-extern ID2D1SolidColorBrush* pHall_Brush;
-extern ID2D1SolidColorBrush* pHall_ClickBrush;
+	extern ID2D1SolidColorBrush* pHall_Brush;
+	extern ID2D1SolidColorBrush* pHall_ClickBrush;
 
-extern ID2D1SolidColorBrush* pMain_Brush;
-extern ID2D1SolidColorBrush* pMain_ClickBrush;
+	extern ID2D1SolidColorBrush* pMain_Brush;
+	extern ID2D1SolidColorBrush* pMain_ClickBrush;
+}
+namespace TextFormat
+{
+	extern IDWriteTextFormat* pMain_Format;
+	extern IDWriteTextFormat* pHall_Format;
+	extern IDWriteTextFormat* pPing_Format;
+}
 
-extern IDWriteTextFormat* pMain_Format;
-extern IDWriteTextFormat* pHall_Format;
-extern IDWriteTextFormat* pPing_Format;
 extern HFONT edit_listbox_front;
 
 extern ID2D1Bitmap* OP_pBitmap;
@@ -87,31 +101,23 @@ extern ID2D1Bitmap* TEXT_pBitmap;
 
 extern D2D1_RECT_F DelayRect;
 
-extern Scene* CurScene;
+namespace _Scene
+{
+	extern Scene* CurScene;
 
-extern Scene* SMain;
-extern Scene_Hall* SHall;
-extern Scene_Option* SOption;
-extern Scene_Room* SRoom_host;
-extern Scene_Room* SRoom_nothost;
-extern Scene* SPause;
-extern Scene* SGaming_online;
-extern Scene* SGaming_local;
-extern Scene* SWinGame;
-extern Scene* SFailGame;
+	extern Scene_Main* SMain;
+	extern Scene_Hall* SHall;
+	extern Scene_Option* SOption;
+	extern Scene_Room_Host* SRoom_host;
+	extern Scene_Room_NoHost* SRoom_nothost;
+	extern Scene_Gaming_local* SGaming_local;
+	extern Scene_Gaming_online* SGaming_online;
+	extern Scene_WinGame* SWinGame;
+	extern Scene_FailGame* SFailGame;
+	extern Scene_Pause* SPause;
+}
 
 extern HWND userid_in;
-
-//extern HWND Hall;
-//extern HWND Hall_room_list;
-//extern HWND Hall_user_list;
-//extern HWND Hall_edit_in;
-//extern HWND edit_hall;
-
-//extern HWND Room_user_list;
-//extern HWND Room_edit_in;
-//extern HWND edit_room;
-//extern HWND Room;
 
 //status 枚举
 enum class STATUS { Main, Option, Hall_Status, Room_Status, Game_Status };
@@ -120,7 +126,11 @@ extern STATUS status;
 /* 以下为外部变量的声明 */
 extern HINSTANCE hInst;
 extern HWND _hwnd;
-extern int MoveX, MoveY, ClickX, ClickY;
+
+namespace MousePos
+{
+	extern int MoveX, MoveY, ClickX, ClickY;
+}
 
 
 //D2D 贴图
@@ -191,7 +201,7 @@ public:
 //场景类
 class Scene
 {
-public:
+protected:
 	vector<D2D_Button*> Button_list;
 	vector<D2D_Bitmap*> Bitmap_list;
 	vector<D2D_Text*> Text_list;
@@ -200,10 +210,13 @@ public:
 	D2D_Text* Text_changed = NULL;
 	D2D_Bitmap* Bitmap_changed = NULL;
 
+public:
 	Scene() {};
 	//初始化
 	Scene(ID2D1Factory* pD2DFactory, ID2D1HwndRenderTarget* pRenderTarget, IWICImagingFactory* pIWICFactory, IDWriteFactory* pIDWriteFactory) :
 		pD2DFactory(pD2DFactory), pRenderTarget(pRenderTarget), pIWICFactory(pIWICFactory), pIDWriteFactory(pIDWriteFactory) {};
+
+	virtual void Load(RECT& rect) = 0;
 
 	// 添加位图
 	D2D_Bitmap* Loadbitmap(int loc1, int loc2, int loc3, int loc4,
@@ -212,7 +225,7 @@ public:
 		LPCWSTR resourceType, LPCWSTR resourceName, float opacity = 1.0f, HINSTANCE hinstance = hInst
 	);
 	// 添加文本
-	D2D_Text* LoadText(int loc1, int loc2, int loc3, int loc4, const wchar_t* pwch, ID2D1SolidColorBrush* pDefaultBrush = ::pMain_Brush, ID2D1SolidColorBrush* pClickBrush = ::pMain_ClickBrush, IDWriteTextFormat* pTextFormat = ::pMain_Format);
+	D2D_Text* LoadText(int loc1, int loc2, int loc3, int loc4, const wchar_t* pwch, ID2D1SolidColorBrush* pDefaultBrush = Brush::pMain_Brush, ID2D1SolidColorBrush* pClickBrush = Brush::pMain_ClickBrush, IDWriteTextFormat* pTextFormat = TextFormat::pMain_Format);
 	// 添加按钮
 	D2D_Button* LoadButton(int loc1, int loc2, int loc3, int loc4, int id);
 	D2D_Button* LoadButton(int loc1, int loc2, int loc3, int loc4, int id, D2D_Bitmap* Bitmap);
@@ -230,11 +243,14 @@ public:
 	bool DeleteButton(int id);
 
 	// 绘制函数
-	virtual void DrawScene();
+	void DrawScene();
+	virtual void OnDrawScene();
 	// 鼠标移动消息反馈函数
 	void Move();
+	virtual void OnMove();
 	// 点击消息反馈函数
 	void Click();
+	virtual void OnClick();
 protected:
 	ID2D1Factory* pD2DFactory = NULL; // Direct2D factory
 	ID2D1HwndRenderTarget* pRenderTarget = NULL;
@@ -262,8 +278,9 @@ public:
 	map<HWND, enum class keybroad> key_map_set2;
 
 	using Scene::Scene;
-	virtual void DrawScene();
+	virtual void OnDrawScene();
 	void Get_Key();
+	virtual void Load(RECT& rect);
 };
 
 class Scene_Hall :public Scene
@@ -275,16 +292,78 @@ public:
 	HWND Hall_user_list;
 	HWND Hall_edit_in;
 	HWND edit_hall;
-};
 
+	virtual void Load(RECT& rect);
+};
 
 class Scene_Room :public Scene
 {
 public:
-	using Scene::Scene;
+	static bool isLoad;
 	static HWND Room_user_list;
 	static HWND Room_edit_in;
 	static HWND edit_room;
+
+public:
+	using Scene::Scene;
+	static void Show_Room(bool flag);
+	virtual void Load(RECT& rect);
+};
+
+class Scene_Room_Host :public Scene_Room
+{
+public:
+	using Scene_Room::Scene_Room;
+	virtual void Load(RECT& rect);
+};
+
+class Scene_Room_NoHost :public Scene_Room
+{
+public:
+	using Scene_Room::Scene_Room;
+	virtual void Load(RECT& rect);
+};
+
+class Scene_Gaming_local :public Scene
+{
+	using Scene::Scene;
+public:
+	virtual void Load(RECT& rect);
+};
+
+class Scene_Gaming_online :public Scene
+{
+	using Scene::Scene;
+public:
+	virtual void Load(RECT& rect);
+};
+
+class Scene_WinGame :public Scene
+{
+	using Scene::Scene;
+public:
+	virtual void Load(RECT& rect);
+};
+
+class Scene_FailGame :public Scene
+{
+	using Scene::Scene;
+public:
+	virtual void Load(RECT& rect);
+};
+
+class Scene_Pause :public Scene
+{
+	using Scene::Scene;
+public:
+	virtual void Load(RECT& rect) {};
+};
+
+class Scene_Main :public Scene
+{
+	using Scene::Scene;
+public:
+	virtual void Load(RECT& rect);
 };
 
 void Init_SceneResource();

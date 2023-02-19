@@ -38,9 +38,6 @@ Line_Round_Crossresult cross(Line& line, RoundObject& round, Pos pos[2])
 		double distance_d_crosspos = sqrt((round.get_radius() * round.get_radius() / 4.0) - dst * dst);
 		pos[0] = d - Pos(vec * (distance_d_crosspos / distance_p2_p1));
 		pos[1] = d + Pos(vec * (distance_d_crosspos / distance_p2_p1));
-		//pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(d.x, d.y), 2.5, 2.5), pGreen_Brush);
-		//pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(pos[0].x, pos[0].y), 2.5, 2.5), pGreen_Brush);
-		//pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(pos[1].x, pos[1].y), 2.5, 2.5), pGreen_Brush);
 		return TwoCrossPos;
 	}
 	else
@@ -50,7 +47,6 @@ Line_Round_Crossresult cross(Line& line, RoundObject& round, Pos pos[2])
 		Pos d = line.pos2() + Pos(vec * (distance_p1_d / distance_p1_p2));
 		pos[0] = d;
 		pos[1] = d;
-		//pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(pos[0].x, pos[0].y), 2.5, 2.5), pGreen_Brush);
 		return OneCrossPos;
 	}
 }
@@ -466,16 +462,20 @@ bool RoundObject::collision_obb(RectObject& other, Pos& ori_RoundPos,/*output*/C
 	return result;
 }
 
-void Pos::Draw(bool redcolor)
+void Pos::Draw(bool isFill, bool redcolor)
 {
 	static ID2D1SolidColorBrush* pBrush;
-	pBrush = redcolor == true ? pRed_Brush : pGreen_Brush;
-	pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(x, y), 2.5, 2.5), pBrush);
+	pBrush = redcolor == true ? Brush::pRed_Brush : Brush::pGreen_Brush;
+
+	if (isFill)
+		pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(x, y), 2.5, 2.5), pBrush);
+	else
+		pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(x, y), 2.5, 2.5), pBrush);
 }
 void Line::Draw(bool redcolor)
 {
 	static ID2D1SolidColorBrush* pBrush;
-	pBrush = redcolor == true ? pRed_Brush : pGreen_Brush;
+	pBrush = redcolor == true ? Brush::pRed_Brush : Brush::pGreen_Brush;
 	pRenderTarget->DrawLine(D2D1::Point2F(pos[0].x, pos[0].y), D2D1::Point2F(pos[1].x, pos[1].y), pBrush);
 }
 
@@ -529,11 +529,15 @@ void RectObject::Draw(bool redcolor)
 
 void RoundObject::Draw()
 {
-	pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(location.x, location.y), radius / 2, radius / 2), pRed_Brush);
+	pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(location.x, location.y), radius / 2, radius / 2), Brush::pRed_Brush);
 }
-void RoundObject::Draw(bool redcolor)
+void RoundObject::Draw(bool isFill, bool redcolor)
 {
 	static ID2D1SolidColorBrush* pBrush;
-	pBrush = redcolor == true ? pRed_Brush : pGreen_Brush;
-	pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(location.x, location.y), radius / 2, radius / 2), pBrush);
+	pBrush = redcolor == true ? Brush::pRed_Brush : Brush::pGreen_Brush;
+
+	if (isFill)
+		pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(location.x, location.y), radius / 2, radius / 2), pBrush);
+	else
+		pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(location.x, location.y), radius / 2, radius / 2), pBrush);
 }

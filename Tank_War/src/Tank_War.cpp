@@ -158,7 +158,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			MessageBox(hWnd, _T("位图加载失败"), L"Error", MB_OK);
 			DestroyWindow(hWnd);
 		}
-		CurScene = SMain;
+		_Scene::CurScene = _Scene::SMain;
 		thread T(Render_Thread);
 		T.detach();
 		break;
@@ -336,9 +336,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			// 加入房间
 			case IDB_ENTERROOM:
 			{
-				int index = SendMessage(SHall->Hall_room_list, LB_GETCURSEL, 0, 0);
+				int index = SendMessage(_Scene::SHall->Hall_room_list, LB_GETCURSEL, 0, 0);
 				TCHAR buff[255];
-				SendMessage(SHall->Hall_room_list, LB_GETTEXT, index, (LPARAM)buff);
+				SendMessage(_Scene::SHall->Hall_room_list, LB_GETTEXT, index, (LPARAM)buff);
 				Enter_Room(index);
 				break;
 			}
@@ -354,7 +354,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case IDB_HALL_SEND:
 			{
 				wchar_t temp[1024] = { '\0' };
-				GetWindowTextW(SHall->Hall_edit_in, temp, 1024);
+				GetWindowTextW(_Scene::SHall->Hall_edit_in, temp, 1024);
 				wstring str = temp;
 				if (!str.empty())
 					Send_Hall_Message(str);
@@ -471,12 +471,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			case WIN:
 			{
-				CurScene = SWinGame;
+				_Scene::CurScene = _Scene::SWinGame;
 				break;
 			}
 			case FAIL:
 			{
-				CurScene = SFailGame;
+				_Scene::CurScene = _Scene::SFailGame;
 				break;
 			}
 			case ReturnInEndGame:
@@ -487,7 +487,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				//SetTimer(hWnd, hall_refreash, 4000, NULL);
 				SetTimer(hWnd, room_refreash, 1000, NULL);
 				Set_CurScene(STATUS::Room_Status);
-				Show_Room(TRUE);
+				Scene_Room::Show_Room(TRUE);
 				break;
 			}
 			case DISBANDINEND:
@@ -521,20 +521,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_MOUSEMOVE:
 	{
-		MoveX = LOWORD(lParam);
-		MoveY = HIWORD(lParam);
-		if (CurScene)
-			CurScene->Move();
+		MousePos::MoveX = LOWORD(lParam);
+		MousePos::MoveY = HIWORD(lParam);
+		if (_Scene::CurScene)
+			_Scene::CurScene->Move();
 		InvalidateRect(hWnd, NULL, TRUE);
 		break;
 	}
 
 	case WM_LBUTTONDOWN:
 	{
-		ClickX = LOWORD(lParam);
-		ClickY = HIWORD(lParam);
-		if (CurScene)
-			CurScene->Click();
+		MousePos::ClickX = LOWORD(lParam);
+		MousePos::ClickY = HIWORD(lParam);
+		if (_Scene::CurScene)
+			_Scene::CurScene->Click();
 		InvalidateRect(hWnd, NULL, TRUE);
 		break;
 	}

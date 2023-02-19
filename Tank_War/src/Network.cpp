@@ -10,9 +10,6 @@ wstring my_userid = L"unname";
 extern HWND _hwnd;
 extern HDC hdc;
 
-extern HWND Hall;
-extern HWND Room;
-
 int room_id[65535];
 //int room_count = 0;
 
@@ -240,20 +237,20 @@ void Return_Get_Hallinfo(Header& header, char* content) {
 	Res.ParseFromArray(content, header.length);
 
 	{
-		(int)SendMessage(SHall->Hall_user_list, LB_RESETCONTENT, 0, 0);
+		(int)SendMessage(_Scene::SHall->Hall_user_list, LB_RESETCONTENT, 0, 0);
 		wstring w_name = my_userid + L"(您)";
-		(int)SendMessage(SHall->Hall_user_list, LB_ADDSTRING, 0, (LPARAM) & (w_name[0]));
+		(int)SendMessage(_Scene::SHall->Hall_user_list, LB_ADDSTRING, 0, (LPARAM) & (w_name[0]));
 		string name;
 		for (int i = 0; i < Res.userinfo_size(); i++) {
 			Message::Hall_info_Response_User userinfo = Res.userinfo(i);
 			name = userinfo.name();
 			w_name = utf82wstring(name);
-			(int)SendMessage(SHall->Hall_user_list, LB_ADDSTRING, 0, (LPARAM) & (w_name[0]));
+			(int)SendMessage(_Scene::SHall->Hall_user_list, LB_ADDSTRING, 0, (LPARAM) & (w_name[0]));
 		}
 	}
 
 	{
-		(int)SendMessage(SHall->Hall_room_list, LB_RESETCONTENT, 0, 0);
+		(int)SendMessage(_Scene::SHall->Hall_room_list, LB_RESETCONTENT, 0, 0);
 
 		string name;
 		wstring w_name;
@@ -265,7 +262,7 @@ void Return_Get_Hallinfo(Header& header, char* content) {
 			w_name = utf82wstring(name) + L"的房间";
 			room_id[counter] = id;
 			counter++;
-			(int)SendMessage(SHall->Hall_room_list, LB_ADDSTRING, 0, (LPARAM) & (w_name[0]));
+			(int)SendMessage(_Scene::SHall->Hall_room_list, LB_ADDSTRING, 0, (LPARAM) & (w_name[0]));
 		}
 	}
 }
@@ -294,9 +291,9 @@ void Return_Hall_Message(Header& header, char* content) {
 	wstring w_message_content = utf82wstring(message_content);
 
 	//发送消息到文本框
-	SendMessage(SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_message_head[0]));
-	SendMessage(SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_message_content[0]));
-	SendMessage(SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
+	SendMessage(_Scene::SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_message_head[0]));
+	SendMessage(_Scene::SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_message_content[0]));
+	SendMessage(_Scene::SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
 }
 
 void Return_Enter_Room(Header& header, char* content) {
@@ -347,11 +344,11 @@ void Send_Hall_Message(wstring& w_content) {
 	wstring w_user_head = my_userid + L"(您)  " + utf82wstring(strTime) + L":\r\n";
 
 	//清空输入文本框
-	SendMessage(SHall->Hall_edit_in, WM_SETTEXT, 0, (LPARAM)L"");
+	SendMessage(_Scene::SHall->Hall_edit_in, WM_SETTEXT, 0, (LPARAM)L"");
 	//发送消息到文本框
-	SendMessage(SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_head[0]));
-	SendMessage(SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_content[0]));
-	SendMessage(SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
+	SendMessage(_Scene::SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_user_head[0]));
+	SendMessage(_Scene::SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM) & (w_content[0]));
+	SendMessage(_Scene::SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
 
 	//发送消息
 	Message::Hall_Message_Request Req;
@@ -664,7 +661,7 @@ void Get_Room_Info()
 
 void Return_Get_Roominfo(Header& header, char* content)
 {
-	(int)SendMessage(SRoom_host->Room_user_list, LB_RESETCONTENT, 0, 0);
+	(int)SendMessage(_Scene::SRoom_host->Room_user_list, LB_RESETCONTENT, 0, 0);
 
 	wstring wtemp = my_userid + L"(您)";
 	if (host)
@@ -675,7 +672,7 @@ void Return_Get_Roominfo(Header& header, char* content)
 	{
 		wtemp += L"（已准备）";
 	}
-	(int)SendMessage(SRoom_host->Room_user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
+	(int)SendMessage(_Scene::SRoom_host->Room_user_list, LB_ADDSTRING, 0, (LPARAM) & (wtemp[0]));
 
 	{
 		Message::Room_info_Response Res;
@@ -693,7 +690,7 @@ void Return_Get_Roominfo(Header& header, char* content)
 			{
 				name += L"（房主）";
 			}
-			(int)SendMessage(SRoom_host->Room_user_list, LB_ADDSTRING, 0, (LPARAM) & (name[0]));
+			(int)SendMessage(_Scene::SRoom_host->Room_user_list, LB_ADDSTRING, 0, (LPARAM) & (name[0]));
 		}
 	}
 }
@@ -702,16 +699,16 @@ void Room_Ready()
 {
 	send_string("Ready");
 	isready = true;
-	SRoom_nothost->ModifyButton_ID(IDB_READY, IDB_CANCELREADY);
-	SRoom_nothost->ModifyText_byButton(IDB_CANCELREADY, L"取消准备");
+	_Scene::SRoom_nothost->ModifyButton_ID(IDB_READY, IDB_CANCELREADY);
+	_Scene::SRoom_nothost->ModifyText_byButton(IDB_CANCELREADY, L"取消准备");
 }
 
 void Room_CancelReady()
 {
 	send_string("CancelReady");
 	isready = false;
-	SRoom_nothost->ModifyButton_ID(IDB_CANCELREADY, IDB_READY);
-	SRoom_nothost->ModifyText_byButton(IDB_READY, L"准备");
+	_Scene::SRoom_nothost->ModifyButton_ID(IDB_CANCELREADY, IDB_READY);
+	_Scene::SRoom_nothost->ModifyText_byButton(IDB_READY, L"准备");
 }
 
 void Send_Room_Message(wstring& w_content) {

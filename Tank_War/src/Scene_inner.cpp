@@ -228,6 +228,11 @@ D2D_Button* Scene::LoadButton(int loc1, int loc2, int loc3, int loc4, int id, D2
 
 void Scene::DrawScene()
 {
+	OnDrawScene();
+}
+
+void Scene::OnDrawScene()
+{
 	for (auto& v : Text_list)
 	{
 		D2D1_RECT_F layoutRect = RectF(v->Text_location1, v->Text_location2, v->Text_location3, v->Text_location4);
@@ -250,11 +255,16 @@ void Scene::DrawScene()
 
 void Scene::Move()
 {
+	OnMove();
+}
+
+void Scene::OnMove()
+{
 	if (Text_changed)
 	{
 		D2D_Button* Button = Text_changed->pButton;
-		if (MoveX < Button->Button_location1 || MoveX > Button->Button_location3 ||
-			MoveY < Button->Button_location2 || MoveY > Button->Button_location4)
+		if (MousePos::MoveX < Button->Button_location1 || MousePos::MoveX > Button->Button_location3 ||
+			MousePos::MoveY < Button->Button_location2 || MousePos::MoveY > Button->Button_location4)
 		{
 			swap(Text_changed->pDefaultBrush, Text_changed->pClickBrush);
 			Text_changed = NULL;
@@ -263,8 +273,8 @@ void Scene::Move()
 	}
 	else if (Bitmap_changed) {
 		D2D_Button* Button = Bitmap_changed->pButton;
-		if (MoveX < Button->Button_location1 || MoveX > Button->Button_location3 ||
-			MoveY < Button->Button_location2 || MoveY > Button->Button_location4)
+		if (MousePos::MoveX < Button->Button_location1 || MousePos::MoveX > Button->Button_location3 ||
+			MousePos::MoveY < Button->Button_location2 || MousePos::MoveY > Button->Button_location4)
 		{
 			Bitmap_changed->Bitmap_location1 += 10;
 			Bitmap_changed->Bitmap_location2 += 10;
@@ -278,8 +288,8 @@ void Scene::Move()
 	{
 		for (auto& v : Button_list)
 		{
-			if (MoveX > v->Button_location1 && MoveX < v->Button_location3 &&
-				MoveY > v->Button_location2 && MoveY < v->Button_location4)
+			if (MousePos::MoveX > v->Button_location1 && MousePos::MoveX < v->Button_location3 &&
+				MousePos::MoveY > v->Button_location2 && MousePos::MoveY < v->Button_location4)
 			{
 				if (v->Text)
 				{
@@ -301,19 +311,24 @@ void Scene::Move()
 
 void Scene::Click()
 {
+	OnClick();
+}
+
+void Scene::OnClick()
+{
 	if (Text_changed)
 	{
 		D2D_Button* Button = Text_changed->pButton;
-		if (ClickX > Button->Button_location1 && ClickX < Button->Button_location3 &&
-			ClickY > Button->Button_location2 && ClickY < Button->Button_location4)
+		if (MousePos::ClickX > Button->Button_location1 && MousePos::ClickX < Button->Button_location3 &&
+			MousePos::ClickY > Button->Button_location2 && MousePos::ClickY < Button->Button_location4)
 		{
 			SendMessage(_hwnd, WM_COMMAND, Button->id, (LPARAM)_hwnd);
 		}
 	}
 	else if (Bitmap_changed) {
 		D2D_Button* Button = Bitmap_changed->pButton;
-		if (ClickX > Button->Button_location1 && ClickX < Button->Button_location3 &&
-			ClickY > Button->Button_location2 && ClickY < Button->Button_location4)
+		if (MousePos::ClickX > Button->Button_location1 && MousePos::ClickX < Button->Button_location3 &&
+			MousePos::ClickY > Button->Button_location2 && MousePos::ClickY < Button->Button_location4)
 		{
 			SendMessage(_hwnd, WM_COMMAND, Button->id, (LPARAM)_hwnd);
 		}
@@ -322,8 +337,8 @@ void Scene::Click()
 	{
 		for (auto& Button : Button_list)
 		{
-			if (ClickX > Button->Button_location1 && ClickX < Button->Button_location3 &&
-				ClickY > Button->Button_location2 && ClickY < Button->Button_location4)
+			if (MousePos::ClickX > Button->Button_location1 && MousePos::ClickX < Button->Button_location3 &&
+				MousePos::ClickY > Button->Button_location2 && MousePos::ClickY < Button->Button_location4)
 			{
 				SendMessage(_hwnd, WM_COMMAND, Button->id, (LPARAM)_hwnd);
 			}
@@ -407,6 +422,7 @@ bool Scene::ModifyBitmap_byButton(int id, int loc1, int loc2, int loc3, int loc4
 					v->Bitmap->Bitmap_location3 = loc3;
 					v->Bitmap->Bitmap_location4 = loc4;
 				}
+				v->Bitmap->opacity = opcaity;
 				return true;
 			}
 			else return false;

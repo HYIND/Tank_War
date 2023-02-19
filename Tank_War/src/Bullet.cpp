@@ -19,19 +19,12 @@ void bullet::Drawbullet()
 
 		pRenderTarget->SetTransform(D2D1::Matrix3x2F::Rotation(this->rotate, center));
 		pRenderTarget->DrawBitmap(pBm, D2D1::RectF(Reloc1, Reloc2, Reloc3, Reloc4));
-		//pRenderTarget->DrawRectangle(D2D1::RectF(Reloc1, Reloc2, Reloc3, Reloc4), pRed_Brush);
 		pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
-
-		//double sin_radius = sin(rotate * M_PI / 180) * radius / 2;
-		//double cos_radius = cos(rotate * M_PI / 180) * radius / 2;
-
-		//pRenderTarget->DrawLine(D2D1::Point2F(location.x - sin_radius * 3, location.y + cos_radius * 3), D2D1::Point2F(location.x + sin_radius * 3, location.y - cos_radius * 3), pRed_Brush);
-		//pRenderTarget->DrawLine(D2D1::Point2F(location.x - cos_radius, location.y - sin_radius), D2D1::Point2F(location.x + cos_radius, location.y + sin_radius), pRed_Brush);
 	}
 	else
 	{
 		pRenderTarget->SetTransform(D2D1::Matrix3x2F::Rotation(this->rotate, center));
-		pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(this->location.x, this->location.y), this->radius / 2, this->radius / 2), pRed_Brush);
+		pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(this->location.x, this->location.y), this->radius / 2, this->radius / 2), Brush::pRed_Brush);
 		pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 
 	}

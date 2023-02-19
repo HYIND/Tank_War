@@ -53,13 +53,13 @@ DWORD WINAPI Render_Thread()
 				pRenderTarget->DrawText(
 					delay_ch,
 					wcslen(delay_ch),
-					pPing_Format,
+					TextFormat::pPing_Format,
 					DelayRect,
-					pMain_Brush
+					Brush::pMain_Brush
 				);
 			}
-			if (CurScene)
-				CurScene->DrawScene();
+			if (_Scene::CurScene)
+				_Scene::CurScene->DrawScene();
 			hr = pRenderTarget->EndDraw();
 		}
 
