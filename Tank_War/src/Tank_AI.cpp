@@ -12,13 +12,13 @@ void AI_Init() {
 
 void AI_control::AI_Move()
 {
-	if (AI_Tank->rotate != goal_rotate) {
-		if (AI_Tank->rotate < goal_rotate) AI_Rotate(true);
+	if (AI_Tank->get_rotate() != goal_rotate) {
+		if (AI_Tank->get_rotate() < goal_rotate) AI_Rotate(true);
 		else AI_Rotate(false);
 	}
-	if (abs(goal_rotate - AI_Tank->rotate) < 40)
+	if (abs(goal_rotate - AI_Tank->get_rotate()) < 40)
 		Cur_Game->Tank_Move(AI_Tank, true);
-	if (abs(goal_rotate - AI_Tank->rotate) < 30)
+	if (abs(goal_rotate - AI_Tank->get_rotate()) < 30)
 	{
 		Cur_Game->Tank_shot(AI_Tank);
 	}
@@ -29,10 +29,10 @@ void AI_control::AI_Rotate(bool forward) {
 }
 
 void AI_control::Get_goal() {
-	goal_x = Cur_Game->ptank1->locationX;
-	goal_y = Cur_Game->ptank1->locationY;
-	double detalX = goal_x - AI_Tank->locationX;
-	double detalY = goal_y - AI_Tank->locationY;
+	goal_x = Cur_Game->ptank1->get_locationX();
+	goal_y = Cur_Game->ptank1->get_locationY();
+	double detalX = goal_x - AI_Tank->get_locationX();
+	double detalY = goal_y - AI_Tank->get_locationY();
 	goal_rotate = atan2(detalX, -detalY) * 180 / M_PI;
 
 }

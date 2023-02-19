@@ -156,7 +156,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="include\collision.h" />
+    <ClInclude Include="GameSceneManager.h" />
+    <ClInclude Include="include\Bullet.h" />
     <ClInclude Include="include\D2D.h" />
     <ClInclude Include="include\Game.h" />
     <ClInclude Include="include\Game_Component.h" />
@@ -165,6 +166,7 @@
     <ClInclude Include="include\Log.h" />
     <ClInclude Include="include\Map.h" />
     <ClInclude Include="include\Network.h" />
+    <ClInclude Include="include\Object.h" />
     <ClInclude Include="include\Prop.h" />
     <ClInclude Include="include\Render.h" />
     <ClInclude Include="include\Scene.h" />
@@ -205,9 +207,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\protobuf\myprotocol.pb.cc" />
-    <ClCompile Include="src\collision.cpp" />
+    <ClCompile Include="src\Object.cpp" />
+    <ClCompile Include="src\Bullet.cpp" />
     <ClCompile Include="src\D2D.cpp" />
     <ClCompile Include="src\Game.cpp" />
+    <ClCompile Include="src\GameSceneManager.cpp" />
     <ClCompile Include="src\Game_Component.cpp" />
     <ClCompile Include="src\header.cpp" />
     <ClCompile Include="src\keymap.cpp" />

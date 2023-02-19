@@ -18,6 +18,7 @@ ID2D1SolidColorBrush* pWhite_Brush;
 ID2D1SolidColorBrush* pBlack_Brush;
 
 ID2D1SolidColorBrush* pRed_Brush;
+ID2D1SolidColorBrush* pGreen_Brush;
 
 ID2D1SolidColorBrush* pHall_Brush;
 ID2D1SolidColorBrush* pHall_ClickBrush;
@@ -747,6 +748,7 @@ void Init_D2DTool(RECT& rect)
 	hr = pRenderTarget->CreateSolidColorBrush(ColorF(0, 0, 0, 1), &pBlack_Brush);
 
 	hr = pRenderTarget->CreateSolidColorBrush(ColorF(1, 0, 0, 1), &pRed_Brush);
+	hr = pRenderTarget->CreateSolidColorBrush(ColorF(0, 1, 0, 1), &pGreen_Brush);
 
 	pMain_Brush = pBlack_Brush;
 	pMain_ClickBrush = pWhite_Brush;

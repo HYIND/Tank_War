@@ -41,8 +41,11 @@
 #include "myprotocol.pb.h"
 #include <type_traits>
 
-//#define LOGGERMODE_ON
+#define LOGGERMODE_ON
 #include "Log.h"
+
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 using namespace std;
 

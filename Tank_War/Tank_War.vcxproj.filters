@@ -66,7 +66,13 @@
     <ClInclude Include="include\Tank_War.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\collision.h">
+    <ClInclude Include="GameSceneManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Bullet.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Object.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -185,9 +191,6 @@
     <ClCompile Include="src\Tank_War.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\collision.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\D2D.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -198,6 +201,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\protobuf\myprotocol.pb.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Bullet.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Object.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GameSceneManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

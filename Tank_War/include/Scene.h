@@ -69,6 +69,7 @@ class Scene_Room;
 
 /* 以下为内部变量的声明 */
 extern ID2D1SolidColorBrush* pRed_Brush;
+extern ID2D1SolidColorBrush* pGreen_Brush;
 
 extern ID2D1SolidColorBrush* pHall_Brush;
 extern ID2D1SolidColorBrush* pHall_ClickBrush;

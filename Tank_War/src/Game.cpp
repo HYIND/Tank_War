@@ -1,5 +1,4 @@
 ﻿#include "Game.h"
-#include "collision.h"
 #include "keymap.h"
 
 #define _USE_MATH_DEFINES
@@ -15,7 +14,8 @@ extern RECT _rect;
 void Game::Init_Game(int map_id, int my_id)
 {
 	Get_keymap();
-	this->map_info = Map_list[map_id];
+	this->map_info = *(Map_list[map_id]);
+	GameSceneManager::Instance()->Build_Collision_Tree(this->map_info);
 	for (auto& v : map_info.Init_Location)
 	{
 		Tank* tank = new Tank(v.x, v.y,
@@ -87,6 +87,46 @@ void Game::Draw()
 		}
 	}
 	map_info.DrawMap();
+
+
+	//GameSceneManager::Instance()->Draw_Collision_Tree();
+	//static RectObject Rect(400, 400, 200, 200, 45.0);
+	//Rect.Draw();
+	//bullet* pbullet = ptank1->bullet_head;
+	//while (pbullet)
+	//{
+	//	::pRenderTarget->DrawLine(
+	//		D2D1::Point2F(pbullet->get_locationX() + sin(pbullet->get_rotate() * M_PI / 180) * 500, pbullet->get_locationY() - cos(pbullet->get_rotate() * M_PI / 180) * 500),
+	//		D2D1::Point2F(pbullet->get_locationX() - sin(pbullet->get_rotate() * M_PI / 180) * 500, pbullet->get_locationY() + cos(pbullet->get_rotate() * M_PI / 180) * 500),
+	//		pRed_Brush);
+	//	Pos ori_location(
+	//		(pbullet->get_locationX() - sin(pbullet->get_rotate() * M_PI / 180) * 200),
+	//		(pbullet->get_locationY() + cos(pbullet->get_rotate() * M_PI / 180) * 200)
+	//	);
+	//	//Line test_line(
+	//	//	Pos(
+	//	//		(pbullet->get_locationX() - sin(pbullet->get_rotate() * M_PI / 180) * 300),
+	//	//		(pbullet->get_locationY() + cos(pbullet->get_rotate() * M_PI / 180) * 300)
+	//	//	),
+	//	//	Pos(
+	//	//		(pbullet->get_locationX() + sin(pbullet->get_rotate() * M_PI / 180) * 300),
+	//	//		(pbullet->get_locationY() - cos(pbullet->get_rotate() * M_PI / 180) * 300)
+	//	//	)
+	//	//);
+	//	Collision_state state;
+	//	if (pbullet->collision(Rect, ori_location, &state))
+	//	{
+	//		pbullet->set_locationX(state.pos.x);
+	//		pbullet->set_locationY(state.pos.y);
+	//		pbullet->set_rotate(state.rotate);
+	//	}
+	//	//Pos cross_pos;
+	//	//if (cross(line, test_line, &cross_pos))
+	//	//	cross_pos.Draw(false);
+	//	pbullet = pbullet->next;
+	//}
+
+	return;
 }
 
 void Game::online()
@@ -101,9 +141,9 @@ void Game::send_hittank(int id, bullet* pbullet)
 	Req.set_hited_tank_id(id);
 
 	Message::bulletinfo* binfo = new Message::bulletinfo();
-	binfo->set_locationx(pbullet->locationX);
-	binfo->set_locationy(pbullet->locationY);
-	binfo->set_rotate(pbullet->rotate);
+	binfo->set_locationx(pbullet->get_locationX());
+	binfo->set_locationy(pbullet->get_locationY());
+	binfo->set_rotate(pbullet->get_rotate());
 	binfo->set_bullet_style((int)pbullet->bullet_style);
 	Req.set_allocated_bulletinfo(binfo);
 
@@ -112,13 +152,13 @@ void Game::send_hittank(int id, bullet* pbullet)
 
 void Game::send_hitbrick(int id, bullet* pbullet)
 {
-  	Message::Game_hit_brick_Request Req;
+	Message::Game_hit_brick_Request Req;
 	Req.set_hited_brick_id(id);
 
 	Message::bulletinfo* binfo = new Message::bulletinfo();
-	binfo->set_locationx(pbullet->locationX);
-	binfo->set_locationy(pbullet->locationY);
-	binfo->set_rotate(pbullet->rotate);
+	binfo->set_locationx(pbullet->get_locationX());
+	binfo->set_locationy(pbullet->get_locationY());
+	binfo->set_rotate(pbullet->get_rotate());
 	binfo->set_bullet_style((int)pbullet->bullet_style);
 	Req.set_allocated_bulletinfo(binfo);
 
@@ -128,9 +168,9 @@ void Game::send_hitbrick(int id, bullet* pbullet)
 void Game::send_mytankinfo()
 {
 	Message::Game_tankinfo_Request Req;
-	Req.set_locationx(ptank1->locationX);
-	Req.set_locationy(ptank1->locationY);
-	Req.set_rotate(ptank1->rotate);
+	Req.set_locationx(ptank1->get_locationX());
+	Req.set_locationy(ptank1->get_locationY());
+	Req.set_rotate(ptank1->get_rotate());
 	Req.set_tank_style((int)ptank1->tank_style);
 
 	Send(Req);
@@ -143,9 +183,9 @@ void Game::send_bullet()
 	while (cur != NULL)
 	{
 		Message::bulletinfo* bulletinfo = Req.add_bulletinfo();
-		bulletinfo->set_locationx(cur->locationX);
-		bulletinfo->set_locationy(cur->locationY);
-		bulletinfo->set_rotate(cur->rotate);
+		bulletinfo->set_locationx(cur->get_locationX());
+		bulletinfo->set_locationy(cur->get_locationY());
+		bulletinfo->set_rotate(cur->get_rotate());
 		bulletinfo->set_bullet_style((int)cur->bullet_style);
 		cur = cur->next;
 	}
@@ -163,9 +203,9 @@ void Game::refreash_tankinfo(Header& header, char* content)
 		Message::Game_tankinfo_Request* info = tankinfo.mutable_tankinfo();
 		Tank* ptank = Tank_info[tankinfo.id()];
 		if (ptank == ptank1) continue;
-		ptank->locationX = info->locationx();
-		ptank->locationY = info->locationy();
-		ptank->rotate = info->rotate();
+		ptank->set_locationX(info->locationx());
+		ptank->set_locationY(info->locationy());
+		ptank->set_rotate(info->rotate());
 		ptank->tank_style = (TankStyle)info->tank_style();
 		ptank->Set_Parameter_byStyle(ptank->tank_style);
 	}
@@ -219,12 +259,14 @@ void Game::recv_hitbrick(Header& header, char* content)
 	if (iter == map_info.Component_info.end())
 		return;
 
+	(*iter)->set_health(health);
+	LOGINFO("Hit_brick ID:{},Health:{}", hited_brick_id, health);
 	if (health <= 0)
 	{
+		LOGINFO("recv_hitbrick Break ID:{}", hited_brick_id);
+		GameSceneManager::Instance()->remove(*iter);
 		map_info.Component_info.erase(iter);
-		return;
 	}
-	(*iter)->health = health;
 }
 
 void Game::recv_hited(Header& header, char* content)
@@ -266,50 +308,32 @@ void set_My_id(int id)
 void Game::Tank_Input()
 {
 	if (GetAsyncKeyState(key1[0]) & 0x8000)
-	{
 		Tank_Move(ptank1, true);
-	}
 	else if (GetAsyncKeyState(key1[1]) & 0x8000)
-	{
 		Tank_Move(ptank1, false);
-	}
+
 	if (GetAsyncKeyState(key1[2]) & 0x8000)
-	{
 		Tank_Rotate(ptank1, false);
-	}
 	else if (GetAsyncKeyState(key1[3]) & 0x8000)
-	{
 		Tank_Rotate(ptank1, true);
-	}
 
 	if (GetAsyncKeyState(key1[4]) & 0x8000)
-	{
 		Tank_shot(ptank1);
-	}
+
 	if (!isonline_game)
 	{
 		if (GetAsyncKeyState(key2[0]) & 0x8000)
-		{
 			Tank_Move(ptank2, true);
-		}
 		else if (GetAsyncKeyState(key2[1]) & 0x8000)
-		{
-
 			Tank_Move(ptank2, false);
 
-		}
 		if (GetAsyncKeyState(key2[2]) & 0x8000)
-		{
 			Tank_Rotate(ptank2, false);
-		}
 		else if (GetAsyncKeyState(key2[3]) & 0x8000)
-		{
 			Tank_Rotate(ptank2, true);
-		}
+
 		if (GetAsyncKeyState(key2[4]) & 0x8000)
-		{
 			Tank_shot(ptank2);
-		}
 	}
 }
 
@@ -328,47 +352,71 @@ void Game::Tank_shot(Tank* ptank) {
 
 void Game::Tank_Move(Tank* ptank, bool forward)
 {
-	double new_locationX = ptank->locationX;
-	double new_locationY = ptank->locationY;
+
+	double ori_locationX = ptank->get_locationX();
+	double ori_locationY = ptank->get_locationY();
 
 	if (forward)
 	{
-		new_locationX += sin(ptank->rotate * M_PI / 180) * ptank->speed;
-		new_locationY -= cos(ptank->rotate * M_PI / 180) * ptank->speed;
+		ptank->set_locationX(ori_locationX + sin(ptank->get_rotate() * M_PI / 180) * ptank->speed);
+		ptank->set_locationY(ori_locationY - cos(ptank->get_rotate() * M_PI / 180) * ptank->speed);
 	}
 	else {
-		new_locationX -= sin(ptank->rotate * M_PI / 180) * ptank->speed;
-		new_locationY += cos(ptank->rotate * M_PI / 180) * ptank->speed;
+		ptank->set_locationX(ptank->get_locationX() - sin(ptank->get_rotate() * M_PI / 180) * ptank->speed);
+		ptank->set_locationY(ptank->get_locationY() + cos(ptank->get_rotate() * M_PI / 180) * ptank->speed);
 	}
+
+	bool isreturn = false;
 
 	for (auto& v : Tank_info)
 	{
 		if (v.second == ptank || v.second->isalive == false)
 			continue;
 		Tank* pother_tank = v.second;
-		if (collision_obb(
-			new_locationX, new_locationY, ptank->width, ptank->height, ptank->rotate,
-			pother_tank->locationX, pother_tank->locationY, pother_tank->width, pother_tank->height, pother_tank->rotate))
-			return;
-	}
-
-	for (auto& v : map_info.Component_info)
-	{
-		if (collision_obb(
-			new_locationX, new_locationY, ptank->width, ptank->height, ptank->rotate,
-			v->locationX, v->locationY, v->width, v->height)
-			)
-			return;
-	}
-
-	for (auto it = Prop_info.begin(); it != Prop_info.end(); it++) {
-		Prop* pProp = it->second;
-		if (collision_obb(
-			new_locationX, new_locationY, ptank->width, ptank->height, ptank->rotate,
-			pProp->locationX, pProp->locationY, pProp->width, pProp->height)
-			)
+		if (ptank->collision(*pother_tank))
 		{
-			if (isonline_game) {
+			ptank->set_locationX(ori_locationX);
+			ptank->set_locationY(ori_locationY);
+			isreturn = true;
+			break;
+		}
+	}
+
+	set<Game_Component* >collision_set;
+	GameSceneManager::Instance()->Quary_Collision(ptank, collision_set);
+	vector<Game_Component*> Wall_Com;
+	vector<Game_Component*> Prop_Com;
+	for (auto pCom : collision_set)
+	{
+		if (pCom->type >= component_type::PROP_DEFAULT)
+			Prop_Com.push_back(pCom);
+		else
+			Wall_Com.push_back(pCom);
+	}
+
+	if (!isreturn)
+	{
+		for (auto& pCom : Wall_Com)
+		{
+			if (ptank->collision(*pCom))
+			{
+				ptank->set_locationX(ori_locationX);
+				ptank->set_locationY(ori_locationY);
+				isreturn = true;
+				break;
+			}
+		}
+	}
+
+	for (auto& pCom : Prop_Com)
+	{
+		Prop* pProp = dynamic_cast<Prop*>(pCom);
+		if (!pProp)
+			break;
+		if (ptank->collision(*pProp))
+		{
+			if (isonline_game)
+			{
 				int id = -1;
 				for (auto& v : Tank_info) {
 					if (v.second == ptank)
@@ -384,99 +432,189 @@ void Game::Tank_Move(Tank* ptank, bool forward)
 		}
 	}
 
-	if (collision_broader(new_locationX, new_locationY, ptank->width, ptank->height, ptank->rotate)) return;
-
-	ptank->locationY = new_locationY;
-	ptank->locationX = new_locationX;
+	if (ptank->collision_broader())
+	{
+		ptank->set_locationX(ori_locationX);
+		ptank->set_locationY(ori_locationY);
+		return;
+	}
 }
 
 void Game::Tank_Rotate(Tank* ptank, bool forward)
 {
-	double new_rotate = ptank->rotate;
+	double ori_rotate = ptank->get_rotate();
 
 	if (forward)
 	{
-		new_rotate += 5;
+		ptank->set_rotate(ori_rotate + 5.0);
 	}
 	else {
-		new_rotate -= 5;
+		ptank->set_rotate(ori_rotate - 5.0);
 	}
+
+	bool isreturn = false;
 
 	for (auto& v : Tank_info)
 	{
 		if (v.second == ptank || v.second->isalive == false)
 			continue;
 		Tank* pother_tank = v.second;
-		if (collision_obb(
-			ptank->locationX, ptank->locationY, ptank->width, ptank->height, new_rotate,
-			pother_tank->locationX, pother_tank->locationY, pother_tank->width, pother_tank->height, pother_tank->rotate))
-			return;
+		if (ptank->collision(*pother_tank))
+		{
+			ptank->set_rotate(ori_rotate);
+			isreturn = true;
+			break;
+		}
 	}
 
-	for (auto& v : map_info.Component_info)
+	set<Game_Component* >collision_set;
+	GameSceneManager::Instance()->Quary_Collision(ptank, collision_set);
+	vector<Game_Component*> Wall_Com;
+	vector<Game_Component*> Prop_Com;
+	for (auto pCom : collision_set)
 	{
-		if (collision_obb(
-			ptank->locationX, ptank->locationY, ptank->width, ptank->height, new_rotate,
-			v->locationX, v->locationY, v->width, v->height))
-			return;
+		if (pCom->type >= component_type::PROP_DEFAULT)
+			Prop_Com.push_back(pCom);
+		else
+			Wall_Com.push_back(pCom);
 	}
 
-	if (collision_broader(ptank->locationX, ptank->locationY, ptank->width, ptank->height, new_rotate)) return;
+	if (!isreturn)
+	{
+		for (auto& pCom : Wall_Com)
+		{
+			if (ptank->collision(*pCom))
+			{
+				ptank->set_rotate(ori_rotate);
+				isreturn = true;
+				break;
+			}
+		}
+	}
 
-	ptank->rotate = new_rotate;
+	for (auto& pCom : Prop_Com)
+	{
+		Prop* pProp = dynamic_cast<Prop*>(pCom);
+		if (!pProp)
+			break;
+		if (ptank->collision(*pProp))
+		{
+			if (isonline_game)
+			{
+				int id = -1;
+				for (auto& v : Tank_info) {
+					if (v.second == ptank)
+					{
+						id = v.first;
+						break;
+					}
+				}
+				pProp->online_get(id);
+				break;
+			}
+			pProp->get(ptank);
+		}
+	}
+
+	if (ptank->collision_broader())
+	{
+		ptank->set_rotate(ori_rotate);
+		return;
+	}
 }
 
 void Game::AI_Rotate(AI_control* AI, bool forward) {
 	Tank* ptank = AI->AI_Tank;
-	double new_rotate = ptank->rotate;
+
+	double ori_rotate = ptank->get_rotate();
 
 	if (forward)
 	{
-		new_rotate += min(5, AI->goal_rotate - new_rotate);
+		ptank->set_rotate(ori_rotate + 5.0);
 	}
 	else {
-		new_rotate -= min(5, new_rotate - AI->goal_rotate);
+		ptank->set_rotate(ori_rotate - 5.0);
 	}
+
+	bool isreturn = false;
 
 	for (auto& v : Tank_info)
 	{
-		if (v.second == ptank)
+		if (v.second == ptank || v.second->isalive == false)
 			continue;
 		Tank* pother_tank = v.second;
-		if (collision_obb(
-			ptank->locationX, ptank->locationY, ptank->width, ptank->height, new_rotate,
-			pother_tank->locationX, pother_tank->locationY, pother_tank->width, pother_tank->height, pother_tank->rotate))
-			return;
+		if (ptank->collision(*pother_tank))
+		{
+			ptank->set_rotate(ori_rotate);
+			isreturn = true;
+			break;
+		}
 	}
 
-	for (auto& v : map_info.Component_info)
+	set<Game_Component* >collision_set;
+	GameSceneManager::Instance()->Quary_Collision(ptank, collision_set);
+	vector<Game_Component*> Wall_Com;
+	vector<Game_Component*> Prop_Com;
+	for (auto pCom : collision_set)
 	{
-		if (collision_obb(
-			ptank->locationX, ptank->locationY, ptank->width, ptank->height, new_rotate,
-			v->locationX, v->locationY, v->width, v->height))
-			return;
+		if (pCom->type >= component_type::PROP_DEFAULT)
+			Prop_Com.push_back(pCom);
+		else
+			Wall_Com.push_back(pCom);
 	}
 
-	if (collision_broader(ptank->locationX, ptank->locationY, ptank->width, ptank->height, new_rotate)) return;
+	if (!isreturn)
+	{
+		for (auto& pCom : Wall_Com)
+		{
+			if (ptank->collision(*pCom))
+			{
+				ptank->set_rotate(ori_rotate);
+				isreturn = true;
+				break;
+			}
+		}
+	}
 
-	ptank->rotate = new_rotate;
+	for (auto& pCom : Prop_Com)
+	{
+		Prop* pProp = dynamic_cast<Prop*>(pCom);
+		if (!pProp)
+			break;
+		if (ptank->collision(*pProp))
+		{
+			if (isonline_game)
+			{
+				int id = -1;
+				for (auto& v : Tank_info) {
+					if (v.second == ptank)
+					{
+						id = v.first;
+						break;
+					}
+				}
+				pProp->online_get(id);
+				break;
+			}
+			pProp->get(ptank);
+		}
+	}
+
+	if (ptank->collision_broader())
+	{
+		ptank->set_rotate(ori_rotate);
+		return;
+	}
 }
 
-struct collisioninfo
-{
-	Game_Component* Component = nullptr;
-	Collision_Pos collision_result = NullPos;
-	double distance = 0.0;
-	collisioninfo(Game_Component* Component_in, Collision_Pos collision_result_in, double distance_in) :
-		Component(Component_in), collision_result(collision_result_in), distance(distance_in) {}
-};
 void Game::Bullet_Move(bullet* pbullet)
 {
 	if (!pbullet) return;
 
 	bool result = false;
-	pbullet->locationX += sin(pbullet->rotate * M_PI / 180) * pbullet->speed;
-	pbullet->locationY -= cos(pbullet->rotate * M_PI / 180) * pbullet->speed;
+	Pos ori_location(pbullet->get_locationX(), pbullet->get_locationY());
+	pbullet->set_locationX(ori_location.x + sin(pbullet->get_rotate() * M_PI / 180) * pbullet->speed);
+	pbullet->set_locationY(ori_location.y - cos(pbullet->get_rotate() * M_PI / 180) * pbullet->speed);
 
 	for (auto& v : Tank_info)
 	{
@@ -484,9 +622,7 @@ void Game::Bullet_Move(bullet* pbullet)
 			continue;
 		Tank* pother_tank = v.second;
 
-		if (collision_obb(
-			pbullet->locationX, pbullet->locationY, pbullet->width, pbullet->height, pbullet->rotate,
-			pother_tank->locationX, pother_tank->locationY, pother_tank->width, pother_tank->height, pother_tank->rotate))
+		if (pbullet->collision(*pother_tank))
 		{
 			if (isonline_game)
 			{
@@ -511,35 +647,52 @@ void Game::Bullet_Move(bullet* pbullet)
 
 	if (result == false)
 	{
-		vector<collisioninfo> collision_map;
-		for (auto it = map_info.Component_info.begin(); it != map_info.Component_info.end(); it++)
+		set<Game_Component* >collision_set;
+		GameSceneManager::Instance()->Quary_Collision(pbullet, collision_set);
+		vector<Game_Component*> Wall_Com;
+		for (auto pCom : collision_set)
 		{
-			Game_Component* pWall = (*it);
-			double distance = 0.0;
-			Collision_Pos collision_result = collision_round_aabb_withInfo(
-				pbullet->locationX, pbullet->locationY, pbullet->width / 2, pbullet->rotate,
-				pWall->locationX, pWall->locationY, pWall->width, pWall->height, 90.0, &distance);
+			if (pCom->type < component_type::PROP_DEFAULT)
+				Wall_Com.push_back(pCom);
+		}
 
-			if (collision_result != 0)
+		struct Collision_info {
+			Game_Component* com;
+			Collision_state state;
+			Collision_info(Game_Component* com, Collision_state state)
+				:com(com), state(state) {}
+
+		};
+
+		vector<Collision_info> collision_map;
+		for (auto& pCom : Wall_Com)
+		{
+			Collision_state collision_state;
+			bool collision_result = pbullet->collision(*pCom, ori_location, &collision_state);
+
+			if (collision_result)
 			{
-				collision_map.emplace_back(pWall, collision_result, distance);
+				collision_map.emplace_back(pCom, collision_state);
 			}
 		}
 
 		if (!collision_map.empty())
 		{
-			Game_Component* pWall = nullptr;
-			Collision_Pos collision_result = NullPos;
+			Game_Component* pCom = nullptr;
+			Collision_state collision_state;
 			double min_distance = DBL_MAX;
 			for (auto& it : collision_map)
 			{
-				if (it.distance < min_distance)
+				double cur_distance = distance(it.state.pos, ori_location);
+				if (cur_distance < min_distance)
 				{
-					pWall = it.Component;
-					collision_result = it.collision_result;
+					pCom = it.com;
+					collision_state = it.state;
+					min_distance = cur_distance;
 				}
 			}
-			switch (pWall->type)
+
+			switch (pCom->type)
 			{
 			case component_type::BRICK:
 			{
@@ -547,23 +700,24 @@ void Game::Bullet_Move(bullet* pbullet)
 
 				if (isonline_game)
 				{
-					send_hitbrick(pWall->id, pbullet);
+					send_hitbrick(pCom->id, pbullet);
 					result = true;
 					break;
 				}
 				else
 				{
-					pWall->health -= 21;
-					if (pWall->health <= 0)
+					int health = pCom->reduce_health(21);
+					if (health <= 0)
 					{
 						for (auto it = map_info.Component_info.begin(); it != map_info.Component_info.end(); it++)
 						{
-							if (*it == pWall)
+							if (*it == pCom)
 							{
 								map_info.Component_info.erase(it);
 								break;
 							}
 						}
+						GameSceneManager::Instance()->remove(pCom);
 					}
 					result = true;
 					break;
@@ -571,7 +725,8 @@ void Game::Bullet_Move(bullet* pbullet)
 			}
 			case component_type::IRON:
 			{
-				if (pbullet->isBounce && pWall->id == pbullet->last_bounceId)
+
+				if (pbullet->isBounce && pCom->id == pbullet->last_bounceId)
 				{
 					result = true;
 					break;
@@ -582,41 +737,12 @@ void Game::Bullet_Move(bullet* pbullet)
 				}
 				else {
 					pbullet->isBounce = true;
-					pbullet->last_bounceId = pWall->id;
-					double axis_rotate = 0.0;		//计算反弹时入射角和出射角的对称轴，取值与撞击点和被撞矩形的角度相关
-					switch (collision_result)
-					{
-					case LeftTopCorner:
-					case RightBottomCorner:
-					{
-						axis_rotate = 45.0;
-						break;
-					}
-					case RightTopCorner:
-					case LeftBottomCorner:
-					{
-						axis_rotate = 135.0;
-						break;
-					}
-					case LeftBroader:
-					case RightBroader:
-					{
-						axis_rotate = 0.0;
-						break;
-					}
-					case TopBroader:
-					case BottomBroader:
-					{
-						axis_rotate = 90.0;
-						break;
-					}
-					default:
-						break;
-					}
-					double format_rotate = fmod(pbullet->rotate, 360.0);
-					format_rotate = 2.0 * axis_rotate - format_rotate;
-					format_rotate = fmod(format_rotate, 360.0);
-					pbullet->rotate = format_rotate;
+					pbullet->last_bounceId = pCom->id;
+
+					pbullet->set_locationX(collision_state.pos.x);
+					pbullet->set_locationY(collision_state.pos.y);
+					pbullet->set_rotate(collision_state.rotate);
+
 					pbullet->BounceCount++;
 				}
 				result = true;
@@ -628,11 +754,10 @@ void Game::Bullet_Move(bullet* pbullet)
 		}
 	}
 
-
 	if (result == false)
 		pbullet->isBounce = false;
 
-	if (result == false && collision_broader(pbullet->locationX, pbullet->locationY, pbullet->width, pbullet->height, pbullet->rotate))
+	if (result == false && pbullet->collision_broader())
 	{
 		pbullet->destroy();
 	}

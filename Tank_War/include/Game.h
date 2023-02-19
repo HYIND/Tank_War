@@ -3,7 +3,7 @@
 #include "Network.h"
 #include "Tank_AI.h"
 #include "Prop.h"
-
+#include "GameSceneManager.h"
 
 class Game;
 class AI_control;
@@ -17,7 +17,7 @@ public:
 	Map map_info;
 
 	map<int, Tank*> Tank_info;
-	unordered_map<int, Prop* >Prop_info;
+	vector<Prop* >Prop_info;
 
 	int my_tankid = 0;
 	int player_alive = 0;
