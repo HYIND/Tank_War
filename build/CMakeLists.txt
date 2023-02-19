@@ -21,3 +21,5 @@ add_executable(Tank_War_Server ${DIR_PROTO} ${DIR_SRCS})
 
 target_link_libraries(Tank_War_Server ${Protobuf_LIBRARIES})
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS True)
+

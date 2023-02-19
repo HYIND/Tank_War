@@ -1,14 +1,15 @@
 #include "Room_Game_Process.h"
-#include "collision.h"
+#include "Object.h"
 
-void Room_Process::Init_Timer(){
+void Room_Process::Init_Timer()
+{
     timefd = timerfd_create(CLOCK_MONOTONIC, 0);
 
     // timeval now;
     // gettimeofday(&now, NULL);
 
     itimerspec timer;
-    timer.it_value.tv_sec =10;
+    timer.it_value.tv_sec = 10;
     timer.it_value.tv_nsec = 0;
     timer.it_interval.tv_sec = 5;
     timer.it_interval.tv_nsec = 0;
@@ -17,8 +18,9 @@ void Room_Process::Init_Timer(){
     addfd(recv_epoll, timefd, true);
 }
 
-void Room_Process::Delete_Timer(){
-    delfd(recv_epoll,timefd);
+void Room_Process::Delete_Timer()
+{
+    delfd(recv_epoll, timefd);
     close(timefd);
 }
 
@@ -97,9 +99,9 @@ void Room_Process::confim()
 
 void Room_Process::Init_Game()
 {
-    this->map_info = Map_list[map_id];
+    this->map_info = *(Map_list[map_id]);
 
-    //服务端初始化Tank信息
+    // 服务端初始化Tank信息
     for (auto &v : info)
     {
         Tank *tank = new Tank();
@@ -107,18 +109,18 @@ void Room_Process::Init_Game()
         {
             if (m.Tank_id == v.second->tank_id)
             {
-                tank->locationX = m.x;
-                tank->locationY = m.y;
-                tank->width = Tank_Style_info[m.tank_style]->width;
-                tank->height = Tank_Style_info[m.tank_style]->height;
-                tank->rotate = m.rotate;
+                tank->set_locationX(m.x);
+                tank->set_locationY(m.y);
+                tank->set_width(Tank_Style_info[m.tank_style]->width);
+                tank->set_height(Tank_Style_info[m.tank_style]->height);
+                tank->set_rotate(m.rotate);
                 tank->isalive = m.isalive;
             }
         }
         Tank_info[v.first] = tank;
     }
 
-    string send_str = "Start"; //开始游戏
+    string send_str = "Start"; // 开始游戏
     for (auto &v : info)
     {
         Message::Room_Start_Response Res;
@@ -154,10 +156,7 @@ bool Room_Process::Hit_tank(int socket, Header &header, char *content)
 
     const Message::bulletinfo *pbinfo = &(Req.bulletinfo());
     int hited_tank_id = Req.hited_tank_id();
-    double bullet_x = pbinfo->locationx();
-    double bullet_y = pbinfo->locationy();
-    double bullet_rotate = pbinfo->rotate();
-    BulletStyle style = (BulletStyle)pbinfo->bullet_style();
+    Bullet bullet(pbinfo->locationx(), pbinfo->locationy(), pbinfo->rotate(), (BulletStyle)pbinfo->bullet_style());
 
     int hited_socket;
     for (auto &v : info)
@@ -169,16 +168,7 @@ bool Room_Process::Hit_tank(int socket, Header &header, char *content)
         }
     }
     Tank *hited_tank = Tank_info[hited_socket];
-    if (collision_obb(bullet_x,
-                      bullet_y,
-                      Bullet_Style_info[style]->width,
-                      Bullet_Style_info[style]->height,
-                      bullet_rotate,
-                      hited_tank->locationX,
-                      hited_tank->locationY,
-                      Tank_Style_info[hited_tank->tank_style]->width,
-                      Tank_Style_info[hited_tank->tank_style]->height,
-                      hited_tank->rotate))
+    if (bullet.collision(*hited_tank))
     {
         hited_tank->health -= 21;
         hittank_notify(hited_socket, hited_tank_id, hited_tank->health);
@@ -199,39 +189,34 @@ bool Room_Process::Hit_brick(int socket, Header &header, char *content)
 
     const Message::bulletinfo *info = &(Req.bulletinfo());
     int hited_brick_id = Req.hited_brick_id();
-    double bullet_x = info->locationx();
-    double bullet_y = info->locationy();
-    double bullet_rotate = info->rotate();
-    BulletStyle style = (BulletStyle)info->bullet_style();
+    Bullet bullet(info->locationx(), info->locationy(), info->rotate(), (BulletStyle)info->bullet_style());
 
-    auto iter = map_info.Brick_info.begin();
-    while (iter != map_info.Brick_info.end())
+    auto iter = map_info.Component_info.begin();
+    while (iter != map_info.Component_info.end())
     {
-        if (iter->id == hited_brick_id)
+
+        if ((*iter)->type == component_type::BRICK && (*iter)->id == hited_brick_id)
             break;
         iter++;
     }
-    if (iter == map_info.Brick_info.end())
+    if (iter == map_info.Component_info.end())
         return false;
-    Brick_Wall *pwall = &(*iter);
 
-    if (collision_obb(bullet_x,
-                      bullet_y,
-                      Bullet_Style_info[style]->width,
-                      Bullet_Style_info[style]->height,
-                      bullet_rotate,
-                      pwall->locationX,
-                      pwall->locationY,
-                      pwall->width,
-                      pwall->height))
+    Brick_Wall *pwall = dynamic_cast<Brick_Wall *>(*iter);
+    if (pwall == nullptr)
+        return false;
+
+    if (bullet.collision(*pwall))
     {
-        pwall->health -= 21;
-        hitbrick_notify(hited_brick_id, pwall->health);
-        if (pwall->health <= 0)
+        pwall->reduce_health(21);
+        LOGINFO("Hit_brick ID:{},Health:{}", hited_brick_id, pwall->get_health());
+        hitbrick_notify(hited_brick_id, pwall->get_health());
+        if (pwall->get_health() <= 0)
         {
-            map_info.Brick_info.erase(iter);
-            return true;
+            map_info.Component_info.erase(iter);
+            LOGINFO("Hit_brick Break ID:{}", hited_brick_id);
         }
+        return true;
     }
     return false;
 }
@@ -300,9 +285,9 @@ void Room_Process::Refreash_tankinfo(int socket, Header &header, char *content)
     Tank *tank = Tank_info[socket];
     if (tank->isalive)
     {
-        tank->locationX = Req.locationx();
-        tank->locationY = Req.locationy();
-        tank->rotate = Req.rotate();
+        tank->set_locationX(Req.locationx());
+        tank->set_locationY(Req.locationy());
+        tank->set_rotate(Req.rotate());
         tank->tank_style = (TankStyle)Req.tank_style();
     }
 }
@@ -315,17 +300,17 @@ void Room_Process::Refreash_bulletinfo(int socket, Header &header, char *content
     Message::Game_bulletinfo_Request Req;
     Req.ParseFromArray(content, header.length);
 
-    bullet *newhead = new bullet();
-    bullet *temp = newhead;
+    Bullet *temphead = new Bullet();
+    Bullet *temp = temphead;
 
     for (int i = 0; i < Req.bulletinfo_size(); i++)
     {
         const Message::bulletinfo info = Req.bulletinfo(i);
-        temp->next = new bullet(info.locationx(), info.locationy(), info.rotate(), (BulletStyle)info.bullet_style());
+        temp->next = new Bullet(info.locationx(), info.locationy(), info.rotate(), (BulletStyle)info.bullet_style());
         temp = temp->next;
     }
-    tank->bullet_head = newhead->next;
-    delete newhead;
+    tank->bullet_head = temphead->next;
+    delete temphead;
 }
 
 void Room_Process::Refreash_Tank_process(bool *end)
@@ -345,9 +330,9 @@ void Room_Process::Refreash_Tank_process(bool *end)
             Res_tankinfo->set_id(info[v.first]->tank_id);
             Res_tankinfo->set_health(tank->health);
             Message::Game_tankinfo_Request *tankinfo = new Message::Game_tankinfo_Request();
-            tankinfo->set_locationx(tank->locationX);
-            tankinfo->set_locationy(tank->locationY);
-            tankinfo->set_rotate(tank->rotate);
+            tankinfo->set_locationx(tank->get_locationX());
+            tankinfo->set_locationy(tank->get_locationY());
+            tankinfo->set_rotate(tank->get_rotate());
             tankinfo->set_tank_style((int)tank->tank_style);
             Res_tankinfo->set_allocated_tankinfo(tankinfo);
         }
@@ -383,13 +368,13 @@ void Room_Process::Refreash_Bullet_process(bool *end)
 
             Res_bulletinfo->set_tankid(info[v.first]->tank_id);
 
-            bullet *cur = tank->bullet_head;
+            Bullet *cur = tank->bullet_head;
             while (cur != NULL)
             {
                 Message::bulletinfo *bulletinfo = Res_bulletinfo->add_bulletinfo();
-                bulletinfo->set_locationx(cur->locationX);
-                bulletinfo->set_locationy(cur->locationY);
-                bulletinfo->set_rotate(cur->rotate);
+                bulletinfo->set_locationx(cur->get_locationX());
+                bulletinfo->set_locationy(cur->get_locationY());
+                bulletinfo->set_rotate(cur->get_rotate());
                 bulletinfo->set_bullet_style((int)cur->bullet_style);
                 cur = cur->next;
             }
@@ -446,10 +431,12 @@ int Room_Process::return_class_game(int socket, Header &header, char *content)
     }
     case 801:
     {
-        static int prop_count=1;
-        if(Prop_info.size()<5){
-            Prop* pProp =new Prop(1,prop_count,prop_count*100,prop_count*50);
-        }
+        static int prop_count = 1;
+        // if (Prop_info.size() < 5)
+        // {
+        //     Prop *pProp = new Prop(1, prop_count, prop_count * 100, prop_count * 50);
+        // }
+        break;
     }
     }
 
@@ -523,8 +510,9 @@ void Room_Process::game_process()
     Tankinfo_thread.join();
     Bulletinfo_thread.join();
 
-    for(auto iter=Tank_info.begin();iter!=Tank_info.end();){
-        delete(iter->second);
+    for (auto iter = Tank_info.begin(); iter != Tank_info.end();)
+    {
+        delete (iter->second);
         Tank_info.erase(iter++);
     }
 

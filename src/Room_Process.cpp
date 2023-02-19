@@ -20,14 +20,14 @@ Room_Process::Room_Process(int socket)
 
 Room_Process::~Room_Process()
 {
-    //置stop位，停线程
+    // 置stop位，停线程
     stop = true;
     char ch[] = "kill";
     int i = send(recv_pipe[1], ch, 4, 0);
     process_cv.notify_one();
     send_cv.notify_one();
 
-    //回收Room_user信息
+    // 回收Room_user信息
     for (auto &v : info)
     {
         delfd(recv_epoll, v.first);
@@ -36,13 +36,13 @@ Room_Process::~Room_Process()
         delete v.second;
     }
 
-    //回收Tank信息
+    // 回收Tank信息
     for (auto &v : Tank_info)
     {
         delete v.second;
     }
 
-    //回收消息队列中的消息
+    // 回收消息队列中的消息
     while (!recv_queue.empty())
     {
         delete recv_queue.front();
@@ -54,7 +54,7 @@ Room_Process::~Room_Process()
         send_queue.pop();
     }
 
-    //移除管道
+    // 移除管道
     for (auto it = game_pipe_list.begin(); it != game_pipe_list.end(); it++)
     {
         if (*it == this->recv_pipe[1])
@@ -63,11 +63,11 @@ Room_Process::~Room_Process()
             break;
         }
     }
-    //关闭管道
+    // 关闭管道
     close(recv_pipe[0]);
     close(recv_pipe[1]);
 
-    //把该房间从room_list移除
+    // 把该房间从room_list移除
     for (auto it = room_list.begin(); it != room_list.end(); it++)
     {
         if ((*it)->room_id == this->room_id)
@@ -77,7 +77,7 @@ Room_Process::~Room_Process()
         }
     }
 
-    //关闭epollfd
+    // 关闭epollfd
     close(recv_epoll);
 }
 
@@ -163,7 +163,7 @@ void Room_Process::recv_process()
             else if (events[i].events & EPOLLRDHUP)
             {
                 stop = true;
-                //非正常退出，暂时直接回收资源
+                // 非正常退出，暂时直接回收资源
                 delete (this);
                 break;
             }
@@ -175,8 +175,8 @@ void Room_Process::recv_process()
                 // cout << exp;
 
                 socket_recvinfo *pinfo = new socket_recvinfo(0);
-                pinfo->header=801;
-                
+                pinfo->header = 801;
+
                 unique_lock<mutex> rlck(recvqueue_mtx);
                 recv_queue.emplace(pinfo);
                 rlck.release()->unlock();
@@ -190,12 +190,12 @@ void Room_Process::recv_process()
                     socket_recvinfo *pinfo = new socket_recvinfo(socket);
                     int count = 0;
 
-                    //获取头
+                    // 获取头
                     recv_length += sizeof(Header);
                     Header *header = &(pinfo->header);
                     memcpy(header, buffer, recv_length);
 
-                    //获取内容（可能为空）
+                    // 获取内容（可能为空）
                     char **content = &(pinfo->content);
                     if (header->length > 0)
                     {
@@ -319,7 +319,7 @@ string Room_Process::return_class_room(int socket, Header &header, char *content
 void Room_Process::Set_Map(int id)
 {
     this->map_id = id;
-    this->map_info = Map_list[id];
+    // this->map_info = *(Map_list[id]);
 }
 
 // void Room_Process::Change_Map(int socket, string &recv_str) //房主切换地图
@@ -369,12 +369,12 @@ void Room_Process::Cancel_Ready(int socket)
 
 string Room_Process::Start_Game(int socket)
 {
-    //检查是否房主
+    // 检查是否房主
     if (socket != socket_host)
     {
         return "NULL";
     }
-    //检查人数
+    // 检查人数
     if (info.size() < 2)
     {
         Message::Room_Start_Response Res;
@@ -389,7 +389,7 @@ string Room_Process::Start_Game(int socket)
 
     unique_lock<mutex> infolck(info_mtx);
     info[socket_host]->Ready = true;
-    //检查是否都已经准备
+    // 检查是否都已经准备
     for (auto &v : info)
     {
         if (v.second->Ready == false)
@@ -422,7 +422,7 @@ string Room_Process::Start_Game(int socket)
 
 string Room_Process::Quit_Room(int socket)
 {
-    //房主退出，房间解散
+    // 房主退出，房间解散
     if (socket == socket_host)
     {
         unique_lock<mutex> infolck(info_mtx);
@@ -439,7 +439,7 @@ string Room_Process::Quit_Room(int socket)
         }
         return "disband";
     }
-    //非房主退出
+    // 非房主退出
     else
     {
         unique_lock<mutex> infolck(info_mtx);
