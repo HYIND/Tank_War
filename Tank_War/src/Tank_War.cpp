@@ -172,40 +172,33 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			if (isonline_game)
 			{
-				Cur_Game->online();
+				Game::Instance()->online();
 			}
 			break;
 		}
 		case _game:
 		{
-			if (GetFocus() == _hwnd)
-			{
-				Cur_Game->Tank_Input();
-				Cur_Game->Move();
+			Game::Instance()->Tick();
+
 #ifdef AITEST
-				static int count = 0;
-				count++;
-				if (count > 5)count -= 5;
-				if (count % 5 == 0)
-					AI_calculate();
-				AI_Track();
+			static int count = 0;
+			count++;
+			if (count > 5)count -= 5;
+			if (count % 5 == 0)
+				AI_calculate();
+			AI_Track();
 #endif // AITEST
-			}
-			else if (isonline_game)
-			{
-				Cur_Game->Move();
-			}
 
 			break;
 		}
 		case hall_refreash:
-			Get_Hallinfo();
+			NetManager::Instance()->NetManager::Instance()->Get_Hallinfo();
 			break;
 		case room_refreash:
-			Get_Room_Info();
+			NetManager::Instance()->Get_Room_Info();
 			break;
 		case ping:
-			send_pingmessage();
+			NetManager::Instance()->send_pingmessage();
 			break;
 		}
 		InvalidateRect(hWnd, NULL, TRUE);
@@ -248,7 +241,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				// 开始游戏
 			case IDB_LOCALGAME: {
-				Cur_Game->Init_Game();
+				Game::Instance()->Init_Game();
 				SetTimer(hWnd, _game, 20, NULL);
 				isonline_game = false;
 				Set_CurScene(STATUS::Game_Status);
@@ -262,9 +255,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case IDB_ENTERHALL: {
 				if (!DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG_Userid), hWnd, (DLGPROC)GetID_Proc))
 					break;
-				if (!Init_Hall())
+				if (!NetManager::Instance()->Init_Hall())
 					break;
-				set_my_userid();
+				NetManager::Instance()->Send_my_userid();
 				Set_CurScene(STATUS::Hall_Status);
 				SetTimer(hWnd, reconnect, 5000, NULL);
 				SetTimer(hWnd, hall_refreash, 4000, NULL);
@@ -330,7 +323,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			// 刷新
 			case IDB_REFRESH:
 			{
-				Get_Hallinfo();
+				NetManager::Instance()->Get_Hallinfo();
 				break;
 			}
 			// 加入房间
@@ -339,12 +332,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				int index = SendMessage(_Scene::SHall->Hall_room_list, LB_GETCURSEL, 0, 0);
 				TCHAR buff[255];
 				SendMessage(_Scene::SHall->Hall_room_list, LB_GETTEXT, index, (LPARAM)buff);
-				Enter_Room(index);
+				NetManager::Instance()->Enter_Room(index);
 				break;
 			}
 			// 离开大厅
 			case IDB_EXITHALL:
-				close_connect();
+				NetManager::Instance()->close_connect();
 				KillTimer(hWnd, reconnect);
 				KillTimer(hWnd, hall_refreash);
 				KillTimer(hWnd, ping);
@@ -357,7 +350,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				GetWindowTextW(_Scene::SHall->Hall_edit_in, temp, 1024);
 				wstring str = temp;
 				if (!str.empty())
-					Send_Hall_Message(str);
+					NetManager::Instance()->Send_Hall_Message(str);
 				break;
 			}
 			// 创建房间
@@ -365,7 +358,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				KillTimer(hWnd, hall_refreash);
 				SetTimer(hWnd, room_refreash, 1000, NULL);
-				Create_Room();
+				NetManager::Instance()->Create_Room();
 				UpdateWindow(_hwnd);
 				break;
 			}
@@ -383,17 +376,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					MessageBox(hWnd, L"您不是房主，请等待房主开始游戏", NULL, MB_OK);
 					break;
 				}
-				send_string("StartGame");
+				NetManager::Instance()->send_string("StartGame");
 				break;
 			}
 			case IDB_READY:
 			{
-				Room_Ready();
+				NetManager::Instance()->Room_Ready();
 				break;
 			}
 			case IDB_CANCELREADY:
 			{
-				Room_CancelReady();
+				NetManager::Instance()->Room_CancelReady();
 				break;
 			}
 			case DISBANDINROOM:
@@ -408,7 +401,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case IDB_EXITROOM:
 			{
 				KillTimer(hWnd, room_refreash);
-				send_string("QuitRoom");
+				NetManager::Instance()->send_string("QuitRoom");
 				Set_CurScene(STATUS::Hall_Status);
 				SetTimer(hWnd, hall_refreash, 4000, NULL);
 				UpdateWindow(hWnd);
@@ -422,7 +415,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 				isonline_game = true;
 				isstart = true;
-				Cur_Game->Init_Game();
+				Game::Instance()->Init_Game();
 				Set_CurScene(STATUS::Game_Status);
 				if (host)
 				{
@@ -437,7 +430,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				GetWindowTextW(Scene_Room::Room_edit_in, temp, 1024);
 				wstring str = temp;
 				if (!str.empty())
-					Send_Room_Message(str);
+					NetManager::Instance()->Send_Room_Message(str);
 				break;
 			}
 			}
@@ -457,7 +450,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					SetTimer(hWnd, _game, 20, NULL);
 					break;
 				case 20:	//重新开始
-					Cur_Game->Init_Game();
+					Game::Instance()->Init_Game();
 #ifdef AITEST
 					AI_Init();
 #endif // AITEST
@@ -541,7 +534,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_DESTROY:
 	{
-		closesocket(tcp_socket);
+		NetManager::Instance()->close_connect();
 		PostQuitMessage(0);
 		break;
 	}

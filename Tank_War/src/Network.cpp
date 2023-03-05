@@ -1,46 +1,17 @@
 ﻿#include"Network.h"
 #include"Game.h"
 
-#define NumberOfRecvThread 8
-
 extern STATUS status;
 
-wstring my_userid = L"unname";
-
 extern HWND _hwnd;
-extern HDC hdc;
 
-int room_id[65535];
-//int room_count = 0;
+NetManager* NetManager::Instance()
+{
+	static NetManager* m_Instance = new NetManager();
+	return m_Instance;
+}
 
-#define SERVER_PORT 2336
-#define SERVER_IP "175.178.90.119"
-
-WSADATA wsa;
-
-SOCKET tcp_socket = INVALID_SOCKET;
-sockaddr_in tcp_remote_addr;
-
-SOCKET udp_socket = INVALID_SOCKET;
-sockaddr_in udp_local_addr;
-sockaddr_in udp_remote_addr;
-bool udp_states = false;
-
-char buffer[1024];
-
-HANDLE hIOCP;
-
-
-queue<Ping_info> ping_queue;
-int delay = 0;
-int ping_id = 0;
-
-queue<socket_messageinfo*> message_queue;
-mutex messagequeue_mutex;
-bool Process_Stop = false;
-bool Recv_Stop = false;
-
-int Get_Header_Type_bystring(string& str)
+int NetManager::Get_Header_Type_bystring(string& str)
 {
 	if (str == "GetHallinfo")return 101;
 	else if (str == "CreateRoom") return 104;
@@ -51,7 +22,7 @@ int Get_Header_Type_bystring(string& str)
 	else if (str == "QuitRoom") return 116;
 }
 
-void send_string(string s) {
+void NetManager::send_string(string s) {
 	Header header;
 	header.type = Get_Header_Type_bystring(s);
 	if (header.type == 0)
@@ -62,7 +33,7 @@ void send_string(string s) {
 	send(tcp_socket, send_buf, sizeof(Header), 0);
 }
 
-string get_local_ip()
+string NetManager::get_local_ip()
 {
 	//查找主机名		
 	char host_name[256];
@@ -90,7 +61,7 @@ string get_local_ip()
 	return "";
 }
 
-void send_udp_info()
+void NetManager::send_udp_info()
 {
 	if (udp_socket == INVALID_SOCKET) {
 		//string local_ip = get_local_ip();
@@ -112,7 +83,7 @@ void send_udp_info()
 	Send(Req);
 }
 
-void recv_udp_info(Header& header, char* content)
+void NetManager::recv_udp_info(Header& header, char* content)
 {
 	Message::UDP_INFO_REQ Req;
 	Req.ParseFromArray(content, header.length);
@@ -129,8 +100,7 @@ void recv_udp_info(Header& header, char* content)
 	recv(udp_socket, buf, 50, 0);
 }
 
-
-void Return_Class(socket_messageinfo* info)
+void NetManager::Return_Class(socket_messageinfo* info)
 {
 	if (info->header.type == 206)
 	{
@@ -196,25 +166,25 @@ void Return_Class(socket_messageinfo* info)
 		switch (info->header.type)
 		{
 		case 220:
-			Cur_Game->refreash_tankinfo(info->header, info->content);
+			Game::Instance()->refreash_tankinfo(info->header, info->content);
 			break;
 		case 221:
-			Cur_Game->refreash_bullet(info->header, info->content);
+			Game::Instance()->refreash_bullet(info->header, info->content);
 			break;
 		case 222:
-			Cur_Game->recv_hitbrick(info->header, info->content);
+			Game::Instance()->recv_hitbrick(info->header, info->content);
 			break;
 		case 223:
-			Cur_Game->recv_hited(info->header, info->content);
+			Game::Instance()->recv_hited(info->header, info->content);
 			break;
 		case 224:
-			Cur_Game->recv_myhited();
+			Game::Instance()->recv_myhited();
 			break;
 		case 225:
-			Cur_Game->recv_destoryed(info->header, info->content);
+			Game::Instance()->recv_destoryed(info->header, info->content);
 			break;
 		case 226:
-			Cur_Game->recv_mydestoryed();
+			Game::Instance()->recv_mydestoryed();
 			break;
 		case 227:
 			SendMessage(_hwnd, WM_COMMAND, WIN, (LPARAM)_hwnd);
@@ -231,8 +201,7 @@ void Return_Class(socket_messageinfo* info)
 	}
 }
 
-
-void Return_Get_Hallinfo(Header& header, char* content) {
+void NetManager::Return_Get_Hallinfo(Header& header, char* content) {
 	Message::Hall_info_Response Res;
 	Res.ParseFromArray(content, header.length);
 
@@ -255,7 +224,8 @@ void Return_Get_Hallinfo(Header& header, char* content) {
 		string name;
 		wstring w_name;
 		int counter = 0;
-		for (int i = 0; i < Res.roominfo_size(); i++) {
+		for (int i = 0; i < Res.roominfo_size(); i++)
+		{
 			Message::Hall_info_Response_Roominfo roominfo = Res.roominfo(i);
 			int id = roominfo.room_id();
 			name = roominfo.host_name();
@@ -267,7 +237,7 @@ void Return_Get_Hallinfo(Header& header, char* content) {
 	}
 }
 
-void Return_Hall_Message(Header& header, char* content) {
+void NetManager::Return_Hall_Message(Header& header, char* content) {
 	Message::Hall_Message_Response Res;
 	Res.ParseFromArray(content, header.length);
 
@@ -296,7 +266,7 @@ void Return_Hall_Message(Header& header, char* content) {
 	SendMessage(_Scene::SHall->edit_hall, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
 }
 
-void Return_Enter_Room(Header& header, char* content) {
+void NetManager::Return_Enter_Room(Header& header, char* content) {
 	Message::Hall_EnterRoom_Response Res;
 	Res.ParseFromArray(content, header.length);
 	switch (Res.result())
@@ -318,7 +288,7 @@ void Return_Enter_Room(Header& header, char* content) {
 	}
 }
 
-void Get_Hallinfo() {
+void NetManager::Get_Hallinfo() {
 	static clock_t last_refreash = 0;
 	static clock_t now_refreash = 0;
 	now_refreash = clock();
@@ -328,7 +298,7 @@ void Get_Hallinfo() {
 	send_string("GetHallinfo");
 }
 
-void Send_Hall_Message(wstring& w_content) {
+void NetManager::Send_Hall_Message(wstring& w_content) {
 	//获取当前时间并格式化为字符串
 	auto now = std::chrono::system_clock::now();
 	time_t tt = std::chrono::system_clock::to_time_t(now);
@@ -356,9 +326,7 @@ void Send_Hall_Message(wstring& w_content) {
 	Send(Req);
 }
 
-mutex process_mtx;
-condition_variable process_cv;
-DWORD WINAPI Process_Thread() {
+DWORD WINAPI NetManager::Process_Thread() {
 	while (!Process_Stop)
 	{
 		unique_lock<mutex> lck(process_mtx);
@@ -376,7 +344,7 @@ DWORD WINAPI Process_Thread() {
 	return 0;
 }
 
-DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam) {
+DWORD WINAPI NetManager::Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam) {
 	HANDLE hIOCP = (HANDLE)lpParam;
 	DWORD dwBytesTranfered = 0;
 
@@ -524,26 +492,25 @@ DWORD WINAPI Recv_Thread(PPER_IO_DATA pPerIO, LPVOID lpParam) {
 	return 0;
 }
 
-void Create_Room() {
+void NetManager::Create_Room() {
 	send_string("CreateRoom");
 	host = true;
 	Set_CurScene(STATUS::Room_Status);
 	Get_Room_Info();
 }
 
-void Enter_Room(int index) {
+void NetManager::Enter_Room(int index) {
 	Message::Hall_EnterRoom_Request Req;
 	Req.set_room_id(room_id[index]);
 	Send(Req);
 }
 
-bool Init_Hall()
+bool NetManager::Init_Hall()
 {
 	WSAStartup(MAKEWORD(2, 2), &wsa);
 	udp_states = false;
 
 	tcp_socket = get_new_socket(SERVER_IP, SERVER_PORT, SOCK_STREAM, tcp_remote_addr);
-	memset(buffer, '\0', 1024);
 
 	int flag = 1;
 	setsockopt(tcp_socket, IPPROTO_TCP, TCP_NODELAY, (const char*)&flag, sizeof(flag));
@@ -561,7 +528,7 @@ bool Init_Hall()
 	CreateIoCompletionPort((HANDLE)tcp_socket, hIOCP, NULL, NumberOfRecvThread);
 
 	Process_Stop = false;
-	thread T1(Process_Thread);
+	thread T1(&NetManager::Process_Thread, this);
 	T1.detach();
 
 	Recv_Stop = false;
@@ -575,14 +542,14 @@ bool Init_Hall()
 
 	PPER_IO_DATA pPerIO = (PPER_IO_DATA)::GlobalAlloc(GPTR, sizeof(PER_IO_DATA));
 	pPerIO->nOperationType = OP_READ;
-	thread T2(Recv_Thread, pPerIO, LPVOID(hIOCP));
+	thread T2(&NetManager::Recv_Thread, this, pPerIO, LPVOID(hIOCP));
 	T2.detach();
 
 	LOGINFO("Connect , Connect Server Success!  userid: {}", wstring2utf8(my_userid));
 	return true;
 }
 
-void Ping_Count(Header& header, char* content)
+void NetManager::Ping_Count(Header& header, char* content)
 {
 	Message::Ping_info Res;
 	Res.ParseFromArray(content, header.length);
@@ -618,7 +585,7 @@ void Ping_Count(Header& header, char* content)
 	}
 }
 
-void send_pingmessage()
+void NetManager::send_pingmessage()
 {
 	chrono::milliseconds ms = chrono::duration_cast<chrono::milliseconds>(
 		chrono::system_clock::now().time_since_epoch()
@@ -647,19 +614,19 @@ void send_pingmessage()
 	}
 }
 
-void set_my_userid()
+void NetManager::Send_my_userid()
 {
 	Message::Set_User_id info;
 	info.set_name(wstring2utf8(my_userid));
 	Send(info);
 }
 
-void Get_Room_Info()
+void NetManager::Get_Room_Info()
 {
 	send_string("GetRoominfo");
 }
 
-void Return_Get_Roominfo(Header& header, char* content)
+void NetManager::Return_Get_Roominfo(Header& header, char* content)
 {
 	(int)SendMessage(_Scene::SRoom_host->Room_user_list, LB_RESETCONTENT, 0, 0);
 
@@ -695,7 +662,7 @@ void Return_Get_Roominfo(Header& header, char* content)
 	}
 }
 
-void Room_Ready()
+void NetManager::Room_Ready()
 {
 	send_string("Ready");
 	isready = true;
@@ -703,7 +670,7 @@ void Room_Ready()
 	_Scene::SRoom_nothost->ModifyText_byButton(IDB_CANCELREADY, L"取消准备");
 }
 
-void Room_CancelReady()
+void NetManager::Room_CancelReady()
 {
 	send_string("CancelReady");
 	isready = false;
@@ -711,7 +678,7 @@ void Room_CancelReady()
 	_Scene::SRoom_nothost->ModifyText_byButton(IDB_READY, L"准备");
 }
 
-void Send_Room_Message(wstring& w_content) {
+void NetManager::Send_Room_Message(wstring& w_content) {
 	//获取当前时间并格式化为字符串
 	auto now = std::chrono::system_clock::now();
 	time_t tt = std::chrono::system_clock::to_time_t(now);
@@ -739,7 +706,7 @@ void Send_Room_Message(wstring& w_content) {
 	Send(Req);
 }
 
-void Return_Room_Message(Header& header, char* content) {
+void NetManager::Return_Room_Message(Header& header, char* content) {
 	Message::Room_Message_Response Res;
 	Res.ParseFromArray(content, header.length);
 
@@ -767,7 +734,7 @@ void Return_Room_Message(Header& header, char* content) {
 	SendMessage(Scene_Room::edit_room, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
 }
 
-void Return_Set_tankid(Header& header, char* content)
+void NetManager::Return_Set_tankid(Header& header, char* content)
 {
 	Message::Room_Set_tankid_Response Res;
 	Res.ParseFromArray(content, header.length);
@@ -775,7 +742,7 @@ void Return_Set_tankid(Header& header, char* content)
 	set_My_id(id);
 }
 
-void Return_Start(Header& header, char* content)
+void NetManager::Return_Start(Header& header, char* content)
 {
 	static clock_t last_popup = 0;	//记录弹窗时间，避免频繁弹窗
 	static clock_t now_popup = 0;
@@ -803,17 +770,17 @@ void Return_Start(Header& header, char* content)
 	}
 }
 
-void win_game()
+void NetManager::win_game()
 {
 	SendMessage(_hwnd, WM_COMMAND, WIN, (LPARAM)_hwnd);
 }
 
-void lost_game()
+void NetManager::lost_game()
 {
 	SendMessage(_hwnd, WM_COMMAND, FAIL, (LPARAM)_hwnd);
 }
 
-void close_connect()
+void NetManager::close_connect()
 {
 	Recv_Stop = true;
 	Process_Stop = true;

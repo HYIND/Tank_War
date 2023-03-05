@@ -7,7 +7,7 @@ AI_control* AI = NULL;
 void AI_Init() {
 
 	AI = new AI_control();
-	AI->AI_Tank = Cur_Game->ptank2;
+	AI->AI_Tank = Game::Instance()->ptank2;
 }
 
 void AI_control::AI_Move()
@@ -17,20 +17,20 @@ void AI_control::AI_Move()
 		else AI_Rotate(false);
 	}
 	if (abs(goal_rotate - AI_Tank->get_rotate()) < 40)
-		Cur_Game->Tank_Move(AI_Tank, true);
+		Game::Instance()->Tank_Move(AI_Tank, true);
 	if (abs(goal_rotate - AI_Tank->get_rotate()) < 30)
 	{
-		Cur_Game->Tank_shot(AI_Tank);
+		Game::Instance()->Tank_shot(AI_Tank);
 	}
 }
 
 void AI_control::AI_Rotate(bool forward) {
-	Cur_Game->AI_Rotate(this, forward);
+	Game::Instance()->AI_Rotate(this, forward);
 }
 
 void AI_control::Get_goal() {
-	goal_x = Cur_Game->ptank1->get_locationX();
-	goal_y = Cur_Game->ptank1->get_locationY();
+	goal_x = Game::Instance()->ptank1->get_locationX();
+	goal_y = Game::Instance()->ptank1->get_locationY();
 	double detalX = goal_x - AI_Tank->get_locationX();
 	double detalY = goal_y - AI_Tank->get_locationY();
 	goal_rotate = atan2(detalX, -detalY) * 180 / M_PI;
@@ -38,11 +38,11 @@ void AI_control::Get_goal() {
 }
 
 void AI_calculate() {
-	if (!Cur_Game->ptank1->isalive) return;
+	if (!Game::Instance()->ptank1->isalive) return;
 	AI->Get_goal();
 }
 void AI_Track() {
-	if (!Cur_Game->ptank1->isalive) return;
+	if (!Game::Instance()->ptank1->isalive) return;
 	AI->AI_Track();
 }
 

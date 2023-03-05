@@ -29,7 +29,8 @@ Line_Round_Crossresult cross(Line& line, RoundObject& round, Pos pos[2])
 {
 	Vec vec((line.pos1() - line.pos2()).toVec());
 	double dst = distance(round.get_location(), line);
-	if (dst > round.get_radius() / 2) return NullCrossPos;
+	if (dst > round.get_radius() / 2) 
+		return NullCrossPos;
 	else if (dst < round.get_radius() / 2)
 	{
 		double distance_p2_d = fabs(dot(vec, Vec((round.get_location() - line.pos2()).toVec())) / vec.norm());

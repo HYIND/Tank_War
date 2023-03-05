@@ -367,3 +367,5 @@ public:
 };
 
 void Init_SceneResource();
+void Set_CurScene(STATUS status_in);
+

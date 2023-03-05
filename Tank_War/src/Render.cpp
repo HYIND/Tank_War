@@ -44,11 +44,11 @@ DWORD WINAPI Render_Thread()
 			}
 			else //if (status == STATUS::Game_Status)
 			{
-				Cur_Game->Draw();
+				Game::Instance()->Draw();
 			}
 			if (status == STATUS::Hall_Status || status == STATUS::Room_Status || (status == STATUS::Game_Status && isonline_game))
 			{
-				wstring ws = to_wstring(delay) + L"ms";
+				wstring ws = to_wstring(NetManager::Instance()->Get_Delay()) + L"ms";
 				const wchar_t* delay_ch = ws.c_str();
 				pRenderTarget->DrawText(
 					delay_ch,

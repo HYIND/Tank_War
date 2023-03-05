@@ -5,10 +5,8 @@
 #include "Prop.h"
 #include "GameSceneManager.h"
 
-class Game;
 class AI_control;
 
-extern Game* Cur_Game;
 extern int my_tank_location;
 
 class Game
@@ -28,9 +26,9 @@ public:
 	int key1[5];		//p1键位存储
 	int key2[5];		//p2键位存储
 public:
-	Game() {}
+	static Game* Instance();
 	void Init_Game(int id = ::Cur_Map_id, int my_id = my_tank_location);
-	void Move();
+	void Tick();
 	void Draw();
 	void Get_keymap();		//获取/重新获取 键位
 	void Tank_Input();		//响应玩家输入
@@ -38,7 +36,7 @@ public:
 	void Tank_Move(Tank* ptank, bool forward);		//移动坦克，同时检查移动合法性（碰撞检查）
 	void Tank_Rotate(Tank* ptank, bool forward);	//旋转坦克，同时检查移动合法性（碰撞检查）
 	void AI_Rotate(AI_control* AI, bool forward);	//AI用旋转
-	void Bullet_Move(bullet* pbullet);		//子弹自移动
+	void Bullet_Tick_Move(bullet* pbullet);			//子弹自移动
 
 
 	void online();
@@ -54,6 +52,9 @@ public:
 	void recv_myhited();
 	void recv_destoryed(Header& header, char* content);
 	void recv_mydestoryed();
+
+private:
+	Game() {}
 	void is_end();
 };
 

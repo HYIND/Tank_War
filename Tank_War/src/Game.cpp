@@ -4,12 +4,15 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-extern SOCKET tcp_socket;
-
-Game* Cur_Game = new Game();
 int my_tank_location = 1;
 
 extern RECT _rect;
+
+Game* Game::Instance()
+{
+	static Game* m_Instance = new Game();
+	return m_Instance;
+}
 
 void Game::Init_Game(int map_id, int my_id)
 {
@@ -54,20 +57,22 @@ void Game::Get_keymap()
 	key2[4] = key_map_p2[keybroad::FIRE];
 }
 
-void Game::Move()
+void Game::Tick()
 {
+	Tank_Input();
+
 	if (!isonline_game)
 	{
 		for (auto& v : Tank_info)
 		{
 			if (v.second->bullet_head)
-				Bullet_Move(v.second->bullet_head);
+				Bullet_Tick_Move(v.second->bullet_head);
 		}
 	}
 	else
 	{
 		if (ptank1->bullet_head)
-			Bullet_Move(ptank1->bullet_head);
+			Bullet_Tick_Move(ptank1->bullet_head);
 	}
 }
 
@@ -108,7 +113,7 @@ void Game::send_hittank(int id, bullet* pbullet)
 	binfo->set_bullet_style((int)pbullet->bullet_style);
 	Req.set_allocated_bulletinfo(binfo);
 
-	Send(Req);
+	NetManager::Instance()->Send(Req);
 }
 
 void Game::send_hitbrick(int id, bullet* pbullet)
@@ -123,7 +128,7 @@ void Game::send_hitbrick(int id, bullet* pbullet)
 	binfo->set_bullet_style((int)pbullet->bullet_style);
 	Req.set_allocated_bulletinfo(binfo);
 
-	Send(Req);
+	NetManager::Instance()->Send(Req);
 }
 
 void Game::send_mytankinfo()
@@ -134,7 +139,7 @@ void Game::send_mytankinfo()
 	Req.set_rotate(ptank1->get_rotate());
 	Req.set_tank_style((int)ptank1->tank_style);
 
-	Send(Req);
+	NetManager::Instance()->Send(Req);
 }
 
 void Game::send_bullet()
@@ -150,7 +155,7 @@ void Game::send_bullet()
 		bulletinfo->set_bullet_style((int)cur->bullet_style);
 		cur = cur->next;
 	}
-	Send(Req);
+	NetManager::Instance()->Send(Req);
 }
 
 void Game::refreash_tankinfo(Header& header, char* content)
@@ -268,6 +273,9 @@ void set_My_id(int id)
 
 void Game::Tank_Input()
 {
+	if (GetFocus() != _hwnd)
+		return;
+
 	if (GetAsyncKeyState(key1[0]) & 0x8000)
 		Tank_Move(ptank1, true);
 	else if (GetAsyncKeyState(key1[1]) & 0x8000)
@@ -568,7 +576,7 @@ void Game::AI_Rotate(AI_control* AI, bool forward) {
 	}
 }
 
-void Game::Bullet_Move(bullet* pbullet)
+void Game::Bullet_Tick_Move(bullet* pbullet)
 {
 	if (!pbullet) return;
 
@@ -723,5 +731,5 @@ void Game::Bullet_Move(bullet* pbullet)
 		pbullet->destroy();
 	}
 
-	Bullet_Move(pbullet->next);
+	Bullet_Tick_Move(pbullet->next);
 }

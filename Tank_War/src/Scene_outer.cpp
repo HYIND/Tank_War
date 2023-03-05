@@ -202,7 +202,7 @@ BOOL CALLBACK GetID_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_INITDIALOG:
 	{
 		userid_in = GetDlgItem(hDlg, Userid_in);
-		SetWindowTextW(userid_in, my_userid.c_str());
+		SetWindowTextW(userid_in, NetManager::Instance()->Get_my_userid().c_str());
 		break;
 	}
 	case WM_COMMAND:
@@ -213,7 +213,8 @@ BOOL CALLBACK GetID_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			wchar_t temp[17] = { '\0' };
 			GetWindowTextW(userid_in, temp, 17);
-			my_userid = temp;
+			wstring userid = temp;
+			NetManager::Instance()->Set_my_userid(userid);
 			EndDialog(hDlg, TRUE);
 			return TRUE;
 		}
@@ -1009,7 +1010,7 @@ void Set_CurScene(STATUS status_in)
 			_Scene::CurScene = _Scene::SRoom_host;
 		}
 		Scene_Room::Show_Room(TRUE);
-		Get_Room_Info();
+		NetManager::Instance()->Get_Room_Info();
 		break;
 	}
 	case STATUS::Main:
@@ -1038,7 +1039,7 @@ void Set_CurScene(STATUS status_in)
 		status = STATUS::Hall_Status;
 		_Scene::CurScene = _Scene::SHall;
 		Show_Hall(true);
-		Get_Hallinfo();
+		NetManager::Instance()->Get_Hallinfo();
 		break;
 	}
 	case STATUS::Game_Status:

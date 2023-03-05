@@ -4,8 +4,6 @@ using namespace std;
 
 extern bool isonline_game;
 
-extern SOCKET tcp_socket;
-
 queue <bullet*> to_destroyed_bulletinfo;
 
 

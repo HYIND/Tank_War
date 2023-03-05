@@ -73,6 +73,7 @@ public:
 	void remove(Game_Component* com);
 
 private:
+	GameSceneManager() {};
 	void Build_QuadTree(QuadNode* node);
 	void Clear_QuadTree(QuadNode* node);
 	void Load_Map(Map& map);
