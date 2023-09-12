@@ -27,9 +27,12 @@ public:
 	int key2[5];		//p2键位存储
 public:
 	static Game* Instance();
+	void LoadLocalMap();
+	void LoadMap(Map* map);
 	void Init_Game(int id = ::Cur_Map_id, int my_id = my_tank_location);
 	void Tick();
 	void Draw();
+	void DrawTank();
 	void Get_keymap();		//获取/重新获取 键位
 	void Tank_Input();		//响应玩家输入
 	void Tank_shot(Tank* ptank);		//发射子弹

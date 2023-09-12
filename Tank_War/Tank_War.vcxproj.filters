@@ -75,6 +75,9 @@
     <ClInclude Include="include\Object.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="include\FileIO.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Tank_War.rc">
@@ -210,6 +213,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\GameSceneManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MapEdit.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FileIO.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

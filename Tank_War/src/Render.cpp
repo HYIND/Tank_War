@@ -31,22 +31,23 @@ DWORD WINAPI Render_Thread()
 
 	while (true)
 	{
+		STATUS m_status = Get_CurScene();
 		//渲染
 		{
 			pRenderTarget->BeginDraw();
 			pRenderTarget->Clear(ColorF(1, 1, 1, 1));
-			if (status != STATUS::Game_Status) {
+			if (m_status == STATUS::Game_Status)
+			{
+				Game::Instance()->Draw();
+			}
+			else if (m_status != STATUS::MapEdit) {
 				pRenderTarget->DrawBitmap(OP_pBitmap, D2D1::RectF(0, 0, rect.right, rect.bottom));
 				//if (FAILED(hr))
 				//{
 				//	MessageBox(NULL, L"Draw failed!", L"Error", 0);
 				//}
 			}
-			else //if (status == STATUS::Game_Status)
-			{
-				Game::Instance()->Draw();
-			}
-			if (status == STATUS::Hall_Status || status == STATUS::Room_Status || (status == STATUS::Game_Status && isonline_game))
+			if (m_status == STATUS::Hall_Status || m_status == STATUS::Room_Status || (m_status == STATUS::Game_Status && isonline_game))
 			{
 				wstring ws = to_wstring(NetManager::Instance()->Get_Delay()) + L"ms";
 				const wchar_t* delay_ch = ws.c_str();
@@ -63,6 +64,7 @@ DWORD WINAPI Render_Thread()
 			hr = pRenderTarget->EndDraw();
 		}
 
+		double m_timeInOneFps = m_status == STATUS::Game_Status || m_status == STATUS::MapEdit ? timeInOneFps : min(0.3333, timeInOneFps);
 		// 帧率动态控制
 		{
 			QueryPerformanceCounter(&time_now);
@@ -84,7 +86,7 @@ DWORD WINAPI Render_Thread()
 				frame_count = 0;
 			}
 
-			if (time_diff - timeInOneFps >= 1.f)
+			if (time_diff - m_timeInOneFps >= 1.f)
 			{
 				if (sleep_time > -160)
 					sleep_time--;

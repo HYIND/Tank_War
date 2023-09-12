@@ -309,13 +309,15 @@ void Scene::OnMove()
 	}
 }
 
-void Scene::Click()
+void Scene::Click(bool isLButtonPress, bool isShiftPress)
 {
-	OnClick();
+	OnClick(isLButtonPress, isShiftPress);
 }
 
-void Scene::OnClick()
+void Scene::OnClick(bool isLButtonPress, bool isShiftPress)
 {
+	if (!isLButtonPress)
+		return;
 	if (Text_changed)
 	{
 		D2D_Button* Button = Text_changed->pButton;
@@ -344,6 +346,10 @@ void Scene::OnClick()
 			}
 		}
 	}
+}
+
+void Scene::Tick() {
+	this->OnTick();
 }
 
 // 修改按钮

@@ -156,6 +156,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\FileIO.h" />
     <ClInclude Include="include\GameSceneManager.h" />
     <ClInclude Include="include\Bullet.h" />
     <ClInclude Include="include\D2D.h" />
@@ -207,6 +208,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\protobuf\myprotocol.pb.cc" />
+    <ClCompile Include="src\FileIO.cpp" />
+    <ClCompile Include="src\MapEdit.cpp" />
     <ClCompile Include="src\Object.cpp" />
     <ClCompile Include="src\Bullet.cpp" />
     <ClCompile Include="src\D2D.cpp" />

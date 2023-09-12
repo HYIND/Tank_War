@@ -61,5 +61,4 @@ extern bool isonline_game;
 string wstring2utf8(const std::wstring& str);
 wstring utf82wstring(const std::string& str);
 SOCKET get_new_socket(std::string IP, uint16_t socket_port, int protocol, sockaddr_in& addr);
-void Init_Logger();
 

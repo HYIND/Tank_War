@@ -28,10 +28,15 @@ public:
 	vector<Game_Component*> Component_info;
 
 public:
-	Map() {}
-	Map(int id, int user_limited) :map_id(id), user_limited(user_limited) {}
+	Map();
+	Map(int id, int user_limited);
+	~Map();
 	Map& operator=(Map& map);
 	void DrawMap();
+	void DrawMap(function<void()> callback);
+	void Clear();
+	void Save(char*& buf, int& len);
+	bool Load(const char* buf, const int len);
 };
 
 extern int Cur_Map_id;

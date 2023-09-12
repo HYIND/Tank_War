@@ -10,15 +10,27 @@ using namespace std;
 #define IRON_WIDTH 56
 #define IRON_HEIGHT 56
 
-extern ID2D1Bitmap* brick_wall_pBitmap;
-extern ID2D1Bitmap* iron_wall_pBitmap;
-
 enum class component_type :int {
 	DEFAULT = 0,
 	BRICK, IRON,				//墙体
 	PROP_DEFAULT,
 	AIDKIT						//道具
 };
+
+extern ID2D1Bitmap* brick_wall_pBitmap;
+extern ID2D1Bitmap* iron_wall_pBitmap;
+
+struct Com_Style_info
+{
+	int width;
+	int height;
+	int health;
+	ID2D1Bitmap* Bitmap;
+	Com_Style_info(int width, int height, int health, ID2D1Bitmap* pBitmap) :
+		width(width), height(height), health(health), Bitmap(pBitmap) {};
+};
+
+extern map<component_type, Com_Style_info*> com_info;
 
 class Game_Component :public RectObject
 {

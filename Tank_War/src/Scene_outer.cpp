@@ -1,6 +1,8 @@
 ﻿#include "Scene.h"
 #include "Network.h"
 #include "keymap.h"
+#include "Map.h"
+
 
 namespace RectBroder
 {
@@ -63,6 +65,7 @@ namespace _Scene
 	Scene_WinGame* SWinGame;
 	Scene_FailGame* SFailGame;
 	Scene_Pause* SPause;
+	Scene_MapEdit* SMapEdit;
 }
 bool Scene_Room::isLoad = false;
 
@@ -246,8 +249,12 @@ void Scene_Main::Load(RECT& rect)
 		LoadText(loc1, 280, loc3, 330, L"设置"));
 
 	LoadButton(loc1, 380, loc3, 430,
+		IDB_MAPEDIT,
+		LoadText(loc1, 380, loc3, 430, L"地图编辑"));
+
+	LoadButton(loc1, 480, loc3, 530,
 		IDB_QUITGAME,
-		LoadText(loc1, 380, loc3, 430, L"退出游戏"));
+		LoadText(loc1, 480, loc3, 530, L"退出游戏"));
 }
 
 void Scene_Hall::Load(RECT& rect)
@@ -691,6 +698,9 @@ void Scene_Gaming_local::Load(RECT& rect)
 	LoadButton(rect.left, rect.top, rect.left + 100, rect.top + 67,
 		IDB_PAUSE,
 		LoadResourceBitmap(rect.left, rect.top, rect.left + 100, rect.top + 67, L"PNG", MAKEINTRESOURCE(PAUSE_PNG)));
+	LoadButton(rect.left + 100, rect.top, rect.left + 200, rect.top + 67,
+		ReLoadMap,
+		LoadText(rect.left + 100, rect.top, rect.left + 200, rect.top + 67, L"加载本地地图"));
 
 }
 
@@ -735,10 +745,35 @@ void Scene_FailGame::Load(RECT& rect)
 	}
 }
 
+void Scene_MapEdit::Load(RECT& rect) {
+	int middle = rect.left + (rect.right - rect.left) / 2;
+	try
+	{
+		LoadButton(rect.left, rect.top, rect.left + 144, rect.top + 87,
+			MAPEDIT_EXIT,
+			LoadResourceBitmap(rect.left, rect.top, rect.left + 144, rect.top + 87, L"PNG", MAKEINTRESOURCE(RETURN_PNG)));
+		LoadButton(rect.left + 180, rect.top, rect.left + 180 + 120 * 2, rect.top + 87,
+			MAPEDIT_LOAD,
+			LoadText(rect.left + 180, rect.top, rect.left + 180 + 120 * 2, rect.top + 87, L"打开地图"));
+		LoadButton(rect.left + 180 + 120 * 2 + 20, rect.top, rect.left + 180 + 120 * 4 + 20, rect.top + 87,
+			MAPEDIT_SAVE,
+			LoadText(rect.left + 180 + 120 * 2 + 20, rect.top, rect.left + 180 + 120 * 4 + 20, rect.top + 87, L"保存地图"));
+
+	}
+	catch (const std::exception&)
+	{
+		return;
+	}
+}
+
+void Scene_MapEdit::OnDrawScene()
+{
+	this->DrawMapEdit();
+	Scene::OnDrawScene();
+}
+
 void Scene_Option::OnDrawScene()
 {
-	Scene::OnDrawScene();
-
 	//FPS选项
 	{
 		pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 3, broder_top + len_y * 2.5), 10, 10), Brush::pWhite_Brush);
@@ -758,6 +793,8 @@ void Scene_Option::OnDrawScene()
 			pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 7, broder_top + len_y * 2.5), 8, 8), Brush::pBlack_Brush);
 		}
 	}
+
+	Scene::OnDrawScene();
 }
 
 void Scene_Option::Get_Key()
@@ -883,6 +920,7 @@ void InitScene(ID2D1Factory*& pD2DFactory, ID2D1HwndRenderTarget*& pRenderTarget
 		::_Scene::SWinGame = new Scene_WinGame(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
 		::_Scene::SFailGame = new Scene_FailGame(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
 		::_Scene::SPause = new Scene_Pause(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
+		::_Scene::SMapEdit = new Scene_MapEdit(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
 
 
 		::_Scene::Scene_list.emplace_back(::_Scene::SMain);
@@ -895,6 +933,7 @@ void InitScene(ID2D1Factory*& pD2DFactory, ID2D1HwndRenderTarget*& pRenderTarget
 		::_Scene::Scene_list.emplace_back(::_Scene::SWinGame);
 		::_Scene::Scene_list.emplace_back(::_Scene::SFailGame);
 		::_Scene::Scene_list.emplace_back(::_Scene::SPause);
+		::_Scene::Scene_list.emplace_back(::_Scene::SMapEdit);
 	}
 	catch (exception& e)
 	{
@@ -1049,8 +1088,20 @@ void Set_CurScene(STATUS status_in)
 		if (isonline_game)
 			_Scene::CurScene = _Scene::SGaming_online;
 		else _Scene::CurScene = _Scene::SGaming_local;
+		break;
+	}
+	case STATUS::MapEdit:
+	{
+		_Scene::SMapEdit->Active();
+		status = STATUS::MapEdit;
+		_Scene::CurScene = _Scene::SMapEdit;
+		break;
 	}
 	default:
 		break;
 	}
+}
+
+STATUS Get_CurScene() {
+	return ::status;
 }

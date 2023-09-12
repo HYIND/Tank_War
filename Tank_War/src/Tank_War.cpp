@@ -2,6 +2,7 @@
 //
 #include "Render.h"
 #include "Tank_AI.h"
+
 #define MAX_LOADSTRING 100
 
 //#define AITEST
@@ -140,7 +141,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 //
 
-enum { _game, _online, hall_refreash, reconnect, ping, room_refreash };	//定时器ID
+enum { _game, _online, hall_refreash, reconnect, ping, room_refreash, sceneTick };	//定时器ID
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	PAINTSTRUCT ps;
@@ -161,6 +162,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		_Scene::CurScene = _Scene::SMain;
 		thread T(Render_Thread);
 		T.detach();
+		SetTimer(hWnd, sceneTick, 20, NULL);
 		break;
 	}
 
@@ -200,6 +202,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case ping:
 			NetManager::Instance()->send_pingmessage();
 			break;
+		case sceneTick:
+			_Scene::CurScene->Tick();
+			break;
 		}
 		InvalidateRect(hWnd, NULL, TRUE);
 		break;
@@ -213,7 +218,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_KILLFOCUS:
 	{
-		if (status == STATUS::Game_Status && !isonline_game)
+		if (Get_CurScene() == STATUS::Game_Status && !isonline_game)
 		{
 			KillTimer(hWnd, _game);
 		}
@@ -222,7 +227,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_SETFOCUS:
 	{
-		if (status == STATUS::Game_Status && !isonline_game)
+		if (Get_CurScene() == STATUS::Game_Status && !isonline_game)
 		{
 			SetTimer(hWnd, _game, 20, NULL);
 		}
@@ -233,7 +238,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		int wmId = LOWORD(wParam);
 		// 分析菜单选择:
-		switch (status)
+		switch (Get_CurScene())
 		{
 		case STATUS::Main:
 		{
@@ -270,7 +275,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				Set_CurScene(STATUS::Option);
 				break;
 			}
-						   // 退出游戏
+						   //地图编辑
+			case IDB_MAPEDIT: {
+				Set_CurScene(STATUS::MapEdit);
+				break;
+			}
+							// 退出游戏
 			case IDB_QUITGAME:
 			{
 				DestroyWindow(hWnd);
@@ -491,6 +501,40 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				SetTimer(hWnd, reconnect, 5000, NULL);
 				SetTimer(hWnd, hall_refreash, 4000, NULL);
 				Set_CurScene(STATUS::Hall_Status);
+				break;
+			}
+			case ReLoadMap:
+			{
+				Game::Instance()->LoadLocalMap();
+				break;
+			}
+			}
+			break;
+		}
+		case STATUS::MapEdit:
+		{
+			switch (wmId)
+			{
+			case MAPEDIT_EXIT:
+			{
+				Set_CurScene(STATUS::Main);
+				break;
+			}
+
+			case MAPEDIT_LOAD:
+			{
+				if (_Scene::CurScene != _Scene::SMapEdit)
+					break;
+				_Scene::SMapEdit->ReadMapFile();
+				break;
+			}
+
+			case MAPEDIT_SAVE:
+			{
+				if (_Scene::CurScene != _Scene::SMapEdit)
+					break;
+				_Scene::SMapEdit->SaveMapFile();
+				break;
 			}
 			}
 			break;
@@ -527,7 +571,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		MousePos::ClickX = LOWORD(lParam);
 		MousePos::ClickY = HIWORD(lParam);
 		if (_Scene::CurScene)
-			_Scene::CurScene->Click();
+			_Scene::CurScene->Click(true, GetAsyncKeyState(VK_SHIFT) & 0x8000);
+		InvalidateRect(hWnd, NULL, TRUE);
+		break;
+	}
+
+	case WM_RBUTTONDOWN:
+	{
+		MousePos::ClickX = LOWORD(lParam);
+		MousePos::ClickY = HIWORD(lParam);
+		if (_Scene::CurScene)
+			_Scene::CurScene->Click(false, GetAsyncKeyState(VK_SHIFT) & 0x8000);
 		InvalidateRect(hWnd, NULL, TRUE);
 		break;
 	}

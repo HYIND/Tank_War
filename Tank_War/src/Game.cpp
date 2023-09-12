@@ -1,5 +1,6 @@
 ﻿#include "Game.h"
 #include "keymap.h"
+#include "FileIO.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -14,10 +15,32 @@ Game* Game::Instance()
 	return m_Instance;
 }
 
-void Game::Init_Game(int map_id, int my_id)
-{
-	Get_keymap();
-	this->map_info = *(Map_list[map_id]);
+void Game::LoadLocalMap() {
+	TCHAR* filename = nullptr;
+	char* buf = nullptr;
+	int len = 0;
+	if (FileIO::OpenOneFile(filename) && FileIO::LoadFile(filename, buf, len))
+	{
+		Map map;
+		if (map.Load(buf, len)) {
+			LoadMap(&map);
+		}
+		else {
+			MessageBox(NULL, TEXT("加载失败，请检查文件是否正确！"), TEXT("Error"), MB_OK);
+		}
+	}
+	if (filename)
+		delete filename;
+	if (buf)
+		delete buf;
+}
+
+void Game::LoadMap(Map* map) {
+	if (!map)
+		return;
+
+	Tank_info.clear();
+	this->map_info = *map;
 	GameSceneManager::Instance()->Build_Collision_Tree(this->map_info);
 	for (auto& v : map_info.Init_Location)
 	{
@@ -30,7 +53,6 @@ void Game::Init_Game(int map_id, int my_id)
 		Tank_info[v.Tank_id] = tank;
 	}
 	this->player_alive = map_info.user_limited;
-	this->my_tankid = my_id;
 	if (!isonline_game)
 	{
 		ptank1 = Tank_info[1];
@@ -40,6 +62,13 @@ void Game::Init_Game(int map_id, int my_id)
 	{
 		ptank1 = Tank_info[my_tankid];
 	}
+}
+
+void Game::Init_Game(int map_id, int my_id)
+{
+	Get_keymap();
+	LoadMap(Map_list[map_id]);
+	this->my_tankid = my_id;
 }
 
 void Game::Get_keymap()
@@ -78,8 +107,11 @@ void Game::Tick()
 
 void Game::Draw()
 {
-	if (map_info.BK_pBitmap)
-		pRenderTarget->DrawBitmap(map_info.BK_pBitmap, D2D1::RectF(0, 0, _rect.right, _rect.bottom));;
+	map_info.DrawMap(std::bind(&Game::DrawTank, this));
+	return;
+}
+
+void Game::DrawTank() {
 	for (auto& v : Tank_info)
 	{
 		if (v.second->isalive)
@@ -91,8 +123,6 @@ void Game::Draw()
 			v.second->bullet_head->Drawbullet();
 		}
 	}
-	map_info.DrawMap();
-	return;
 }
 
 void Game::online()
@@ -276,20 +306,23 @@ void Game::Tank_Input()
 	if (GetFocus() != _hwnd)
 		return;
 
-	if (GetAsyncKeyState(key1[0]) & 0x8000)
-		Tank_Move(ptank1, true);
-	else if (GetAsyncKeyState(key1[1]) & 0x8000)
-		Tank_Move(ptank1, false);
+	if (ptank1->isalive)
+	{
+		if (GetAsyncKeyState(key1[0]) & 0x8000)
+			Tank_Move(ptank1, true);
+		else if (GetAsyncKeyState(key1[1]) & 0x8000)
+			Tank_Move(ptank1, false);
 
-	if (GetAsyncKeyState(key1[2]) & 0x8000)
-		Tank_Rotate(ptank1, false);
-	else if (GetAsyncKeyState(key1[3]) & 0x8000)
-		Tank_Rotate(ptank1, true);
+		if (GetAsyncKeyState(key1[2]) & 0x8000)
+			Tank_Rotate(ptank1, false);
+		else if (GetAsyncKeyState(key1[3]) & 0x8000)
+			Tank_Rotate(ptank1, true);
 
-	if (GetAsyncKeyState(key1[4]) & 0x8000)
-		Tank_shot(ptank1);
+		if (GetAsyncKeyState(key1[4]) & 0x8000)
+			Tank_shot(ptank1);
+	}
 
-	if (!isonline_game)
+	if (!isonline_game && ptank2->isalive)
 	{
 		if (GetAsyncKeyState(key2[0]) & 0x8000)
 			Tank_Move(ptank2, true);

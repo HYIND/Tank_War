@@ -20,8 +20,8 @@ double distance(Pos pos1, Pos pos2)
 }
 double distance(Pos pos, Line line)
 {
-	Vec vec1((line.pos1() - line.pos2()).toVec());
-	Vec vec2((pos - line.pos2()).toVec());
+	Vec vec1 = (line.pos1() - line.pos2()).toVec();
+	Vec vec2 = (pos - line.pos2()).toVec();
 	return abs(cross(vec1, vec2) / vec1.norm());
 }
 
@@ -29,7 +29,7 @@ Line_Round_Crossresult cross(Line& line, RoundObject& round, Pos pos[2])
 {
 	Vec vec((line.pos1() - line.pos2()).toVec());
 	double dst = distance(round.get_location(), line);
-	if (dst > round.get_radius() / 2) 
+	if (dst > round.get_radius() / 2)
 		return NullCrossPos;
 	else if (dst < round.get_radius() / 2)
 	{
@@ -77,9 +77,7 @@ bool cross(Line line1, Line line2, Pos* result)
 		max(line1.pos1().x, line1.pos2().x) >= min(line2.pos1().x, line2.pos2().x);
 
 	//	ÏòÁ¿¼ì²é
-	Vec vec_line1(
-		(line1.pos2() - line1.pos1()).toVec()
-	);
+	Vec vec_line1 = (line1.pos2() - line1.pos1()).toVec();
 	Vec	vec1 = (line1.pos1() - line2.pos1()).toVec();
 	Vec	vec2 = (line1.pos1() - line2.pos2()).toVec();
 	bool vec_result = cross(vec_line1, vec1) >= 0.0 == cross(vec_line1, vec2) <= 0.0;

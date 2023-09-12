@@ -2,6 +2,8 @@
 
 #include "header.h"
 #include "D2D.h"
+#include "Game_Component.h"
+#include "Style.h"
 
 /*
  各场景按钮和控件的编号
@@ -9,10 +11,11 @@
  次位：3-按钮，4-控件
 */
 
-#define IDB_LOCALGAME     3301
-#define IDB_ENTERHALL   3302
+#define IDB_LOCALGAME  3301
+#define IDB_ENTERHALL  3302
 #define IDB_OPTION	3303
-#define IDB_QUITGAME	3304
+#define IDB_MAPEDIT	3304
+#define IDB_QUITGAME	3305
 
 #define IDB_REFRESH 4301
 #define IDB_HALL_SEND 4302
@@ -37,6 +40,7 @@
 #define IDB_RETURN 6302
 #define ReturnInEndGame 6303
 #define ReturnToHall 6304
+#define ReLoadMap 6305
 
 #define IDB_SETFPS_30 7301
 #define IDB_SETFPS_60 7302
@@ -52,6 +56,10 @@
 #define EDIT_EKY2_LEFT 7408
 #define EDIT_EKY2_RIGHT 7409
 #define EDIT_EKY2_FIRE 7410
+
+#define MAPEDIT_EXIT 8301
+#define MAPEDIT_LOAD 8302
+#define MAPEDIT_SAVE 8303
 
 using namespace std;
 using namespace D2D1;
@@ -74,6 +82,7 @@ class Scene_Gaming_online;
 class Scene_WinGame;
 class Scene_FailGame;
 class Scene_Pause;
+class Scene_MapEdit;
 
 /* 以下为内部变量的声明 */
 namespace Brush
@@ -115,13 +124,14 @@ namespace _Scene
 	extern Scene_WinGame* SWinGame;
 	extern Scene_FailGame* SFailGame;
 	extern Scene_Pause* SPause;
+	extern Scene_MapEdit* SMapEdit;
+
 }
 
 extern HWND userid_in;
 
 //status 枚举
-enum class STATUS { Main, Option, Hall_Status, Room_Status, Game_Status };
-extern STATUS status;
+enum class STATUS { Main, Option, Hall_Status, Room_Status, Game_Status, MapEdit };
 
 /* 以下为外部变量的声明 */
 extern HINSTANCE hInst;
@@ -249,8 +259,11 @@ public:
 	void Move();
 	virtual void OnMove();
 	// 点击消息反馈函数
-	void Click();
-	virtual void OnClick();
+	void Click(bool isLButtonPress, bool isShiftPress);
+	virtual void OnClick(bool isLButtonPress, bool isShiftPress);
+	// 周期函数
+	void Tick();
+	virtual void OnTick() {};
 protected:
 	ID2D1Factory* pD2DFactory = NULL; // Direct2D factory
 	ID2D1HwndRenderTarget* pRenderTarget = NULL;
@@ -366,6 +379,35 @@ public:
 	virtual void Load(RECT& rect);
 };
 
+class Game_Component;
+class Map;
+class Scene_MapEdit :public Scene
+{
+	using Scene::Scene;
+public:
+	virtual void OnDrawScene();
+	virtual void Load(RECT& rect);
+	virtual void OnClick(bool isLButtonPress, bool isShiftPress);
+	virtual void OnTick();
+
+public:
+	void Active();
+	void UnActiveSelect();
+	void selectCom(component_type type, TankStyle style);
+	void AddCom(int X, int Y);
+	void ReadMapFile();
+	void SaveMapFile();
+
+protected:
+	void DrawMapEdit();
+private:
+	component_type curCom = component_type::DEFAULT;
+	TankStyle curStyle = TankStyle::NULLSTYLE;
+	double curRotate = 0.0;
+	Map* m_Map;
+};
+
 void Init_SceneResource();
 void Set_CurScene(STATUS status_in);
+STATUS Get_CurScene();
 
