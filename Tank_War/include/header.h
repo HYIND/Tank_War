@@ -1,6 +1,8 @@
 ﻿#pragma once
 #define WIN32_LEAN_AND_MEAN
 
+#include "stdafx.h"
+
 #include "Tank_War.h"
 #include "framework.h"
 #include <comdef.h>
@@ -33,6 +35,7 @@
 #include <queue>
 #include <mutex> 
 
+#include <set>
 #include <map>
 #include <unordered_map>
 #include <timeapi.h>

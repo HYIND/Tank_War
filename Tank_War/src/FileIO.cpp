@@ -140,8 +140,10 @@ namespace FileIO
 				lstrcat(szFileName, TEXT("/n")); //换行   
 				p += lstrlen(p) + 1;     //移至下一个文件
 			}
-			MessageBox(NULL, szFileName, TEXT("MultiSelect"), MB_OK);
+			return true;
+			//MessageBox(NULL, szFileName, TEXT("MultiSelect"), MB_OK);
 		}
+		else return false;
 	}
 
 }

@@ -78,6 +78,9 @@
     <ClInclude Include="include\FileIO.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="include\stdafx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Tank_War.rc">
