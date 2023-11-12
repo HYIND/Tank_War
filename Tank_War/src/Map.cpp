@@ -6,13 +6,11 @@ int Cur_Map_id = 0;
 map<int, Map*> Map_list;
 #define SHOW(Vec) for (auto& v : Vec){v->Draw();}
 
-ID2D1Bitmap* Zero_BK;
-
 /* 以下为外部声明 */
 extern HINSTANCE hInst;
 
-Map::Map() :BK_pBitmap(Zero_BK) {}
-Map::Map(int id, int user_limited) : BK_pBitmap(Zero_BK), map_id(id), user_limited(user_limited) {}
+Map::Map() :BK_pBitmap(ResFactory->GetBitMapRes(ResName::sandBK)) {}
+Map::Map(int id, int user_limited) : BK_pBitmap(ResFactory->GetBitMapRes(ResName::sandBK)), map_id(id), user_limited(user_limited) {}
 Map::~Map() {
 	for (auto& com : this->Component_info)
 	{
@@ -257,7 +255,7 @@ void Init_Map_Zero()
 {
 	Map* Default_Map = new Map(0, 2);
 
-	Default_Map->BK_pBitmap = Zero_BK;
+	Default_Map->BK_pBitmap = ResFactory->GetBitMapRes(ResName::sandBK);
 
 	Default_Map->Init_Location.emplace_back(1, 50, 280, 0, TankStyle::DEFAULT);
 	Default_Map->Init_Location.emplace_back(2, _rect.right - 50, 280, 0, TankStyle::DEFAULT);
@@ -333,7 +331,7 @@ void Init_Map_Debug()
 {
 	Map* Debug_Map = new Map(-1, 2);
 
-	Debug_Map->BK_pBitmap = Zero_BK;
+	Debug_Map->BK_pBitmap = ResFactory->GetBitMapRes(ResName::sandBK);
 
 	Debug_Map->Init_Location.emplace_back(1, 50, 280, 0, TankStyle::DEFAULT);
 	Debug_Map->Init_Location.emplace_back(2, _rect.right - 50, 280, 0, TankStyle::DEFAULT);
@@ -341,16 +339,8 @@ void Init_Map_Debug()
 	Map_list[Debug_Map->map_id] = Debug_Map;
 }
 
-void Init_Map_BK()
-{
-	LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"JPG", MAKEINTRESOURCE(BK_SAND), &Zero_BK);
-}
-
-
 void Init_Map()
 {
-	Init_Map_BK();
-	Init_Component_Resource();
 	Init_Map_Zero();
 	Init_Map_Debug();
 }

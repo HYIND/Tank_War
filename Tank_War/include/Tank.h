@@ -37,7 +37,7 @@ public:
 	void DrawTankHP(ID2D1HwndRenderTarget* pRenderTarget = ::pRenderTarget);
 	void DrawTank(ID2D1HwndRenderTarget* pRenderTarget = ::pRenderTarget);
 	void Addbullet(BulletStyle bulletstyle);
-
+	void destory();
 
 	friend class bullet;
 };

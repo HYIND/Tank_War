@@ -1,4 +1,5 @@
 ﻿#include "Tank.h"
+#include "Game.h"
 using namespace std;
 
 
@@ -60,6 +61,11 @@ void Tank::Addbullet(BulletStyle bulletstyle) {
 			temp = temp->next;
 		temp->next = new bullet(this->location.x, this->location.y, this->rotate, bulletstyle, this, temp);
 	}
+}
+
+void Tank::destory() {
+	isalive = false;
+	Game::Instance()->AddGIF(location.x - 50, location.y - 50, location.x + 50, location.y + 50, ResFactory->GetGIFRes(ResName::explosionGIF), 1);
 }
 
 //mutex mtx;

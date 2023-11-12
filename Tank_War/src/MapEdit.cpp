@@ -39,7 +39,8 @@ void Scene_MapEdit::UnActiveSelect()
 	this->curRotate = 0.0;
 }
 
-void Scene_MapEdit::DrawMapEdit() {
+void Scene_MapEdit::DrawMapEdit(double time_diff) {
+	pRenderTarget->DrawBitmap(ResFactory->GetBitMapRes(ResName::opBK), D2D1::RectF(0, 0, _rect.right, _rect.bottom));
 	if (m_Map)
 		m_Map->DrawMap();
 	for (auto& it : TypeMap)

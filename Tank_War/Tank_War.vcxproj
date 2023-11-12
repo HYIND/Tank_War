@@ -170,22 +170,26 @@
     <ClInclude Include="include\Object.h" />
     <ClInclude Include="include\Prop.h" />
     <ClInclude Include="include\Render.h" />
+    <ClInclude Include="include\ResourceManager.h" />
     <ClInclude Include="include\Scene.h" />
     <ClInclude Include="include\stdafx.h" />
     <ClInclude Include="include\Style.h" />
     <ClInclude Include="include\Tank.h" />
     <ClInclude Include="include\Tank_AI.h" />
     <ClInclude Include="include\Tank_War.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Tank_War.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\resource\bitmap3.bmp" />
     <Image Include="..\Resource\BRICK_WALL.png" />
     <Image Include="..\Resource\Bullet.png" />
     <Image Include="..\Resource\Bullet_Green.png" />
     <Image Include="..\Resource\Bullet_Orange.png" />
     <Image Include="..\Resource\Bullet_Purple.png" />
+    <Image Include="..\Resource\explosion.gif" />
     <Image Include="..\Resource\Fail.png" />
     <Image Include="..\Resource\GAME_BG_SAND.jpg" />
     <Image Include="..\Resource\Health_Kit.png" />
@@ -223,6 +227,7 @@
     <ClCompile Include="src\Network.cpp" />
     <ClCompile Include="src\Prop.cpp" />
     <ClCompile Include="src\Render.cpp" />
+    <ClCompile Include="src\ResourceManager.cpp" />
     <ClCompile Include="src\Scene_inner.cpp" />
     <ClCompile Include="src\Scene_outer.cpp" />
     <ClCompile Include="src\Style.cpp" />

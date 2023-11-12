@@ -7,8 +7,6 @@
 
 int my_tank_location = 1;
 
-extern RECT _rect;
-
 Game* Game::Instance()
 {
 	static Game* m_Instance = new Game();
@@ -105,10 +103,21 @@ void Game::Tick()
 	}
 }
 
-void Game::Draw()
+void Game::Draw(double time_diff)
 {
 	map_info.DrawMap(std::bind(&Game::DrawTank, this));
+	DrawGIF(time_diff);
 	return;
+}
+
+void Game::DrawGIF(double time_diff)
+{
+	for (auto it = Gif_list.begin(); it != Gif_list.end();)
+	{
+		if (!(*it)->Draw(time_diff))
+			it = Gif_list.erase(it);
+		else it++;
+	}
 }
 
 void Game::DrawTank() {
@@ -288,7 +297,7 @@ void Game::recv_destoryed(Header& header, char* content)
 	int hited_id = Res.destroyed_tank_id();
 
 	if (Tank_info[hited_id])
-		Tank_info[hited_id]->isalive = false;
+		Tank_info[hited_id]->destory();
 }
 
 void Game::recv_mydestoryed()
@@ -637,7 +646,7 @@ void Game::Bullet_Tick_Move(bullet* pbullet)
 			pother_tank->health -= 21;
 			if (pother_tank->health <= 0)
 			{
-				pother_tank->isalive = false;
+				pother_tank->destory();
 			}
 			pbullet->destroy();
 			player_alive--;
@@ -765,4 +774,11 @@ void Game::Bullet_Tick_Move(bullet* pbullet)
 	}
 
 	Bullet_Tick_Move(pbullet->next);
+}
+
+D2D_GIF* Game::AddGIF(int x1, int y1, int x2, int y2, GIFINFO* gifInfo, int loopCount)
+{
+	D2D_GIF* Gif = new D2D_GIF(x1, y1, x2, y2, gifInfo, loopCount);
+	Gif_list.emplace_back(Gif);
+	return Gif;
 }

@@ -1,5 +1,6 @@
 ﻿#include "D2D.h"
 
+
 ID2D1Factory* pD2DFactory;
 ID2D1HwndRenderTarget* pRenderTarget;
 IWICImagingFactory* pIWICFactory;
@@ -14,10 +15,10 @@ void Set_Fps(int Fps_in)
 	timeInOneFps = 1000 / Fps;
 }
 
-HRESULT LoadResourceBitmap(
+ID2D1Bitmap* LoadResourceBitmap(
 	HINSTANCE hinstance,
 	IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget,
-	LPCWSTR resourceType, LPCWSTR resourceName, ID2D1Bitmap** ppBitmap)
+	LPCWSTR resourceType, LPCWSTR resourceName)
 {
 	if (NULL == pIWICFactory)
 	{
@@ -33,7 +34,7 @@ HRESULT LoadResourceBitmap(
 	IWICBitmapFrameDecode* pSource = NULL;
 	IWICStream* pStream = NULL;
 	IWICFormatConverter* pConverter = NULL;
-	IWICBitmapScaler* pScaler = NULL;
+	//IWICBitmapScaler* pScaler = NULL;
 
 	HRSRC imageResHandle = NULL;
 	HGLOBAL imageResDataHandle = NULL;
@@ -42,9 +43,7 @@ HRESULT LoadResourceBitmap(
 	DWORD imageFileSize = 0;
 
 	// Locate the resource.
-	DWORD k = GetLastError();
 	imageResHandle = FindResource((HMODULE)hinstance, resourceName, resourceType);
-	k = GetLastError();
 	HRESULT hr = imageResHandle ? S_OK : E_FAIL;
 	if (SUCCEEDED(hr))
 	{
@@ -105,6 +104,8 @@ HRESULT LoadResourceBitmap(
 		hr = pIWICFactory->CreateFormatConverter(&pConverter);
 	}
 
+	ID2D1Bitmap* pBitmap = nullptr;
+
 	if (SUCCEEDED(hr))
 	{
 		hr = pConverter->Initialize(
@@ -121,7 +122,7 @@ HRESULT LoadResourceBitmap(
 			hr = pRenderTarget->CreateBitmapFromWicBitmap(
 				pConverter,
 				NULL,
-				ppBitmap
+				&pBitmap
 			);
 
 		}
@@ -129,14 +130,14 @@ HRESULT LoadResourceBitmap(
 		SafeRelease(pSource);
 		SafeRelease(pStream);
 		SafeRelease(pConverter);
-		SafeRelease(pScaler);
+		//SafeRelease(pScaler);
 
-		return hr;
+		return pBitmap;
 	}
 }
 
-HRESULT Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget,
-	LPCTSTR pszResource, ID2D1Bitmap** ppBitmap)
+ID2D1Bitmap* Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget,
+	LPCTSTR pszResource)
 {
 	if (NULL == pIWICFactory)
 	{
@@ -150,7 +151,7 @@ HRESULT Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderT
 	}
 	HRESULT hr = S_OK;
 	IWICStream* pStream = NULL;
-	IWICBitmapScaler* pScaler = NULL;
+	//IWICBitmapScaler* pScaler = NULL;
 	IWICBitmapDecoder* pDecoder = NULL;
 	IWICBitmapFrameDecode* pSource = NULL;
 	IWICFormatConverter* pConverter = NULL;
@@ -188,13 +189,14 @@ HRESULT Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderT
 		);
 	}
 
+	ID2D1Bitmap* pBitmap = nullptr;
 	if (SUCCEEDED(hr))
 	{
 		// Create a Direct2D bitmap from the WIC bitmap.
 		hr = pRenderTarget->CreateBitmapFromWicBitmap(
 			pConverter,
 			NULL,
-			ppBitmap
+			&pBitmap
 		);
 	}
 
@@ -202,7 +204,142 @@ HRESULT Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderT
 	SafeRelease(pSource);
 	SafeRelease(pStream);
 	SafeRelease(pConverter);
-	SafeRelease(pScaler);
+	//SafeRelease(pScaler);
 
-	return hr;
+	return pBitmap;
+}
+
+vector<ID2D1Bitmap*> LoadResourceGIF(
+	HINSTANCE hinstance,
+	IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget,
+	LPCWSTR resourceType, LPCWSTR resourceName)
+{
+	if (NULL == pIWICFactory)
+	{
+		CoInitialize(NULL);
+		CoCreateInstance(
+			CLSID_WICImagingFactory,
+			NULL,
+			CLSCTX_INPROC_SERVER,
+			IID_PPV_ARGS(&pIWICFactory)
+		);
+	}
+	IWICBitmapDecoder* pDecoder = NULL;
+	IWICStream* pStream = NULL;
+	//IWICBitmapScaler* pScaler = NULL;
+
+	HRSRC imageResHandle = NULL;
+	HGLOBAL imageResDataHandle = NULL;
+
+	void* pImageFile = NULL;
+	DWORD imageFileSize = 0;
+
+	// Locate the resource.
+	imageResHandle = FindResource((HMODULE)hinstance, resourceName, resourceType);
+	HRESULT hr = imageResHandle ? S_OK : E_FAIL;
+	if (SUCCEEDED(hr))
+	{
+		// Load the resource.
+		imageResDataHandle = LoadResource(hinstance, imageResHandle);
+
+		hr = imageResDataHandle ? S_OK : E_FAIL;
+	}
+	if (SUCCEEDED(hr))
+	{
+		// Lock it to get a system memory pointer.
+		pImageFile = LockResource(imageResDataHandle);
+
+		hr = pImageFile ? S_OK : E_FAIL;
+	}
+	if (SUCCEEDED(hr))
+	{
+		// Calculate the size.
+		imageFileSize = SizeofResource(hinstance, imageResHandle);
+
+		hr = imageFileSize ? S_OK : E_FAIL;
+
+	}
+	if (SUCCEEDED(hr))
+	{
+		// Create a WIC stream to map onto the memory.
+		hr = pIWICFactory->CreateStream(&pStream);
+	}
+	if (SUCCEEDED(hr))
+	{
+		// Initialize the stream with the memory pointer and size.
+		hr = pStream->InitializeFromMemory(
+			reinterpret_cast<BYTE*>(pImageFile),
+			imageFileSize
+		);
+	}
+	if (SUCCEEDED(hr))
+	{
+		//Create a decoder for the stream.
+		hr = pIWICFactory->CreateDecoderFromStream(
+			pStream,
+			&GUID_ContainerFormatGif,
+			WICDecodeMetadataCacheOnLoad,
+			&pDecoder
+		);
+	}
+	vector<ID2D1Bitmap*> result;
+	if (SUCCEEDED(hr))
+	{
+		UINT count;
+		GUID pguidContainerFormat;
+		hr = pDecoder->GetContainerFormat(&pguidContainerFormat);
+		hr = pDecoder->GetFrameCount(&count);
+
+		if (SUCCEEDED(hr))
+		{
+
+			for (int i = 0; i < count; i++)
+			{
+				IWICBitmapFrameDecode* pSource = NULL;
+				IWICFormatConverter* pConverter = NULL;
+
+				hr = pDecoder->GetFrame(i, &pSource);
+
+				if (SUCCEEDED(hr))
+				{
+					// Convert the image format to 32bppPBGRA
+					// (DXGI_FORMAT_B8G8R8A8_UNORM + D2D1_ALPHA_MODE_PREMULTIPLIED).
+					hr = pIWICFactory->CreateFormatConverter(&pConverter);
+				}
+				ID2D1Bitmap* pBitmap = nullptr;
+				if (SUCCEEDED(hr))
+				{
+					hr = pConverter->Initialize(
+						pSource,
+						GUID_WICPixelFormat32bppPBGRA,
+						WICBitmapDitherTypeNone,
+						NULL,
+						0.f,
+						WICBitmapPaletteTypeMedianCut
+					);
+					if (SUCCEEDED(hr))
+					{
+						//create a Direct2D bitmap from the WIC bitmap.
+						hr = pRenderTarget->CreateBitmapFromWicBitmap(
+							pConverter,
+							NULL,
+							&pBitmap
+						);
+
+					}
+				}
+				result.push_back(pBitmap);
+				SafeRelease(pSource);
+				SafeRelease(pConverter);
+			}
+		}
+
+
+
+		SafeRelease(pDecoder);
+		SafeRelease(pStream);
+		//SafeRelease(pScaler);
+
+	}
+	return result;
 }

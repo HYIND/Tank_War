@@ -22,10 +22,11 @@ HDC hdc;
 void Init_all_Resource()
 {
 	LOGINFO("Init", "Init_All");
-	Init_SceneResource();
+	ResFactory->InitResource();
+	Init_Scene();
 	Init_Style();
 	Init_Map();
-	Init_Prop_Resource();
+	Init_ComponentMap();
 }
 
 // 此代码模块中包含的函数的前向声明:
@@ -145,9 +146,7 @@ enum { _game, _online, hall_refreash, reconnect, ping, room_refreash, sceneTick 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	PAINTSTRUCT ps;
-	RECT rect;
-	GetClientRect(hWnd, &rect);
-	_rect = rect;
+	GetClientRect(hWnd, &_rect);
 	_hwnd = hWnd;
 	switch (message)
 	{

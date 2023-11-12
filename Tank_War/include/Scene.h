@@ -105,9 +105,6 @@ namespace TextFormat
 
 extern HFONT edit_listbox_front;
 
-extern ID2D1Bitmap* OP_pBitmap;
-extern ID2D1Bitmap* TEXT_pBitmap;
-
 extern D2D1_RECT_F DelayRect;
 
 namespace _Scene
@@ -136,12 +133,45 @@ enum class STATUS { Main, Option, Hall_Status, Room_Status, Game_Status, MapEdit
 /* 以下为外部变量的声明 */
 extern HINSTANCE hInst;
 extern HWND _hwnd;
+extern RECT _rect;
 
 namespace MousePos
 {
 	extern int MoveX, MoveY, ClickX, ClickY;
 }
 
+class D2D_GIF {
+public:
+	int locationX1 = 0;
+	int locationY1 = 0;
+	int locationX2 = 0;
+	int locationY2 = 0;
+
+	float opacity = 1.0f;
+
+	double lastTime = 0.f;	//从第一次绘制开始的持续时间
+	double totalTime = 1.f;
+	int loopCount = 1;
+	std::vector<ID2D1Bitmap*> pBitmapVec;
+
+	D2D_GIF(int loc1, int loc2, int loc3, int loc4, GIFINFO* gifInfo, int loopCount = 1, float opacity = 1.0f) :
+		locationX1(loc1), locationY1(loc2), locationX2(loc3), locationY2(loc4), loopCount(loopCount), opacity(opacity) {
+		pBitmapVec = gifInfo->getVecBP();
+		totalTime = gifInfo->getDefaultMsTime();
+	}
+	bool Draw(double time_diff) {
+		int curIndex = int(lastTime / (totalTime / pBitmapVec.size()));
+		int i = curIndex % pBitmapVec.size();
+		ID2D1Bitmap* pBitmap = pBitmapVec[i];
+		pRenderTarget->DrawBitmap(pBitmap,
+			RectF(locationX1, locationY1, locationX2, locationY2),
+			opacity);
+		lastTime += time_diff;
+		if (loopCount <= 0)return true;
+		if (lastTime > loopCount * totalTime)
+			return false;
+	}
+};
 
 //D2D 贴图
 class D2D_Bitmap
@@ -215,6 +245,7 @@ protected:
 	vector<D2D_Button*> Button_list;
 	vector<D2D_Bitmap*> Bitmap_list;
 	vector<D2D_Text*> Text_list;
+	vector<D2D_GIF*> Gif_list;
 
 	//两个用来监测选中变化的指针
 	D2D_Text* Text_changed = NULL;
@@ -228,18 +259,16 @@ public:
 
 	virtual void Load(RECT& rect) = 0;
 
-	// 添加位图
-	D2D_Bitmap* Loadbitmap(int loc1, int loc2, int loc3, int loc4,
-		LPCTSTR pszResource, float opicaty = 1.0f);
-	D2D_Bitmap* LoadResourceBitmap(int loc1, int loc2, int loc3, int loc4,
-		LPCWSTR resourceType, LPCWSTR resourceName, float opacity = 1.0f, HINSTANCE hinstance = hInst
-	);
+	//添加位图
+	D2D_Bitmap* AddResourceBitmap(int loc1, int loc2, int loc3, int loc4, ID2D1Bitmap* pBitmap, float opacity = 1.0f);
 	// 添加文本
-	D2D_Text* LoadText(int loc1, int loc2, int loc3, int loc4, const wchar_t* pwch, ID2D1SolidColorBrush* pDefaultBrush = Brush::pMain_Brush, ID2D1SolidColorBrush* pClickBrush = Brush::pMain_ClickBrush, IDWriteTextFormat* pTextFormat = TextFormat::pMain_Format);
+	D2D_Text* AddText(int loc1, int loc2, int loc3, int loc4, const wchar_t* pwch, ID2D1SolidColorBrush* pDefaultBrush = Brush::pMain_Brush, ID2D1SolidColorBrush* pClickBrush = Brush::pMain_ClickBrush, IDWriteTextFormat* pTextFormat = TextFormat::pMain_Format);
 	// 添加按钮
-	D2D_Button* LoadButton(int loc1, int loc2, int loc3, int loc4, int id);
-	D2D_Button* LoadButton(int loc1, int loc2, int loc3, int loc4, int id, D2D_Bitmap* Bitmap);
-	D2D_Button* LoadButton(int loc1, int loc2, int loc3, int loc4, int id, D2D_Text* Text);
+	D2D_Button* AddButton(int loc1, int loc2, int loc3, int loc4, int id);
+	D2D_Button* AddButton(int loc1, int loc2, int loc3, int loc4, int id, D2D_Bitmap* Bitmap);
+	D2D_Button* AddButton(int loc1, int loc2, int loc3, int loc4, int id, D2D_Text* Text);
+	// 添加GIF
+	D2D_GIF* AddGIF(int loc1, int loc2, int loc3, int loc4, GIFINFO* gifInfo, int loopCount = -1);
 
 	// 修改按钮
 	bool ModifyButton_Location(int id, int loc1, int loc2, int loc3, int loc4, bool offset);
@@ -253,8 +282,8 @@ public:
 	bool DeleteButton(int id);
 
 	// 绘制函数
-	void DrawScene();
-	virtual void OnDrawScene();
+	void DrawScene(double time_diff);
+	virtual void OnDrawScene(double time_diff);
 	// 鼠标移动消息反馈函数
 	void Move();
 	virtual void OnMove();
@@ -291,7 +320,8 @@ public:
 	map<HWND, enum class keybroad> key_map_set2;
 
 	using Scene::Scene;
-	virtual void OnDrawScene();
+	virtual void OnDrawScene(double time_diff);
+	void DrawOption();
 	void Get_Key();
 	virtual void Load(RECT& rect);
 };
@@ -307,6 +337,8 @@ public:
 	HWND edit_hall;
 
 	virtual void Load(RECT& rect);
+	void DrawHall();
+	virtual void OnDrawScene(double time_diff);
 };
 
 class Scene_Room :public Scene
@@ -319,6 +351,8 @@ public:
 
 public:
 	using Scene::Scene;
+	void DrawRoom();
+	virtual void OnDrawScene(double time_diff);
 	static void Show_Room(bool flag);
 	virtual void Load(RECT& rect);
 };
@@ -341,6 +375,8 @@ class Scene_Gaming_local :public Scene
 {
 	using Scene::Scene;
 public:
+	void DrawGame();
+	virtual void OnDrawScene(double time_diff);
 	virtual void Load(RECT& rect);
 };
 
@@ -348,6 +384,8 @@ class Scene_Gaming_online :public Scene
 {
 	using Scene::Scene;
 public:
+	void DrawGame();
+	virtual void OnDrawScene(double time_diff);
 	virtual void Load(RECT& rect);
 };
 
@@ -376,6 +414,8 @@ class Scene_Main :public Scene
 {
 	using Scene::Scene;
 public:
+	void DrawMain();
+	virtual void OnDrawScene(double time_diff);
 	virtual void Load(RECT& rect);
 };
 
@@ -385,7 +425,7 @@ class Scene_MapEdit :public Scene
 {
 	using Scene::Scene;
 public:
-	virtual void OnDrawScene();
+	virtual void OnDrawScene(double time_diff);
 	virtual void Load(RECT& rect);
 	virtual void OnClick(bool isLButtonPress, bool isShiftPress);
 	virtual void OnTick();
@@ -399,7 +439,7 @@ public:
 	void SaveMapFile();
 
 protected:
-	void DrawMapEdit();
+	void DrawMapEdit(double time_diff);
 private:
 	component_type curCom = component_type::DEFAULT;
 	TankStyle curStyle = TankStyle::NULLSTYLE;
@@ -407,7 +447,7 @@ private:
 	Map* m_Map;
 };
 
-void Init_SceneResource();
+void Init_Scene();
 void Set_CurScene(STATUS status_in);
 STATUS Get_CurScene();
 

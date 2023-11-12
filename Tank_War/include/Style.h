@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "D2D.h"
+#include "ResourceManager.h"
 using namespace std;
 
 enum class TankStyle :int { NULLSTYLE = -1, DEFAULT, BIG_DEFAULT, SMALL_DEFAULT };

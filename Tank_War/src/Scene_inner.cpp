@@ -1,237 +1,57 @@
 ﻿#include "Scene.h"
 
-D2D_Bitmap* Scene::Loadbitmap(int loc1, int loc2, int loc3, int loc4, LPCTSTR pszResource, float opacity)
+
+D2D_Bitmap* Scene::AddResourceBitmap(int loc1, int loc2, int loc3, int loc4, ID2D1Bitmap* pBitmap, float opacity)
 {
-	D2D_Bitmap* Bitmap = new D2D_Bitmap(loc1, loc2, loc3, loc4, NULL, opacity);
-	if (NULL == pIWICFactory)
-	{
-		CoInitialize(NULL);
-		CoCreateInstance(
-			CLSID_WICImagingFactory,
-			NULL,
-			CLSCTX_INPROC_SERVER,
-			IID_PPV_ARGS(&pIWICFactory)
-		);
-	}
-	HRESULT hr = S_OK;
-	IWICStream* pStream = NULL;
-	IWICBitmapScaler* pScaler = NULL;
-	IWICBitmapDecoder* pDecoder = NULL;
-	IWICBitmapFrameDecode* pSource = NULL;
-	IWICFormatConverter* pConverter = NULL;
+	D2D_Bitmap* Bitmap = new D2D_Bitmap(loc1, loc2, loc3, loc4, pBitmap, opacity);
 
-	hr = pIWICFactory->CreateDecoderFromFilename(
-		pszResource,
-		NULL,
-		GENERIC_READ,
-		WICDecodeMetadataCacheOnLoad,
-		&pDecoder
-	);
+	Bitmap_list.emplace_back(Bitmap);
 
-	if (SUCCEEDED(hr))
-	{
-		// Create the initial frame.
-		hr = pDecoder->GetFrame(0, &pSource);
-	}
-
-	if (SUCCEEDED(hr))
-	{
-		hr = pIWICFactory->CreateFormatConverter(&pConverter);
-	}
-
-	if (SUCCEEDED(hr))
-	{
-		hr = pConverter->Initialize(
-			pSource,
-			GUID_WICPixelFormat32bppPBGRA,
-			WICBitmapDitherTypeNone,
-			NULL,
-			0.f,
-			WICBitmapPaletteTypeMedianCut
-		);
-	}
-
-	if (SUCCEEDED(hr))
-	{
-		// Create a Direct2D bitmap from the WIC bitmap.
-		hr = pRenderTarget->CreateBitmapFromWicBitmap(
-			pConverter,
-			NULL,
-			&(Bitmap->pBitmap)
-		);
-	}
-
-	if (SUCCEEDED(hr))
-	{
-		Bitmap_list.emplace_back(Bitmap);
-	}
-
-	SafeRelease(pDecoder);
-	SafeRelease(pSource);
-	SafeRelease(pStream);
-	SafeRelease(pConverter);
-	SafeRelease(pScaler);
 
 	return Bitmap;
 }
 
-D2D_Bitmap* Scene::LoadResourceBitmap(int loc1, int loc2, int loc3, int loc4,
-	LPCWSTR resourceType, LPCWSTR resourceName, float opacity, HINSTANCE hinstance
-)
-{
-	D2D_Bitmap* Bitmap = new D2D_Bitmap(loc1, loc2, loc3, loc4, NULL, opacity);
-	if (NULL == pIWICFactory)
-	{
-		CoInitialize(NULL);
-		CoCreateInstance(
-			CLSID_WICImagingFactory,
-			NULL,
-			CLSCTX_INPROC_SERVER,
-			IID_PPV_ARGS(&pIWICFactory)
-		);
-	}
-	IWICBitmapDecoder* pDecoder = NULL;
-	IWICBitmapFrameDecode* pSource = NULL;
-	IWICStream* pStream = NULL;
-	IWICFormatConverter* pConverter = NULL;
-	IWICBitmapScaler* pScaler = NULL;
-
-	HRSRC imageResHandle = NULL;
-	HGLOBAL imageResDataHandle = NULL;
-
-	void* pImageFile = NULL;
-	DWORD imageFileSize = 0;
-
-	// Locate the resource.
-	imageResHandle = FindResource((HMODULE)hinstance, resourceName, resourceType);;
-	HRESULT hr = imageResHandle ? S_OK : E_FAIL;
-	if (SUCCEEDED(hr))
-	{
-		// Load the resource.
-		imageResDataHandle = LoadResource(hinstance, imageResHandle);
-
-		hr = imageResDataHandle ? S_OK : E_FAIL;
-	}
-	if (SUCCEEDED(hr))
-	{
-		// Lock it to get a system memory pointer.
-		pImageFile = LockResource(imageResDataHandle);
-
-		hr = pImageFile ? S_OK : E_FAIL;
-	}
-	if (SUCCEEDED(hr))
-	{
-		// Calculate the size.
-		imageFileSize = SizeofResource(hinstance, imageResHandle);
-
-		hr = imageFileSize ? S_OK : E_FAIL;
-
-	}
-	if (SUCCEEDED(hr))
-	{
-		// Create a WIC stream to map onto the memory.
-		hr = pIWICFactory->CreateStream(&pStream);
-	}
-	if (SUCCEEDED(hr))
-	{
-		// Initialize the stream with the memory pointer and size.
-		hr = pStream->InitializeFromMemory(
-			reinterpret_cast<BYTE*>(pImageFile),
-			imageFileSize
-		);
-	}
-	if (SUCCEEDED(hr))
-	{
-		// Create a decoder for the stream.
-		hr = pIWICFactory->CreateDecoderFromStream(
-			pStream,
-			NULL,
-			WICDecodeMetadataCacheOnLoad,
-			&pDecoder
-		);
-	}
-	if (SUCCEEDED(hr))
-	{
-		// Create the initial frame.
-		hr = pDecoder->GetFrame(0, &pSource);
-	}
-	if (SUCCEEDED(hr))
-	{
-		// Convert the image format to 32bppPBGRA
-		// (DXGI_FORMAT_B8G8R8A8_UNORM + D2D1_ALPHA_MODE_PREMULTIPLIED).
-		hr = pIWICFactory->CreateFormatConverter(&pConverter);
-	}
-
-	if (SUCCEEDED(hr))
-	{
-		hr = pConverter->Initialize(
-			pSource,
-			GUID_WICPixelFormat32bppPBGRA,
-			WICBitmapDitherTypeNone,
-			NULL,
-			0.f,
-			WICBitmapPaletteTypeMedianCut
-		);
-		if (SUCCEEDED(hr))
-		{
-			//create a Direct2D bitmap from the WIC bitmap.
-			hr = pRenderTarget->CreateBitmapFromWicBitmap(
-				pConverter,
-				NULL,
-				&(Bitmap->pBitmap)
-			);
-
-		}
-
-		if (SUCCEEDED(hr))
-		{
-			Bitmap_list.emplace_back(Bitmap);
-		}
-
-		SafeRelease(pDecoder);
-		SafeRelease(pSource);
-		SafeRelease(pStream);
-		SafeRelease(pConverter);
-		SafeRelease(pScaler);
-
-		return Bitmap;
-	}
-}
-
-D2D_Text* Scene::LoadText(int loc1, int loc2, int loc3, int loc4, const wchar_t* pwch, ID2D1SolidColorBrush* pDefaultBrush, ID2D1SolidColorBrush* pClickBrush, IDWriteTextFormat* pTextFormat)
+D2D_Text* Scene::AddText(int loc1, int loc2, int loc3, int loc4, const wchar_t* pwch, ID2D1SolidColorBrush* pDefaultBrush, ID2D1SolidColorBrush* pClickBrush, IDWriteTextFormat* pTextFormat)
 {
 	D2D_Text* Text = new D2D_Text(loc1, loc2, loc3, loc4, pwch, pDefaultBrush, pClickBrush, pTextFormat);
 	Text_list.emplace_back(Text);
 	return Text;
 }
 
-D2D_Button* Scene::LoadButton(int loc1, int loc2, int loc3, int loc4, int id)
+D2D_Button* Scene::AddButton(int loc1, int loc2, int loc3, int loc4, int id)
 {
 	D2D_Button* Button = new D2D_Button(loc1, loc2, loc3, loc4, id);
 	Button_list.emplace_back(Button);
 	return Button;
 }
 
-D2D_Button* Scene::LoadButton(int loc1, int loc2, int loc3, int loc4, int id, D2D_Bitmap* Bitmap)
+D2D_Button* Scene::AddButton(int loc1, int loc2, int loc3, int loc4, int id, D2D_Bitmap* Bitmap)
 {
 	D2D_Button* Button = new D2D_Button(loc1, loc2, loc3, loc4, id, Bitmap);
 	Button_list.emplace_back(Button);
 	return Button;
 }
 
-D2D_Button* Scene::LoadButton(int loc1, int loc2, int loc3, int loc4, int id, D2D_Text* Text)
+D2D_Button* Scene::AddButton(int loc1, int loc2, int loc3, int loc4, int id, D2D_Text* Text)
 {
 	D2D_Button* Button = new D2D_Button(loc1, loc2, loc3, loc4, id, Text);
 	Button_list.emplace_back(Button);
 	return Button;
 }
 
-void Scene::DrawScene()
+D2D_GIF* Scene::AddGIF(int loc1, int loc2, int loc3, int loc4, GIFINFO* gifInfo, int loopCount)
 {
-	OnDrawScene();
+	D2D_GIF* Gif = new D2D_GIF(loc1, loc2, loc3, loc4, gifInfo, loopCount);
+	Gif_list.emplace_back(Gif);
+	return Gif;
 }
 
-void Scene::OnDrawScene()
+void Scene::DrawScene(double time_diff)
+{
+	OnDrawScene(time_diff);
+}
+
+void Scene::OnDrawScene(double time_diff)
 {
 	for (auto& v : Text_list)
 	{
@@ -250,6 +70,13 @@ void Scene::OnDrawScene()
 		pRenderTarget->DrawBitmap(v->pBitmap,
 			RectF(v->Bitmap_location1, v->Bitmap_location2, v->Bitmap_location3, v->Bitmap_location4),
 			v->opacity);
+	}
+
+	for (auto it = Gif_list.begin(); it != Gif_list.end();)
+	{
+		if (!(*it)->Draw(time_diff))
+			it = Gif_list.erase(it);
+		else it++;
 	}
 }
 

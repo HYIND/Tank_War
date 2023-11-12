@@ -6,8 +6,6 @@
 #define AIDKIT_WIDTH 40
 #define AIDKIT_HEIGHT 40
 
-extern ID2D1Bitmap* aidkit_pBitmap;
-
 
 //道具类，记录道具类型，道具坐标以及过期时间
 class Prop :public Game_Component
@@ -34,8 +32,6 @@ class Aid_kit :public Prop
 {
 public:
 	Aid_kit(double x, double y, int id)
-		:Prop(x, y, AIDKIT_WIDTH, AIDKIT_HEIGHT, id, aidkit_pBitmap, component_type::AIDKIT) {};
+		:Prop(x, y, AIDKIT_WIDTH, AIDKIT_HEIGHT, id, ResFactory->GetBitMapRes(ResName::aidKit), component_type::AIDKIT) {};
 	using Prop::Draw;
 };
-
-void Init_Prop_Resource();

@@ -13,6 +13,7 @@
 #define IDI_Tank_War                    107
 #define IDI_SMALL                       108
 #define IDC_WINDOWSPROJECT1             109
+#define EXPLOISION_GIF                  110
 #define IDR_MAINFRAME                   128
 #define OPBK_PNG                        129
 #define IDD_DIALOG_PAUSE                134
@@ -38,7 +39,6 @@
 #define TANK_PNG                        177
 #define IDB_PNG3                        185
 #define PAUSE_PNG                       186
-#define TEST_GIF                        188
 #define BRICK_WALL                      190
 #define IDB_BITMAP4                     191
 #define HEALTH_KIT                      193
@@ -47,14 +47,12 @@
 #define WATER                           196
 #define IDR_JPG2                        197
 #define BK_SAND                         197
+#define IDB_BITMAP3                     199
 #define IDC_BUTTON1                     1002
-#define MYSOURCE_TEXTBK                 1002
-#define OP                              1002
 #define IDC_BUTTON2                     1003
 #define IRON_WALL                       1003
 #define IDC_BUTTON3                     1004
 #define RETURN_PNG                      1004
-#define NFG                             1004
 #define IDC_LIST6                       1014
 #define IDC_LIST2                       1014
 #define IDC_LIST1                       1015
@@ -71,9 +69,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        199
+#define _APS_NEXT_RESOURCE_VALUE        201
 #define _APS_NEXT_COMMAND_VALUE         32774
 #define _APS_NEXT_CONTROL_VALUE         1021
-#define _APS_NEXT_SYMED_VALUE           110
+#define _APS_NEXT_SYMED_VALUE           111
 #endif
 #endif

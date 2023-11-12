@@ -13,9 +13,14 @@ extern double timeInOneFps;
 
 void Set_Fps(int Fps_in);
 
-HRESULT LoadResourceBitmap(HINSTANCE hinstance,
+ID2D1Bitmap* LoadResourceBitmap(HINSTANCE hinstance,
 	IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget,
-	LPCWSTR resourceType, LPCWSTR resourceName, ID2D1Bitmap** ppBitmap);
+	LPCWSTR resourceType, LPCWSTR resourceName);
 
-HRESULT Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget,
-	LPCTSTR pszResource, ID2D1Bitmap** ppBitmap);
+ID2D1Bitmap* Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget,
+	LPCTSTR pszResource);
+
+vector<ID2D1Bitmap*> LoadResourceGIF(
+	HINSTANCE hinstance,
+	IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget,
+	LPCWSTR resourceType, LPCWSTR resourceName);

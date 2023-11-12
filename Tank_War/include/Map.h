@@ -3,7 +3,7 @@
 #include "Tank.h"
 #include "Game_Component.h"
 #include "Prop.h"
-#include "D2D.h"
+#include "ResourceManager.h"
 
 struct Init_info {
 	int Tank_id = 0;							//编号

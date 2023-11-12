@@ -1,12 +1,6 @@
 ﻿#include "Game_Component.h"
-#include "D2D.h"
-
-ID2D1Bitmap* brick_wall_pBitmap;
-ID2D1Bitmap* iron_wall_pBitmap;
 
 map<component_type, Com_Style_info*> com_info;
-
-extern HINSTANCE hInst;
 
 void Game_Component::Draw()
 {
@@ -63,11 +57,8 @@ int Game_Component::reduce_health(int reduce)
 	}
 }
 
-void Init_Component_Resource()
+void Init_ComponentMap()
 {
-	LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(BRICK_WALL), &brick_wall_pBitmap);
-	com_info[component_type::BRICK] = new Com_Style_info(BRICK_WIDTH, BRICK_HEIGHT, 60, brick_wall_pBitmap);
-	LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(IRON_WALL), &iron_wall_pBitmap);
-	com_info[component_type::IRON] = new Com_Style_info(IRON_WIDTH, IRON_HEIGHT, 9999, iron_wall_pBitmap);
-
+	com_info[component_type::BRICK] = new Com_Style_info(BRICK_WIDTH, BRICK_HEIGHT, 60, ResFactory->GetBitMapRes(ResName::brickWall));
+	com_info[component_type::IRON] = new Com_Style_info(IRON_WIDTH, IRON_HEIGHT, 9999, ResFactory->GetBitMapRes(ResName::ironWall));
 }

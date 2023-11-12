@@ -2,7 +2,8 @@
 #include "Network.h"
 #include "keymap.h"
 #include "Map.h"
-
+#include "ResourceManager.h"
+#include "Game.h"
 
 namespace RectBroder
 {
@@ -42,9 +43,6 @@ namespace TextFormat
 }
 
 HFONT edit_listbox_front;
-
-ID2D1Bitmap* OP_pBitmap;
-ID2D1Bitmap* TEXT_pBitmap;
 
 D2D1_RECT_F DelayRect;	//	延迟显示位
 
@@ -232,84 +230,95 @@ BOOL CALLBACK GetID_Proc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	return FALSE;
 }
 
+void Scene_Main::DrawMain()
+{
+	pRenderTarget->DrawBitmap(ResFactory->GetBitMapRes(ResName::opBK), D2D1::RectF(0, 0, _rect.right, _rect.bottom));
+}
+
+void Scene_Main::OnDrawScene(double time_diff)
+{
+	DrawMain();
+	Scene::OnDrawScene(time_diff);
+}
+
 void Scene_Main::Load(RECT& rect)
 {
 	int loc1 = (rect.left + rect.right) / 2 - 120;
 	int loc3 = (rect.left + rect.right) / 2 + 120;
-	LoadButton(loc1, 80, loc3, 130,
+	AddButton(loc1, 80, loc3, 130,
 		IDB_LOCALGAME,
-		LoadText(loc1, 80, loc3, 130, L"开始游戏"));
+		AddText(loc1, 80, loc3, 130, L"开始游戏"));
 
-	LoadButton(loc1, 180, loc3, 230,
+	AddButton(loc1, 180, loc3, 230,
 		IDB_ENTERHALL,
-		LoadText(loc1, 180, loc3, 230, L"联机大厅"));
+		AddText(loc1, 180, loc3, 230, L"联机大厅"));
 
-	LoadButton(loc1, 280, loc3, 330,
+	AddButton(loc1, 280, loc3, 330,
 		IDB_OPTION,
-		LoadText(loc1, 280, loc3, 330, L"设置"));
+		AddText(loc1, 280, loc3, 330, L"设置"));
 
-	LoadButton(loc1, 380, loc3, 430,
+	AddButton(loc1, 380, loc3, 430,
 		IDB_MAPEDIT,
-		LoadText(loc1, 380, loc3, 430, L"地图编辑"));
+		AddText(loc1, 380, loc3, 430, L"地图编辑"));
 
-	LoadButton(loc1, 480, loc3, 530,
+	AddButton(loc1, 480, loc3, 530,
 		IDB_QUITGAME,
-		LoadText(loc1, 480, loc3, 530, L"退出游戏"));
+		AddText(loc1, 480, loc3, 530, L"退出游戏"));
 }
 
 void Scene_Hall::Load(RECT& rect)
 {
-	LoadResourceBitmap(broder_left, broder_top, broder_right, broder_bottom, L"PNG", MAKEINTRESOURCE(TEXTBK_PNG), 0.4f);
+	AddResourceBitmap(broder_left, broder_top, broder_right, broder_bottom, ResFactory->GetBitMapRes(ResName::textBK), 0.4f);
 
-	LoadResourceBitmap(broder_left + len_x * 6 + 10, broder_top + len_y * 5, broder_right - 10, broder_bottom - len_y, L"PNG", MAKEINTRESOURCE(TEXTBK_PNG), 0.2f);
+	AddResourceBitmap(broder_left + len_x * 6 + 10, broder_top + len_y * 5, broder_right - 10, broder_bottom - len_y, ResFactory->GetBitMapRes(ResName::textBK), 0.2f);
 
 	{
-		LoadButton(rect.left, rect.top, rect.left + 144, rect.top + 87,
+		AddButton(rect.left, rect.top, rect.left + 144, rect.top + 87,
 			IDB_EXITHALL,
-			LoadResourceBitmap(rect.left, rect.top, rect.left + 144, rect.top + 87, L"PNG", MAKEINTRESOURCE(RETURN_PNG)));
+			AddResourceBitmap(rect.left, rect.top, rect.left + 144, rect.top + 87, ResFactory->GetBitMapRes(ResName::returnBP)));
 	}
 
 	{
-		LoadText(broder_left + len_x, broder_top,
+		AddText(broder_left + len_x, broder_top,
 			broder_left + len_x * 4, broder_top + len_y - 3,
 			L"房间列表", Brush::pHall_Brush, Brush::pHall_Brush, TextFormat::pHall_Format);
-		LoadText(broder_left + len_x * 7 - 5, broder_top + 5,
+		AddText(broder_left + len_x * 7 - 5, broder_top + 5,
 			broder_left + len_x * 9 + 5, broder_top + len_y + 3,
 			L"大厅用户列表", Brush::pHall_Brush, Brush::pHall_Brush, TextFormat::pHall_Format);
 
-		LoadText(broder_left + len_x * 0.5, broder_top + len_y * 5.5,
+		AddText(broder_left + len_x * 0.5, broder_top + len_y * 5.5,
 			broder_left + len_x, broder_top + len_y * 6,
 			L"公", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
-		LoadText(broder_left + len_x * 0.5, broder_top + len_y * 6,
+		AddText(broder_left + len_x * 0.5, broder_top + len_y * 6,
 			broder_left + len_x, broder_top + len_y * 6.5,
 			L"共", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
-		LoadText(broder_left + len_x * 0.5, broder_top + len_y * 6.5,
+		AddText(broder_left + len_x * 0.5, broder_top + len_y * 6.5,
 			broder_left + len_x, broder_top + len_y * 7,
 			L"频", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
-		LoadText(broder_left + len_x * 0.5, broder_top + len_y * 7,
+		AddText(broder_left + len_x * 0.5, broder_top + len_y * 7,
 			broder_left + len_x, broder_top + len_y * 7.5,
 			L"道", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
 	}
 
 	{
-		LoadButton(broder_left + len_x * 6 + 10, broder_top + len_y * 5 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 6,
+		AddButton(broder_left + len_x * 6 + 10, broder_top + len_y * 5 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 6,
 			IDB_ENTERROOM,
-			_Scene::SHall->LoadText(broder_left + len_x * 6 + 10, broder_top + len_y * 5 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 6,
+			_Scene::SHall->AddText(broder_left + len_x * 6 + 10, broder_top + len_y * 5 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 6,
 				L"加入房间", Brush::pHall_Brush, Brush::pHall_ClickBrush, TextFormat::pHall_Format));
 
-		LoadButton(broder_left + len_x * 8, broder_top + len_y * 5 + 10, broder_right - 10, broder_top + len_y * 6,
+		AddButton(broder_left + len_x * 8, broder_top + len_y * 5 + 10, broder_right - 10, broder_top + len_y * 6,
 			IDB_CREATEROOM,
-			_Scene::SHall->LoadText(broder_left + len_x * 8, broder_top + len_y * 5 + 10, broder_right - 10, broder_top + len_y * 6,
+			_Scene::SHall->AddText(broder_left + len_x * 8, broder_top + len_y * 5 + 10, broder_right - 10, broder_top + len_y * 6,
 				L"创建房间", Brush::pHall_Brush, Brush::pHall_ClickBrush, TextFormat::pHall_Format));
 
-		LoadButton(broder_left + len_x * 6 + 10, broder_top + len_y * 6 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 7,
+		AddButton(broder_left + len_x * 6 + 10, broder_top + len_y * 6 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 7,
 			IDB_REFRESH,
-			_Scene::SHall->LoadText(broder_left + len_x * 6 + 10, broder_top + len_y * 6 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 7,
+			_Scene::SHall->AddText(broder_left + len_x * 6 + 10, broder_top + len_y * 6 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 7,
 				L"刷新", Brush::pHall_Brush, Brush::pHall_ClickBrush, TextFormat::pHall_Format));
 
-		LoadButton(broder_left + len_x * 6 + 10, broder_top + len_y * 8 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 9,
+		AddButton(broder_left + len_x * 6 + 10, broder_top + len_y * 8 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 9,
 			IDB_HALL_SEND,
-			_Scene::SHall->LoadText(broder_left + len_x * 6 + 10, broder_top + len_y * 8 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 9,
+			_Scene::SHall->AddText(broder_left + len_x * 6 + 10, broder_top + len_y * 8 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 9,
 				L"发送", Brush::pHall_Brush, Brush::pHall_ClickBrush, TextFormat::pHall_Format));
 	}
 
@@ -365,6 +374,25 @@ void Scene_Hall::Load(RECT& rect)
 	}
 }
 
+void Scene_Hall::DrawHall()
+{
+	wstring ws = to_wstring(NetManager::Instance()->Get_Delay()) + L"ms";
+	const wchar_t* delay_ch = ws.c_str();
+	pRenderTarget->DrawText(
+		delay_ch,
+		wcslen(delay_ch),
+		TextFormat::pPing_Format,
+		DelayRect,
+		Brush::pMain_Brush
+	);
+}
+
+void Scene_Hall::OnDrawScene(double time_diff)
+{
+	DrawHall();
+	Scene::OnDrawScene(time_diff);
+}
+
 void Scene_Room::Load(RECT& rect)
 {
 	if (isLoad == false)
@@ -414,50 +442,50 @@ void Scene_Room::Load(RECT& rect)
 
 void Scene_Option::Load(RECT& rect)
 {
-	LoadResourceBitmap(broder_left, broder_top, broder_right, broder_bottom, L"PNG", MAKEINTRESOURCE(TEXTBK_PNG), 0.4f);
-	LoadButton(rect.left, rect.top, rect.left + 144, rect.top + 87,
+	AddResourceBitmap(broder_left, broder_top, broder_right, broder_bottom, ResFactory->GetBitMapRes(ResName::textBK), 0.4f);
+	AddButton(rect.left, rect.top, rect.left + 144, rect.top + 87,
 		IDB_EXITOPTION,
-		LoadResourceBitmap(rect.left, rect.top, rect.left + 144, rect.top + 87, L"PNG", MAKEINTRESOURCE(RETURN_PNG)));
+		AddResourceBitmap(rect.left, rect.top, rect.left + 144, rect.top + 87, ResFactory->GetBitMapRes(ResName::returnBP)));
 
 	{		/* 帧率设置 */
-		LoadText(broder_left + len_x * 2, broder_top + len_y,
+		AddText(broder_left + len_x * 2, broder_top + len_y,
 			broder_left + len_x * 4, broder_top + len_y * 1.5,
 			L"设置", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
 
-		LoadText(broder_left + len_x * 1, broder_top + len_y * 2,
+		AddText(broder_left + len_x * 1, broder_top + len_y * 2,
 			broder_left + len_x * 2, broder_top + len_y * 3,
 			L"帧率", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
-		LoadText(broder_left + len_x * 3 + 10, broder_top + len_y * 2,
+		AddText(broder_left + len_x * 3 + 10, broder_top + len_y * 2,
 			broder_left + len_x * 4, broder_top + len_y * 3,
 			L"30", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
-		LoadText(broder_left + len_x * 5 + 10, broder_top + len_y * 2,
+		AddText(broder_left + len_x * 5 + 10, broder_top + len_y * 2,
 			broder_left + len_x * 6, broder_top + len_y * 3,
 			L"60", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
-		LoadText(broder_left + len_x * 7 + 10, broder_top + len_y * 2,
+		AddText(broder_left + len_x * 7 + 10, broder_top + len_y * 2,
 			broder_left + len_x * 8, broder_top + len_y * 3,
 			L"144", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
-		LoadButton(broder_left + len_x * 3 - 12, broder_top + len_y * 2.5 - 12,
+		AddButton(broder_left + len_x * 3 - 12, broder_top + len_y * 2.5 - 12,
 			broder_left + len_x * 3 + 12, broder_top + len_y * 2.5 + 12,
 			IDB_SETFPS_30);
-		LoadButton(broder_left + len_x * 5 - 12, broder_top + len_y * 2.5 - 12,
+		AddButton(broder_left + len_x * 5 - 12, broder_top + len_y * 2.5 - 12,
 			broder_left + len_x * 5 + 12, broder_top + len_y * 2.5 + 12,
 			IDB_SETFPS_60);
-		LoadButton(broder_left + len_x * 7 - 12, broder_top + len_y * 2.5 - 12,
+		AddButton(broder_left + len_x * 7 - 12, broder_top + len_y * 2.5 - 12,
 			broder_left + len_x * 7 + 12, broder_top + len_y * 2.5 + 12,
 			IDB_SETFPS_144);
 	}
 
 	{	/* 键位设置 */
-		LoadText(broder_left + len_x * 2, broder_top + len_y * 4,
+		AddText(broder_left + len_x * 2, broder_top + len_y * 4,
 			broder_left + len_x * 4, broder_top + len_y * 5,
 			L"键位设置", Brush::pWhite_Brush, Brush::pHall_Brush, TextFormat::pHall_Format);
 
 		{	/* P1 */
-			LoadText(broder_left + len_x * 1, broder_top + len_y * 5,
+			AddText(broder_left + len_x * 1, broder_top + len_y * 5,
 				broder_left + len_x * 2, broder_top + len_y * 7.5,
 				L"P1", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 
-			LoadText(broder_left + len_x * 2, broder_top + len_y * 5,
+			AddText(broder_left + len_x * 2, broder_top + len_y * 5,
 				broder_left + len_x * 2.5, broder_top + len_y * 5.5,
 				L"UP", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 			key1_UP = CreateWindowW(L"EDIT", L"",
@@ -467,7 +495,7 @@ void Scene_Option::Load(RECT& rect)
 				_hwnd, (HMENU)EDIT_EKY1_UP, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 			Key_map_PreProc = SetWindowLongPtr(key1_UP, GWLP_WNDPROC, (LONG_PTR)Key_map_Proc1);
 
-			LoadText(broder_left + len_x * 2, broder_top + len_y * 5.5,
+			AddText(broder_left + len_x * 2, broder_top + len_y * 5.5,
 				broder_left + len_x * 2.5, broder_top + len_y * 6,
 				L"DOWN", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 			key1_DOWN = CreateWindowW(L"EDIT", L"",
@@ -477,7 +505,7 @@ void Scene_Option::Load(RECT& rect)
 				_hwnd, (HMENU)EDIT_EKY1_DOWN, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 			Key_map_PreProc = SetWindowLongPtr(key1_DOWN, GWLP_WNDPROC, (LONG_PTR)Key_map_Proc1);
 
-			LoadText(broder_left + len_x * 2, broder_top + len_y * 6,
+			AddText(broder_left + len_x * 2, broder_top + len_y * 6,
 				broder_left + len_x * 2.5, broder_top + len_y * 6.5,
 				L"LEFT", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 			key1_LEFT = CreateWindowW(L"EDIT", L"",
@@ -487,7 +515,7 @@ void Scene_Option::Load(RECT& rect)
 				_hwnd, (HMENU)EDIT_EKY1_LEFT, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 			Key_map_PreProc = SetWindowLongPtr(key1_LEFT, GWLP_WNDPROC, (LONG_PTR)Key_map_Proc1);
 
-			LoadText(broder_left + len_x * 2, broder_top + len_y * 6.5,
+			AddText(broder_left + len_x * 2, broder_top + len_y * 6.5,
 				broder_left + len_x * 2.5, broder_top + len_y * 7,
 				L"RIGHT", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 			key1_RIGHT = CreateWindowW(L"EDIT", L"",
@@ -497,7 +525,7 @@ void Scene_Option::Load(RECT& rect)
 				_hwnd, (HMENU)EDIT_EKY1_RIGHT, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 			Key_map_PreProc = SetWindowLongPtr(key1_RIGHT, GWLP_WNDPROC, (LONG_PTR)Key_map_Proc1);
 
-			LoadText(broder_left + len_x * 2, broder_top + len_y * 7,
+			AddText(broder_left + len_x * 2, broder_top + len_y * 7,
 				broder_left + len_x * 2.5, broder_top + len_y * 7.5,
 				L"FIRE", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 			key1_FIRE = CreateWindowW(L"EDIT", L"",
@@ -509,11 +537,11 @@ void Scene_Option::Load(RECT& rect)
 		}
 
 		{	/* P2 */
-			LoadText(broder_left + len_x * 4, broder_top + len_y * 5,
+			AddText(broder_left + len_x * 4, broder_top + len_y * 5,
 				broder_left + len_x * 5, broder_top + len_y * 7.5,
 				L"P2", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 
-			LoadText(broder_left + len_x * 5, broder_top + len_y * 5,
+			AddText(broder_left + len_x * 5, broder_top + len_y * 5,
 				broder_left + len_x * 5.5, broder_top + len_y * 5.5,
 				L"UP", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 			key2_UP = CreateWindowW(L"EDIT", L"",
@@ -523,7 +551,7 @@ void Scene_Option::Load(RECT& rect)
 				_hwnd, (HMENU)EDIT_EKY1_UP, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 			Key_map_PreProc = SetWindowLongPtr(key2_UP, GWLP_WNDPROC, (LONG_PTR)Key_map_Proc2);
 
-			LoadText(broder_left + len_x * 5, broder_top + len_y * 5.5,
+			AddText(broder_left + len_x * 5, broder_top + len_y * 5.5,
 				broder_left + len_x * 5.5, broder_top + len_y * 6,
 				L"DOWN", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 			key2_DOWN = CreateWindowW(L"EDIT", L"",
@@ -533,7 +561,7 @@ void Scene_Option::Load(RECT& rect)
 				_hwnd, (HMENU)EDIT_EKY1_DOWN, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 			Key_map_PreProc = SetWindowLongPtr(key2_DOWN, GWLP_WNDPROC, (LONG_PTR)Key_map_Proc2);
 
-			LoadText(broder_left + len_x * 5, broder_top + len_y * 6,
+			AddText(broder_left + len_x * 5, broder_top + len_y * 6,
 				broder_left + len_x * 5.5, broder_top + len_y * 6.5,
 				L"LEFT", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 			key2_LEFT = CreateWindowW(L"EDIT", L"",
@@ -543,7 +571,7 @@ void Scene_Option::Load(RECT& rect)
 				_hwnd, (HMENU)EDIT_EKY1_LEFT, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 			Key_map_PreProc = SetWindowLongPtr(key2_LEFT, GWLP_WNDPROC, (LONG_PTR)Key_map_Proc2);
 
-			LoadText(broder_left + len_x * 5, broder_top + len_y * 6.5,
+			AddText(broder_left + len_x * 5, broder_top + len_y * 6.5,
 				broder_left + len_x * 5.5, broder_top + len_y * 7,
 				L"RIGHT", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 			key2_RIGHT = CreateWindowW(L"EDIT", L"",
@@ -553,7 +581,7 @@ void Scene_Option::Load(RECT& rect)
 				_hwnd, (HMENU)EDIT_EKY1_RIGHT, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 			Key_map_PreProc = SetWindowLongPtr(key2_RIGHT, GWLP_WNDPROC, (LONG_PTR)Key_map_Proc2);
 
-			LoadText(broder_left + len_x * 5, broder_top + len_y * 7,
+			AddText(broder_left + len_x * 5, broder_top + len_y * 7,
 				broder_left + len_x * 5.5, broder_top + len_y * 7.5,
 				L"FIRE", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 			key2_FIRE = CreateWindowW(L"EDIT", L"",
@@ -607,42 +635,42 @@ void Scene_Room_Host::Load(RECT& rect)
 {
 	Scene_Room::Load(rect);
 	{
-		LoadResourceBitmap(broder_left, broder_top, broder_right, broder_bottom, L"PNG", MAKEINTRESOURCE(TEXTBK_PNG), 0.4f);
-		LoadResourceBitmap(broder_left + len_x * 6 + 10, broder_top + len_y * 5, broder_right - 10, broder_bottom - len_y, L"PNG", MAKEINTRESOURCE(TEXTBK_PNG), 0.2f);
+		AddResourceBitmap(broder_left, broder_top, broder_right, broder_bottom, ResFactory->GetBitMapRes(ResName::textBK), 0.4f);
+		AddResourceBitmap(broder_left + len_x * 6 + 10, broder_top + len_y * 5, broder_right - 10, broder_bottom - len_y, ResFactory->GetBitMapRes(ResName::textBK), 0.2f);
 		{
-			LoadButton(rect.left, rect.top, rect.left + 144, rect.top + 87,
+			AddButton(rect.left, rect.top, rect.left + 144, rect.top + 87,
 				IDB_EXITROOM,
-				LoadResourceBitmap(rect.left, rect.top, rect.left + 144, rect.top + 87, L"PNG", MAKEINTRESOURCE(RETURN_PNG)));
+				AddResourceBitmap(rect.left, rect.top, rect.left + 144, rect.top + 87, ResFactory->GetBitMapRes(ResName::returnBP)));
 		}
 
 		{
-			LoadText(broder_left + len_x, broder_top,
+			AddText(broder_left + len_x, broder_top,
 				broder_left + len_x * 4, broder_top + len_y - 3,
 				L"当前房间内玩家情况", Brush::pHall_Brush, Brush::pHall_Brush, TextFormat::pHall_Format);
 
-			LoadText(broder_left + len_x * 0.5, broder_top + len_y * 5.5,
+			AddText(broder_left + len_x * 0.5, broder_top + len_y * 5.5,
 				broder_left + len_x, broder_top + len_y * 6,
 				L"房", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
-			LoadText(broder_left + len_x * 0.5, broder_top + len_y * 6,
+			AddText(broder_left + len_x * 0.5, broder_top + len_y * 6,
 				broder_left + len_x, broder_top + len_y * 6.5,
 				L"间", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
-			LoadText(broder_left + len_x * 0.5, broder_top + len_y * 6.5,
+			AddText(broder_left + len_x * 0.5, broder_top + len_y * 6.5,
 				broder_left + len_x, broder_top + len_y * 7,
 				L"频", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
-			LoadText(broder_left + len_x * 0.5, broder_top + len_y * 7,
+			AddText(broder_left + len_x * 0.5, broder_top + len_y * 7,
 				broder_left + len_x, broder_top + len_y * 7.5,
 				L"道", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
 		}
 
 		{
-			LoadButton(broder_left + len_x * 6 + 10, broder_top + len_y * 5 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 6,
+			AddButton(broder_left + len_x * 6 + 10, broder_top + len_y * 5 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 6,
 				IDB_STARTGAME,
-				LoadText(broder_left + len_x * 6 + 10, broder_top + len_y * 5 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 6,
+				AddText(broder_left + len_x * 6 + 10, broder_top + len_y * 5 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 6,
 					L"开始游戏", Brush::pHall_Brush, Brush::pHall_ClickBrush, TextFormat::pHall_Format));
 
-			LoadButton(broder_left + len_x * 6 + 10, broder_top + len_y * 8 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 9,
+			AddButton(broder_left + len_x * 6 + 10, broder_top + len_y * 8 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 9,
 				IDB_ROOM_SEND,
-				LoadText(broder_left + len_x * 6 + 10, broder_top + len_y * 8 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 9,
+				AddText(broder_left + len_x * 6 + 10, broder_top + len_y * 8 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 9,
 					L"发送", Brush::pHall_Brush, Brush::pHall_ClickBrush, TextFormat::pHall_Format));
 		}
 	}
@@ -652,63 +680,93 @@ void Scene_Room_NoHost::Load(RECT& rect)
 {
 	Scene_Room::Load(rect);
 	{
-		LoadResourceBitmap(broder_left, broder_top, broder_right, broder_bottom, L"PNG", MAKEINTRESOURCE(TEXTBK_PNG), 0.4f);
-		LoadResourceBitmap(broder_left + len_x * 6 + 10, broder_top + len_y * 5, broder_right - 10, broder_bottom - len_y, L"PNG", MAKEINTRESOURCE(TEXTBK_PNG), 0.5f);
+		AddResourceBitmap(broder_left, broder_top, broder_right, broder_bottom, ResFactory->GetBitMapRes(ResName::textBK), 0.4f);
+		AddResourceBitmap(broder_left + len_x * 6 + 10, broder_top + len_y * 5, broder_right - 10, broder_bottom - len_y, ResFactory->GetBitMapRes(ResName::textBK), 0.5f);
 		{
-			LoadText(broder_left + len_x, broder_top,
+			AddText(broder_left + len_x, broder_top,
 				broder_left + len_x * 4, broder_top + len_y - 3,
 				L"当前房间内玩家情况", Brush::pHall_Brush, Brush::pHall_Brush, TextFormat::pHall_Format);
 
-			LoadText(broder_left + len_x * 0.5, broder_top + len_y * 5.5,
+			AddText(broder_left + len_x * 0.5, broder_top + len_y * 5.5,
 				broder_left + len_x, broder_top + len_y * 6,
 				L"房", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
-			LoadText(broder_left + len_x * 0.5, broder_top + len_y * 6,
+			AddText(broder_left + len_x * 0.5, broder_top + len_y * 6,
 				broder_left + len_x, broder_top + len_y * 6.5,
 				L"间", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
-			LoadText(broder_left + len_x * 0.5, broder_top + len_y * 6.5,
+			AddText(broder_left + len_x * 0.5, broder_top + len_y * 6.5,
 				broder_left + len_x, broder_top + len_y * 7,
 				L"频", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
-			LoadText(broder_left + len_x * 0.5, broder_top + len_y * 7,
+			AddText(broder_left + len_x * 0.5, broder_top + len_y * 7,
 				broder_left + len_x, broder_top + len_y * 7.5,
 				L"道", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
 		}
 		{
-			LoadButton(rect.left, rect.top, rect.left + 144, rect.top + 87,
+			AddButton(rect.left, rect.top, rect.left + 144, rect.top + 87,
 				IDB_EXITROOM,
-				LoadResourceBitmap(rect.left, rect.top, rect.left + 144, rect.top + 87, L"PNG", MAKEINTRESOURCE(RETURN_PNG)));
+				AddResourceBitmap(rect.left, rect.top, rect.left + 144, rect.top + 87, ResFactory->GetBitMapRes(ResName::returnBP)));
 		}
 
 		{
-			LoadButton(broder_left + len_x * 6 + 10, broder_top + len_y * 5 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 6,
+			AddButton(broder_left + len_x * 6 + 10, broder_top + len_y * 5 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 6,
 				IDB_READY,
-				LoadText(broder_left + len_x * 6 + 10, broder_top + len_y * 5 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 6,
+				AddText(broder_left + len_x * 6 + 10, broder_top + len_y * 5 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 6,
 					L"准备", Brush::pHall_Brush, Brush::pHall_ClickBrush, TextFormat::pHall_Format));
 
-			LoadButton(broder_left + len_x * 6 + 10, broder_top + len_y * 8 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 9,
+			AddButton(broder_left + len_x * 6 + 10, broder_top + len_y * 8 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 9,
 				IDB_ROOM_SEND,
-				LoadText(broder_left + len_x * 6 + 10, broder_top + len_y * 8 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 9,
+				AddText(broder_left + len_x * 6 + 10, broder_top + len_y * 8 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 9,
 					L"发送", Brush::pHall_Brush, Brush::pHall_ClickBrush, TextFormat::pHall_Format));
 		}
 	}
 }
 
+void Scene_Gaming_local::DrawGame()
+{}
+
+void Scene_Gaming_local::OnDrawScene(double time_diff)
+{
+	Game::Instance()->Draw(time_diff);
+	DrawGame();
+	Scene::OnDrawScene(time_diff);
+}
+
 void Scene_Gaming_local::Load(RECT& rect)
 {
 
-	LoadButton(rect.left, rect.top, rect.left + 100, rect.top + 67,
+	AddButton(rect.left, rect.top, rect.left + 100, rect.top + 67,
 		IDB_PAUSE,
-		LoadResourceBitmap(rect.left, rect.top, rect.left + 100, rect.top + 67, L"PNG", MAKEINTRESOURCE(PAUSE_PNG)));
-	LoadButton(rect.left + 100, rect.top, rect.left + 200, rect.top + 67,
+		AddResourceBitmap(rect.left, rect.top, rect.left + 100, rect.top + 67, ResFactory->GetBitMapRes(ResName::pauseBP)));
+	AddButton(rect.left + 100, rect.top, rect.left + 200, rect.top + 67,
 		ReLoadMap,
-		LoadText(rect.left + 100, rect.top, rect.left + 200, rect.top + 67, L"加载本地地图"));
+		AddText(rect.left + 100, rect.top, rect.left + 200, rect.top + 67, L"加载本地地图"));
 
+}
+
+void Scene_Gaming_online::DrawGame()
+{
+	wstring ws = to_wstring(NetManager::Instance()->Get_Delay()) + L"ms";
+	const wchar_t* delay_ch = ws.c_str();
+	pRenderTarget->DrawText(
+		delay_ch,
+		wcslen(delay_ch),
+		TextFormat::pPing_Format,
+		DelayRect,
+		Brush::pMain_Brush
+	);
+}
+
+void Scene_Gaming_online::OnDrawScene(double time_diff)
+{
+	Game::Instance()->Draw(time_diff);
+	DrawGame();
+	Scene::OnDrawScene(time_diff);
 }
 
 void Scene_Gaming_online::Load(RECT& rect)
 {
-	LoadButton(rect.left, rect.top, rect.left + 144, rect.top + 87,
+	AddButton(rect.left, rect.top, rect.left + 144, rect.top + 87,
 		IDB_RETURN,
-		LoadResourceBitmap(rect.left, rect.top, rect.left + 144, rect.top + 87, L"PNG", MAKEINTRESOURCE(RETURN_PNG)));
+		AddResourceBitmap(rect.left, rect.top, rect.left + 144, rect.top + 87, ResFactory->GetBitMapRes(ResName::returnBP)));
 }
 
 void Scene_WinGame::Load(RECT& rect)
@@ -716,10 +774,10 @@ void Scene_WinGame::Load(RECT& rect)
 	int middle = rect.left + (rect.right - rect.left) / 2;
 	try
 	{
-		LoadButton(middle - 100, 250, middle + 100, 350,
+		AddButton(middle - 100, 250, middle + 100, 350,
 			ReturnInEndGame,
-			LoadText(middle - 100, 250, middle + 100, 350, L"返回"));
-		LoadResourceBitmap(middle - 120, 30, middle + 120, 230, L"PNG", MAKEINTRESOURCE(WIN_PNG));
+			AddText(middle - 100, 250, middle + 100, 350, L"返回"));
+		AddResourceBitmap(middle - 120, 30, middle + 120, 230, ResFactory->GetBitMapRes(ResName::winBP));
 
 	}
 	catch (std::exception& e)
@@ -733,10 +791,10 @@ void Scene_FailGame::Load(RECT& rect)
 	int middle = rect.left + (rect.right - rect.left) / 2;
 	try
 	{
-		LoadButton(middle - 100, 250, middle + 100, 350,
+		AddButton(middle - 100, 250, middle + 100, 350,
 			ReturnInEndGame,
-			LoadText(middle - 100, 250, middle + 100, 350, L"返回"));
-		LoadResourceBitmap(middle - 100, 100, middle + 100, 190, L"PNG", MAKEINTRESOURCE(FAIL_PNG));
+			AddText(middle - 100, 250, middle + 100, 350, L"返回"));
+		AddResourceBitmap(middle - 100, 100, middle + 100, 190, ResFactory->GetBitMapRes(ResName::failBP));
 
 	}
 	catch (std::exception& e)
@@ -749,15 +807,15 @@ void Scene_MapEdit::Load(RECT& rect) {
 	int middle = rect.left + (rect.right - rect.left) / 2;
 	try
 	{
-		LoadButton(rect.left, rect.top, rect.left + 144, rect.top + 87,
+		AddButton(rect.left, rect.top, rect.left + 144, rect.top + 87,
 			MAPEDIT_EXIT,
-			LoadResourceBitmap(rect.left, rect.top, rect.left + 144, rect.top + 87, L"PNG", MAKEINTRESOURCE(RETURN_PNG)));
-		LoadButton(rect.left + 180, rect.top, rect.left + 180 + 120 * 2, rect.top + 87,
+			AddResourceBitmap(rect.left, rect.top, rect.left + 144, rect.top + 87, ResFactory->GetBitMapRes(ResName::returnBP)));
+		AddButton(rect.left + 180, rect.top, rect.left + 180 + 120 * 2, rect.top + 87,
 			MAPEDIT_LOAD,
-			LoadText(rect.left + 180, rect.top, rect.left + 180 + 120 * 2, rect.top + 87, L"打开地图"));
-		LoadButton(rect.left + 180 + 120 * 2 + 20, rect.top, rect.left + 180 + 120 * 4 + 20, rect.top + 87,
+			AddText(rect.left + 180, rect.top, rect.left + 180 + 120 * 2, rect.top + 87, L"打开地图"));
+		AddButton(rect.left + 180 + 120 * 2 + 20, rect.top, rect.left + 180 + 120 * 4 + 20, rect.top + 87,
 			MAPEDIT_SAVE,
-			LoadText(rect.left + 180 + 120 * 2 + 20, rect.top, rect.left + 180 + 120 * 4 + 20, rect.top + 87, L"保存地图"));
+			AddText(rect.left + 180 + 120 * 2 + 20, rect.top, rect.left + 180 + 120 * 4 + 20, rect.top + 87, L"保存地图"));
 
 	}
 	catch (const std::exception&)
@@ -766,35 +824,39 @@ void Scene_MapEdit::Load(RECT& rect) {
 	}
 }
 
-void Scene_MapEdit::OnDrawScene()
+void Scene_MapEdit::OnDrawScene(double time_diff)
 {
-	this->DrawMapEdit();
-	Scene::OnDrawScene();
+	this->DrawMapEdit(time_diff);
+	Scene::OnDrawScene(time_diff);
 }
 
-void Scene_Option::OnDrawScene()
+void Scene_Option::OnDrawScene(double time_diff)
+{
+
+	DrawOption();
+
+	Scene::OnDrawScene(time_diff);
+}
+
+void Scene_Option::DrawOption()
 {
 	//FPS选项
+	pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 3, broder_top + len_y * 2.5), 10, 10), Brush::pWhite_Brush);
+	pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 5, broder_top + len_y * 2.5), 10, 10), Brush::pWhite_Brush);
+	pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 7, broder_top + len_y * 2.5), 10, 10), Brush::pWhite_Brush);
+
+	if (Fps == 30.0)
 	{
-		pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 3, broder_top + len_y * 2.5), 10, 10), Brush::pWhite_Brush);
-		pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 5, broder_top + len_y * 2.5), 10, 10), Brush::pWhite_Brush);
-		pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 7, broder_top + len_y * 2.5), 10, 10), Brush::pWhite_Brush);
-
-		if (Fps == 30.0)
-		{
-			pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 3, broder_top + len_y * 2.5), 8, 8), Brush::pBlack_Brush);
-		}
-		else if (Fps == 60.0)
-		{
-			pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 5, broder_top + len_y * 2.5), 8, 8), Brush::pBlack_Brush);
-		}
-		else if (Fps == 144.0)
-		{
-			pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 7, broder_top + len_y * 2.5), 8, 8), Brush::pBlack_Brush);
-		}
+		pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 3, broder_top + len_y * 2.5), 8, 8), Brush::pBlack_Brush);
 	}
-
-	Scene::OnDrawScene();
+	else if (Fps == 60.0)
+	{
+		pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 5, broder_top + len_y * 2.5), 8, 8), Brush::pBlack_Brush);
+	}
+	else if (Fps == 144.0)
+	{
+		pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 7, broder_top + len_y * 2.5), 8, 8), Brush::pBlack_Brush);
+	}
 }
 
 void Scene_Option::Get_Key()
@@ -821,39 +883,24 @@ void Scene_Option::Get_Key()
 
 void Init_D2DTool(RECT& rect)
 {
-	D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &pD2DFactory);
+	pRenderTarget->CreateSolidColorBrush(ColorF(1, 1, 1, 1), &Brush::pWhite_Brush);
+	pRenderTarget->CreateSolidColorBrush(ColorF(0, 0, 0, 1), &Brush::pBlack_Brush);
 
-	HRESULT hr = S_OK;
-
-	hr = pD2DFactory->CreateHwndRenderTarget(
-		RenderTargetProperties(),
-		HwndRenderTargetProperties(_hwnd, SizeU(rect.right - rect.left, rect.bottom - rect.top)),
-		&pRenderTarget
-	);
-	hr = pRenderTarget->CreateSolidColorBrush(ColorF(1, 1, 1, 1), &Brush::pWhite_Brush);
-	hr = pRenderTarget->CreateSolidColorBrush(ColorF(0, 0, 0, 1), &Brush::pBlack_Brush);
-
-	hr = pRenderTarget->CreateSolidColorBrush(ColorF(1, 0, 0, 1), &Brush::pRed_Brush);
-	hr = pRenderTarget->CreateSolidColorBrush(ColorF(0, 1, 0, 1), &Brush::pGreen_Brush);
+	pRenderTarget->CreateSolidColorBrush(ColorF(1, 0, 0, 1), &Brush::pRed_Brush);
+	pRenderTarget->CreateSolidColorBrush(ColorF(0, 1, 0, 1), &Brush::pGreen_Brush);
 
 	Brush::pMain_Brush = Brush::pBlack_Brush;
 	Brush::pMain_ClickBrush = Brush::pWhite_Brush;
-	//hr = pRenderTarget->CreateSolidColorBrush(ColorF(0, 0, 0, 1), &Brush::pMain_Brush);
-	//hr = pRenderTarget->CreateSolidColorBrush(ColorF(1, 1, 1, 1), &Brush::pMain_ClickBrush);
+	//pRenderTarget->CreateSolidColorBrush(ColorF(0, 0, 0, 1), &Brush::pMain_Brush);
+	//pRenderTarget->CreateSolidColorBrush(ColorF(1, 1, 1, 1), &Brush::pMain_ClickBrush);
 
 	Brush::pHall_Brush = Brush::pBlack_Brush;
 	Brush::pHall_ClickBrush = Brush::pWhite_Brush;
-	//hr = pRenderTarget->CreateSolidColorBrush(ColorF(1, 1, 1, 1), &Brush::pHall_Brush);
-	//hr = pRenderTarget->CreateSolidColorBrush(ColorF(0, 0, 0, 1), &Brush::pHall_ClickBrush);
+	//pRenderTarget->CreateSolidColorBrush(ColorF(1, 1, 1, 1), &Brush::pHall_Brush);
+	//pRenderTarget->CreateSolidColorBrush(ColorF(0, 0, 0, 1), &Brush::pHall_ClickBrush);
 
 
-	hr = DWriteCreateFactory(
-		DWRITE_FACTORY_TYPE_SHARED,
-		__uuidof(IDWriteFactory),
-		reinterpret_cast<IUnknown**>(&pIDWriteFactory)
-	);
-
-	hr = pIDWriteFactory->CreateTextFormat(
+	pIDWriteFactory->CreateTextFormat(
 		L"SimSun",                   // Font family name
 		NULL,                          // Font collection(NULL sets it to the system font collection)
 		DWRITE_FONT_WEIGHT_REGULAR,    // Weight
@@ -863,10 +910,10 @@ void Init_D2DTool(RECT& rect)
 		L"zh-cn",                      // Local
 		&TextFormat::pMain_Format                 // Pointer to recieve the created object
 	);
-	hr = TextFormat::pMain_Format->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
-	hr = TextFormat::pMain_Format->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+	TextFormat::pMain_Format->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+	TextFormat::pMain_Format->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 
-	hr = pIDWriteFactory->CreateTextFormat(
+	pIDWriteFactory->CreateTextFormat(
 		L"Gabriola",                   // Font family name
 		NULL,                          // Font collection(NULL sets it to the system font collection)
 		DWRITE_FONT_WEIGHT_REGULAR,    // Weight
@@ -877,7 +924,7 @@ void Init_D2DTool(RECT& rect)
 		&TextFormat::pHall_Format                 // Pointer to recieve the created object
 	);
 
-	hr = pIDWriteFactory->CreateTextFormat(
+	pIDWriteFactory->CreateTextFormat(
 		L"SimHei",                   // Font family name
 		NULL,                          // Font collection(NULL sets it to the system font collection)
 		DWRITE_FONT_WEIGHT_REGULAR,    // Weight
@@ -888,11 +935,11 @@ void Init_D2DTool(RECT& rect)
 		&TextFormat::pPing_Format                 // Pointer to recieve the created object
 	);
 
-	hr = TextFormat::pHall_Format->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
-	hr = TextFormat::pHall_Format->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+	TextFormat::pHall_Format->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+	TextFormat::pHall_Format->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 
-	hr = TextFormat::pPing_Format->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
-	hr = TextFormat::pPing_Format->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+	TextFormat::pPing_Format->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+	TextFormat::pPing_Format->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 
 	edit_listbox_front = CreateFont(
 		-16/*高度*/, -8/*宽度*/, 0/*不用管*/, 0/*不用管*/, 500 /*一般这个值设为400*/,
@@ -943,13 +990,11 @@ void InitScene(ID2D1Factory*& pD2DFactory, ID2D1HwndRenderTarget*& pRenderTarget
 
 void Load_D2DUI(RECT& rect)
 {
-	LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(OPBK_PNG), &OP_pBitmap);
-
 	for (auto v : _Scene::Scene_list)
 		v->Load(rect);
 }
 
-void Init_SceneResource()
+void Init_Scene()
 {
 	GetClientRect(_hwnd, &rect);
 
@@ -985,6 +1030,24 @@ void Show_Hall(bool flag)
 		ShowWindow(_Scene::SHall->Hall_room_list, SW_HIDE);
 		ShowWindow(_Scene::SHall->Hall_user_list, SW_HIDE);
 	}
+}
+void Scene_Room::DrawRoom()
+{
+	pRenderTarget->DrawBitmap(ResFactory->GetBitMapRes(ResName::opBK), D2D1::RectF(0, 0, _rect.right, _rect.bottom));
+	wstring ws = to_wstring(NetManager::Instance()->Get_Delay()) + L"ms";
+	const wchar_t* delay_ch = ws.c_str();
+	pRenderTarget->DrawText(
+		delay_ch,
+		wcslen(delay_ch),
+		TextFormat::pPing_Format,
+		DelayRect,
+		Brush::pMain_Brush
+	);
+}
+void Scene_Room::OnDrawScene(double time_diff)
+{
+	DrawRoom();
+	Scene::OnDrawScene(time_diff);
 }
 void Scene_Room::Show_Room(bool flag)
 {

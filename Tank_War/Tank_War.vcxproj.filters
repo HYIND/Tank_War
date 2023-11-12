@@ -81,6 +81,12 @@
     <ClInclude Include="include\stdafx.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="include\ResourceManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Tank_War.rc">
@@ -149,6 +155,12 @@
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="..\Resource\GAME_BG_SAND.jpg">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\explosion.gif">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\resource\bitmap3.bmp">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>
@@ -222,6 +234,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\FileIO.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ResourceManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

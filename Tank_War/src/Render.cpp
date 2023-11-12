@@ -1,4 +1,5 @@
 ﻿#include "Render.h"
+#include "ResourceManager.h"
 
 extern HDC hdc;
 
@@ -36,35 +37,12 @@ DWORD WINAPI Render_Thread()
 		{
 			pRenderTarget->BeginDraw();
 			pRenderTarget->Clear(ColorF(1, 1, 1, 1));
-			if (m_status == STATUS::Game_Status)
-			{
-				Game::Instance()->Draw();
-			}
-			else if (m_status != STATUS::MapEdit) {
-				pRenderTarget->DrawBitmap(OP_pBitmap, D2D1::RectF(0, 0, rect.right, rect.bottom));
-				//if (FAILED(hr))
-				//{
-				//	MessageBox(NULL, L"Draw failed!", L"Error", 0);
-				//}
-			}
-			if (m_status == STATUS::Hall_Status || m_status == STATUS::Room_Status || (m_status == STATUS::Game_Status && isonline_game))
-			{
-				wstring ws = to_wstring(NetManager::Instance()->Get_Delay()) + L"ms";
-				const wchar_t* delay_ch = ws.c_str();
-				pRenderTarget->DrawText(
-					delay_ch,
-					wcslen(delay_ch),
-					TextFormat::pPing_Format,
-					DelayRect,
-					Brush::pMain_Brush
-				);
-			}
 			if (_Scene::CurScene)
-				_Scene::CurScene->DrawScene();
+				_Scene::CurScene->DrawScene(time_diff);
 			hr = pRenderTarget->EndDraw();
 		}
 
-		double m_timeInOneFps = m_status == STATUS::Game_Status || m_status == STATUS::MapEdit ? timeInOneFps : min(0.3333, timeInOneFps);
+		double m_timeInOneFps = m_status == STATUS::Game_Status || m_status == STATUS::MapEdit ? timeInOneFps : max(33.33, timeInOneFps);
 		// 帧率动态控制
 		{
 			QueryPerformanceCounter(&time_now);
