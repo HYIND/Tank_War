@@ -8,8 +8,6 @@
 //#define AITEST
 // 全局变量:
 
-HRESULT hr = S_OK;
-
 bool reverse_in = false;
 
 HINSTANCE hInst;                                // 当前实例
@@ -19,7 +17,7 @@ HWND _hwnd;
 RECT _rect;
 HDC hdc;
 
-void Init_all_Resource()
+bool Init_all_Resource()
 {
 	LOGINFO("Init", "Init_All");
 	ResFactory->InitResource();
@@ -27,6 +25,7 @@ void Init_all_Resource()
 	Init_Style();
 	Init_Map();
 	Init_ComponentMap();
+	return true;
 }
 
 // 此代码模块中包含的函数的前向声明:
@@ -152,8 +151,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CREATE:
 	{
-		Init_all_Resource();
-		if (FAILED(hr))
+		bool result = Init_all_Resource();
+		if (!result)
 		{
 			MessageBox(hWnd, _T("位图加载失败"), L"Error", MB_OK);
 			DestroyWindow(hWnd);

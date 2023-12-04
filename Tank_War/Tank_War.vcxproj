@@ -143,7 +143,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp14</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>D:\protobuf;$(SolutionDir)\protobuf;$(SolutionDir)\spdlog;$(SolutionDir)\Tank_War\include;$(SolutionDir)\Tank_War;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\protobuf;$(SolutionDir)\spdlog;$(SolutionDir)\Tank_War\include;$(SolutionDir)\Tank_War;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
     </ClCompile>
     <Link>
