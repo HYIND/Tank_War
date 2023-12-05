@@ -376,6 +376,7 @@ void Scene_Hall::Load(RECT& rect)
 
 void Scene_Hall::DrawHall()
 {
+	pRenderTarget->DrawBitmap(ResFactory->GetBitMapRes(ResName::opBK), D2D1::RectF(0, 0, _rect.right, _rect.bottom));
 	wstring ws = to_wstring(NetManager::Instance()->Get_Delay()) + L"ms";
 	const wchar_t* delay_ch = ws.c_str();
 	pRenderTarget->DrawText(

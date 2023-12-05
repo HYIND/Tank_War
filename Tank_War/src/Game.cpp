@@ -64,9 +64,9 @@ void Game::LoadMap(Map* map) {
 
 void Game::Init_Game(int map_id, int my_id)
 {
+	this->my_tankid = my_id;
 	Get_keymap();
 	LoadMap(Map_list[map_id]);
-	this->my_tankid = my_id;
 }
 
 void Game::Get_keymap()
