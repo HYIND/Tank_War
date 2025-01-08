@@ -1,4 +1,4 @@
-#include "GameSceneManager.h"
+#include "GameScene_CollisionManager.h"
 
 extern RECT _rect;
 

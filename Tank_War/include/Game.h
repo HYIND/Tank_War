@@ -3,7 +3,7 @@
 #include "Network.h"
 #include "Tank_AI.h"
 #include "Prop.h"
-#include "GameSceneManager.h"
+#include "GameScene_CollisionManager.h"
 
 class AI_control;
 

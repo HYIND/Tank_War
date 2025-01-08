@@ -842,6 +842,8 @@ void Scene_Option::OnDrawScene(double time_diff)
 void Scene_Option::DrawOption()
 {
 	//FPS选项
+	pRenderTarget->DrawBitmap(ResFactory->GetBitMapRes(ResName::opBK), D2D1::RectF(0, 0, _rect.right, _rect.bottom));
+
 	pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 3, broder_top + len_y * 2.5), 10, 10), Brush::pWhite_Brush);
 	pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 5, broder_top + len_y * 2.5), 10, 10), Brush::pWhite_Brush);
 	pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 7, broder_top + len_y * 2.5), 10, 10), Brush::pWhite_Brush);

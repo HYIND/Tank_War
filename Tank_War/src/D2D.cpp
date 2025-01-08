@@ -15,11 +15,7 @@ void Set_Fps(int Fps_in)
 	timeInOneFps = 1000 / Fps;
 }
 
-ID2D1Bitmap* LoadResourceBitmap(
-	HINSTANCE hinstance,
-	IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget,
-	LPCWSTR resourceType, LPCWSTR resourceName)
-{
+void Need() {
 	if (NULL == pIWICFactory)
 	{
 		CoInitialize(NULL);
@@ -30,6 +26,15 @@ ID2D1Bitmap* LoadResourceBitmap(
 			IID_PPV_ARGS(&pIWICFactory)
 		);
 	}
+}
+
+ID2D1Bitmap* LoadResourceBitmap(
+	HINSTANCE hinstance,
+	ID2D1RenderTarget* pRenderTarget,
+	LPCWSTR resourceType, LPCWSTR resourceName)
+{
+	Need();
+
 	IWICBitmapDecoder* pDecoder = NULL;
 	IWICBitmapFrameDecode* pSource = NULL;
 	IWICStream* pStream = NULL;
@@ -136,19 +141,12 @@ ID2D1Bitmap* LoadResourceBitmap(
 	}
 }
 
-ID2D1Bitmap* Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget,
+ID2D1Bitmap* Loadbitmap(
+	ID2D1RenderTarget* pRenderTarget,
 	LPCTSTR pszResource)
 {
-	if (NULL == pIWICFactory)
-	{
-		CoInitialize(NULL);
-		CoCreateInstance(
-			CLSID_WICImagingFactory,
-			NULL,
-			CLSCTX_INPROC_SERVER,
-			IID_PPV_ARGS(&pIWICFactory)
-		);
-	}
+	Need();
+
 	HRESULT hr = S_OK;
 	IWICStream* pStream = NULL;
 	//IWICBitmapScaler* pScaler = NULL;
@@ -209,21 +207,15 @@ ID2D1Bitmap* Loadbitmap(IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRe
 	return pBitmap;
 }
 
-vector<ID2D1Bitmap*> LoadResourceGIF(
+bool LoadResourceGIF(
 	HINSTANCE hinstance,
-	IWICImagingFactory* pIWICFactory, ID2D1RenderTarget* pRenderTarget,
-	LPCWSTR resourceType, LPCWSTR resourceName)
+	ID2D1RenderTarget* pRenderTarget,
+	LPCWSTR resourceType, LPCWSTR resourceName,
+	UINT& out_totalFrameCount, IWICBitmapDecoder*& out_pDecoder, IWICStream*& out_pStream
+)
 {
-	if (NULL == pIWICFactory)
-	{
-		CoInitialize(NULL);
-		CoCreateInstance(
-			CLSID_WICImagingFactory,
-			NULL,
-			CLSCTX_INPROC_SERVER,
-			IID_PPV_ARGS(&pIWICFactory)
-		);
-	}
+	Need();
+
 	IWICBitmapDecoder* pDecoder = NULL;
 	IWICStream* pStream = NULL;
 	//IWICBitmapScaler* pScaler = NULL;
@@ -282,7 +274,7 @@ vector<ID2D1Bitmap*> LoadResourceGIF(
 			&pDecoder
 		);
 	}
-	vector<ID2D1Bitmap*> result;
+
 	if (SUCCEEDED(hr))
 	{
 		UINT count;
@@ -292,54 +284,15 @@ vector<ID2D1Bitmap*> LoadResourceGIF(
 
 		if (SUCCEEDED(hr))
 		{
-
-			for (int i = 0; i < count; i++)
-			{
-				IWICBitmapFrameDecode* pSource = NULL;
-				IWICFormatConverter* pConverter = NULL;
-
-				hr = pDecoder->GetFrame(i, &pSource);
-
-				if (SUCCEEDED(hr))
-				{
-					// Convert the image format to 32bppPBGRA
-					// (DXGI_FORMAT_B8G8R8A8_UNORM + D2D1_ALPHA_MODE_PREMULTIPLIED).
-					hr = pIWICFactory->CreateFormatConverter(&pConverter);
-				}
-				ID2D1Bitmap* pBitmap = nullptr;
-				if (SUCCEEDED(hr))
-				{
-					hr = pConverter->Initialize(
-						pSource,
-						GUID_WICPixelFormat32bppPBGRA,
-						WICBitmapDitherTypeNone,
-						NULL,
-						0.f,
-						WICBitmapPaletteTypeMedianCut
-					);
-					if (SUCCEEDED(hr))
-					{
-						//create a Direct2D bitmap from the WIC bitmap.
-						hr = pRenderTarget->CreateBitmapFromWicBitmap(
-							pConverter,
-							NULL,
-							&pBitmap
-						);
-
-					}
-				}
-				result.push_back(pBitmap);
-				SafeRelease(pSource);
-				SafeRelease(pConverter);
-			}
+			out_totalFrameCount = count;
+			out_pDecoder = pDecoder;
+			out_pStream = pStream;
+			return true;
 		}
-
-
-
-		SafeRelease(pDecoder);
-		SafeRelease(pStream);
-		//SafeRelease(pScaler);
-
 	}
-	return result;
+
+	SafeRelease(pDecoder)
+	SafeRelease(pStream)
+
+	return false;
 }

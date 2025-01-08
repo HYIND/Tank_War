@@ -5,15 +5,76 @@
 extern HINSTANCE hInst;
 extern HWND _hwnd;
 
-GIFINFO::GIFINFO(double mstime, const std::vector<ID2D1Bitmap*>& VecBP) {
+GIFINFO::GIFINFO(double mstime, UINT frameCount, IWICBitmapDecoder* Decoder, IWICStream* Stream) {
 	defaultTime = mstime;
-	_VecBP = VecBP;
+	totalFrameCount = frameCount;
+	pDecoder = Decoder;
+	pStream = Stream;
+}
+GIFINFO::~GIFINFO()
+{
+	SafeRelease(pDecoder);
+	SafeRelease(pStream);
 }
 double GIFINFO::getDefaultMsTime() {
 	return defaultTime;
 }
-std::vector<ID2D1Bitmap*>& GIFINFO::getVecBP() {
-	return _VecBP;
+ID2D1Bitmap* GIFINFO::getFrame(UINT frameNum) {
+
+	if (_BitMaps.find(frameNum) != _BitMaps.end())
+		return _BitMaps[frameNum];
+	else {
+		ID2D1Bitmap* pBitmap = nullptr;
+
+		if (pDecoder == NULL || pStream == NULL)
+			return nullptr;
+		if (frameNum >= totalFrameCount)
+			return nullptr;
+
+		HRESULT hr = E_FAIL;
+
+		IWICBitmapFrameDecode* pSource = NULL;
+		IWICFormatConverter* pConverter = NULL;
+
+		hr = pDecoder->GetFrame(frameNum, &pSource);
+		if (SUCCEEDED(hr))
+		{
+			hr = pIWICFactory->CreateFormatConverter(&pConverter);
+		}
+		if (SUCCEEDED(hr))
+		{
+			hr = pConverter->Initialize(
+				pSource,
+				GUID_WICPixelFormat32bppPBGRA,
+				WICBitmapDitherTypeNone,
+				NULL,
+				0.f,
+				WICBitmapPaletteTypeMedianCut
+			);
+			if (SUCCEEDED(hr))
+			{
+				//create a Direct2D bitmap from the WIC bitmap.
+				hr = pRenderTarget->CreateBitmapFromWicBitmap(
+					pConverter,
+					NULL,
+					&pBitmap
+				);
+
+			}
+		}
+		SafeRelease(pSource);
+		SafeRelease(pConverter);
+
+		if (pBitmap != nullptr)
+			_BitMaps[frameNum] = pBitmap;
+
+		return pBitmap;
+	}
+}
+
+UINT GIFINFO::getFrameCount()
+{
+	return totalFrameCount;
 }
 
 ResourceManager::ResourceManager() {}
@@ -47,25 +108,34 @@ bool Need() {
 bool ResourceManager::InitResource() {
 	Need();
 
-	ID2D1Bitmap* textBK = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(TEXTBK_PNG));
-	ID2D1Bitmap* returnBP = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(RETURN_PNG));
-	ID2D1Bitmap* pauseBP = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(PAUSE_PNG));
-	ID2D1Bitmap* winBP = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(WIN_PNG));
-	ID2D1Bitmap* failBP = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(FAIL_PNG));
+	ID2D1Bitmap* textBK = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(TEXTBK_PNG));
+	ID2D1Bitmap* returnBP = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(RETURN_PNG));
+	ID2D1Bitmap* pauseBP = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(PAUSE_PNG));
+	ID2D1Bitmap* winBP = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(WIN_PNG));
+	ID2D1Bitmap* failBP = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(FAIL_PNG));
 
 
-	ID2D1Bitmap* opBK = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(OPBK_PNG));
-	ID2D1Bitmap* brick_wall_pBitmap = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(BRICK_WALL));
-	ID2D1Bitmap* iron_wall_pBitmap = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(IRON_WALL));
-	ID2D1Bitmap* sand_BK = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"JPG", MAKEINTRESOURCE(BK_SAND));
-	ID2D1Bitmap* aidkit_pBitmap = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(AID_KIT));
-	ID2D1Bitmap* Def_Tank_pBitmap = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(TANK_PNG));
-	ID2D1Bitmap* Def_Bullet_pBitmap = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(BULLET_PNG));
-	ID2D1Bitmap* Orange_Bullet_pBitmap = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(BULLET_ORANGE_PNG));
-	ID2D1Bitmap* Green_Bullet_pBitmap = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(BULLET_GREEN_PNG));
-	ID2D1Bitmap* Purple_Bullet_pBitmap = LoadResourceBitmap(hInst, pIWICFactory, pRenderTarget, L"PNG", MAKEINTRESOURCE(BULLET_PURPLE_PNG));
+	ID2D1Bitmap* opBK = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(OPBK_PNG));
+	ID2D1Bitmap* brick_wall_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(BRICK_WALL));
+	ID2D1Bitmap* iron_wall_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(IRON_WALL));
+	ID2D1Bitmap* sand_BK = LoadResourceBitmap(hInst, pRenderTarget, L"JPG", MAKEINTRESOURCE(BK_SAND));
+	ID2D1Bitmap* aidkit_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(AID_KIT));
+	ID2D1Bitmap* Def_Tank_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(TANK_PNG));
+	ID2D1Bitmap* Def_Bullet_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(BULLET_PNG));
+	ID2D1Bitmap* Orange_Bullet_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(BULLET_ORANGE_PNG));
+	ID2D1Bitmap* Green_Bullet_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(BULLET_GREEN_PNG));
+	ID2D1Bitmap* Purple_Bullet_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(BULLET_PURPLE_PNG));
 
-	GIFINFO* Explosion_GIF = new GIFINFO(500, LoadResourceGIF(hInst, pIWICFactory, pRenderTarget, L"GIF", MAKEINTRESOURCE(EXPLOISION_GIF)));
+	{
+		UINT count = 0;
+		IWICBitmapDecoder* pDecoder = NULL;
+		IWICStream* pStream = NULL;
+		if (LoadResourceGIF(hInst, pRenderTarget, L"GIF", MAKEINTRESOURCE(EXPLOISION_GIF), count, pDecoder, pStream))
+		{
+			GIFINFO* Explosion_GIF = new GIFINFO(500, count, pDecoder, pStream);
+			GIFRes[ResName::explosionGIF] = Explosion_GIF;
+		}
+	}
 
 	BitMapRes[ResName::textBK] = textBK;
 	BitMapRes[ResName::returnBP] = returnBP;
@@ -83,7 +153,6 @@ bool ResourceManager::InitResource() {
 	BitMapRes[ResName::greenBullet] = Green_Bullet_pBitmap;
 	BitMapRes[ResName::purpleBullet] = Purple_Bullet_pBitmap;
 
-	GIFRes[ResName::explosionGIF] = Explosion_GIF;
 	return true;
 }
 

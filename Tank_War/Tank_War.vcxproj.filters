@@ -66,7 +66,7 @@
     <ClInclude Include="include\Tank_War.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\GameSceneManager.h">
+    <ClInclude Include="include\GameScene_CollisionManager.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\Bullet.h">
@@ -227,7 +227,7 @@
     <ClCompile Include="src\Object.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\GameSceneManager.cpp">
+    <ClCompile Include="src\GameScene_CollisionManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\MapEdit.cpp">

@@ -152,20 +152,23 @@ public:
 	double lastTime = 0.f;	//从第一次绘制开始的持续时间
 	double totalTime = 1.f;
 	int loopCount = 1;
-	std::vector<ID2D1Bitmap*> pBitmapVec;
+	GIFINFO* gifInfo = nullptr;
 
 	D2D_GIF(int loc1, int loc2, int loc3, int loc4, GIFINFO* gifInfo, int loopCount = 1, float opacity = 1.0f) :
-		locationX1(loc1), locationY1(loc2), locationX2(loc3), locationY2(loc4), loopCount(loopCount), opacity(opacity) {
-		pBitmapVec = gifInfo->getVecBP();
+		locationX1(loc1), locationY1(loc2), locationX2(loc3), locationY2(loc4), gifInfo(gifInfo), loopCount(loopCount), opacity(opacity) {
 		totalTime = gifInfo->getDefaultMsTime();
 	}
 	bool Draw(double time_diff) {
-		int curIndex = int(lastTime / (totalTime / pBitmapVec.size()));
-		int i = curIndex % pBitmapVec.size();
-		ID2D1Bitmap* pBitmap = pBitmapVec[i];
-		pRenderTarget->DrawBitmap(pBitmap,
-			RectF(locationX1, locationY1, locationX2, locationY2),
-			opacity);
+		UINT framecount = gifInfo->getFrameCount();
+		UINT curIndex = UINT(lastTime / (totalTime / framecount));
+		UINT i = curIndex % framecount;
+		ID2D1Bitmap* pBitmap = gifInfo->getFrame(i);
+		if (pBitmap != nullptr)
+		{
+			pRenderTarget->DrawBitmap(pBitmap,
+				RectF(locationX1, locationY1, locationX2, locationY2),
+				opacity);
+		}
 		lastTime += time_diff;
 		if (loopCount <= 0)return true;
 		if (lastTime > loopCount * totalTime)

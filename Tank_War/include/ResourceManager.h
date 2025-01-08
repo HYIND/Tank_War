@@ -3,12 +3,17 @@
 
 class GIFINFO {
 public:
-	GIFINFO(double time, const std::vector<ID2D1Bitmap*>& VecBP);
+	GIFINFO(double time, UINT frameCount, IWICBitmapDecoder* pDecoder, IWICStream* pStream);
+	~GIFINFO();
 	double getDefaultMsTime();
-	std::vector<ID2D1Bitmap*>& getVecBP();
+	ID2D1Bitmap* getFrame(UINT frameNum);
+	UINT getFrameCount();
 private:
 	double defaultTime = 0;
-	std::vector<ID2D1Bitmap*> _VecBP;
+	UINT totalFrameCount = 0;
+	IWICBitmapDecoder* pDecoder = NULL;
+	IWICStream* pStream = NULL;
+	std::map<UINT, ID2D1Bitmap*> _BitMaps;
 };
 
 
