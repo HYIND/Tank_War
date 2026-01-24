@@ -1,0 +1,243 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="资源文件\Resource">
+      <UniqueIdentifier>{8be8d9cd-e014-4b6f-8c88-5a3eaf31eeee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="doc">
+      <UniqueIdentifier>{14759265-64af-4f9b-9320-8341ee3d0835}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\D2D.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Game.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Game_Component.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\header.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\keymap.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Log.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Map.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Network.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Prop.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Render.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Scene.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Style.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tank.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tank_AI.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tank_War.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GameScene_CollisionManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Bullet.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Object.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\FileIO.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stdafx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ResourceManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Tank_War.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Tank_War.ico">
+      <Filter>资源文件\Resource</Filter>
+    </Image>
+    <Image Include="..\Resource\Tank2.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\liangliang.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\Text_BK.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\Bullet.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\Fail.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\Win.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\Bullet_Purple.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\Bullet_Orange.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\Bullet_Green.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\Tank2.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\Pause.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\Return.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\BRICK_WALL.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\Health_Kit.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\IRON_WALL.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\SNOW.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\WATER.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\OP_KB.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\jiaran.jpg">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\GAME_BG_SAND.jpg">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\explosion.gif">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\resource\bitmap3.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Filter>doc</Filter>
+    </None>
+    <None Include="..\Resource\Cursor.cur">
+      <Filter>资源文件</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\header.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\keymap.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Map.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Network.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Prop.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Render.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Scene_inner.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Scene_outer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Style.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tank.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tank_AI.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tank_War.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\D2D.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Game.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Game_Component.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\protobuf\myprotocol.pb.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Bullet.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Object.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GameScene_CollisionManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MapEdit.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FileIO.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ResourceManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

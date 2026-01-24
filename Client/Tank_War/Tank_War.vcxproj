@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{e7b54356-d875-4bd5-bdbc-3cf5d2caef80}</ProjectGuid>
+    <RootNamespace>Tank_War</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Tank_War</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(SolutionDir)\protobuf;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\protobuf;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(SolutionDir)\protobuf;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\protobuf;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions);_SCL_SECURE_NO_WARNINGS;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(SolutionDir)\protobuf;$(SolutionDir)\spdlog;$(SolutionDir)\Tank_War\include;$(SolutionDir)\Tank_War;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\protobuf\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions);_SCL_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(SolutionDir)\protobuf;$(SolutionDir)\spdlog;$(SolutionDir)\Tank_War\include;$(SolutionDir)\Tank_War;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Optimization>Disabled</Optimization>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)protobuf/libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="include\FileIO.h" />
+    <ClInclude Include="include\GameScene_CollisionManager.h" />
+    <ClInclude Include="include\Bullet.h" />
+    <ClInclude Include="include\D2D.h" />
+    <ClInclude Include="include\Game.h" />
+    <ClInclude Include="include\Game_Component.h" />
+    <ClInclude Include="include\header.h" />
+    <ClInclude Include="include\keymap.h" />
+    <ClInclude Include="include\Log.h" />
+    <ClInclude Include="include\Map.h" />
+    <ClInclude Include="include\Network.h" />
+    <ClInclude Include="include\Object.h" />
+    <ClInclude Include="include\Prop.h" />
+    <ClInclude Include="include\Render.h" />
+    <ClInclude Include="include\ResourceManager.h" />
+    <ClInclude Include="include\Scene.h" />
+    <ClInclude Include="include\stdafx.h" />
+    <ClInclude Include="include\Style.h" />
+    <ClInclude Include="include\Tank.h" />
+    <ClInclude Include="include\Tank_AI.h" />
+    <ClInclude Include="include\Tank_War.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Tank_War.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\resource\bitmap3.bmp" />
+    <Image Include="..\Resource\BRICK_WALL.png" />
+    <Image Include="..\Resource\Bullet.png" />
+    <Image Include="..\Resource\Bullet_Green.png" />
+    <Image Include="..\Resource\Bullet_Orange.png" />
+    <Image Include="..\Resource\Bullet_Purple.png" />
+    <Image Include="..\Resource\explosion.gif" />
+    <Image Include="..\Resource\Fail.png" />
+    <Image Include="..\Resource\GAME_BG_SAND.jpg" />
+    <Image Include="..\Resource\Health_Kit.png" />
+    <Image Include="..\Resource\IRON_WALL.png" />
+    <Image Include="..\Resource\jiaran.jpg" />
+    <Image Include="..\Resource\liangliang.bmp" />
+    <Image Include="..\Resource\OP_KB.png" />
+    <Image Include="..\Resource\Pause.png" />
+    <Image Include="..\Resource\Return.png" />
+    <Image Include="..\Resource\SNOW.png" />
+    <Image Include="..\Resource\Tank2.bmp" />
+    <Image Include="..\Resource\Tank2.png" />
+    <Image Include="..\Resource\Text_BK.png" />
+    <Image Include="..\Resource\WATER.png" />
+    <Image Include="..\Resource\Win.png" />
+    <Image Include="Tank_War.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\README.md" />
+    <None Include="..\Resource\Cursor.cur" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\protobuf\myprotocol.pb.cc" />
+    <ClCompile Include="src\FileIO.cpp" />
+    <ClCompile Include="src\MapEdit.cpp" />
+    <ClCompile Include="src\Object.cpp" />
+    <ClCompile Include="src\Bullet.cpp" />
+    <ClCompile Include="src\D2D.cpp" />
+    <ClCompile Include="src\Game.cpp" />
+    <ClCompile Include="src\GameScene_CollisionManager.cpp" />
+    <ClCompile Include="src\Game_Component.cpp" />
+    <ClCompile Include="src\header.cpp" />
+    <ClCompile Include="src\keymap.cpp" />
+    <ClCompile Include="src\Map.cpp" />
+    <ClCompile Include="src\Network.cpp" />
+    <ClCompile Include="src\Prop.cpp" />
+    <ClCompile Include="src\Render.cpp" />
+    <ClCompile Include="src\ResourceManager.cpp" />
+    <ClCompile Include="src\Scene_inner.cpp" />
+    <ClCompile Include="src\Scene_outer.cpp" />
+    <ClCompile Include="src\Style.cpp" />
+    <ClCompile Include="src\Tank.cpp" />
+    <ClCompile Include="src\Tank_AI.cpp" />
+    <ClCompile Include="src\Tank_War.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
