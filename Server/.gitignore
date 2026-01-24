@@ -1,0 +1,9 @@
+# vscode ================================
+.vscode/*
+
+# CMake ================================
+build/*
+!build/CMakeLists.txt
+
+bin/*
+!bin/Tank_War_Server
