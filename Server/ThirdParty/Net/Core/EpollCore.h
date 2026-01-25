@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/DeleteLater.h"
-#include "Core/TCPTransportWarpper.h"
+#include "Connection/BaseTransportConnection.h"
 
 class EpollCoreProcessImpl;
 
