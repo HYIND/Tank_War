@@ -173,7 +173,7 @@ public:
 	EXPORT_FUNC bool ReleaseClients();
 	EXPORT_FUNC void BindAcceptCallBack(std::function<void(std::shared_ptr<TCPTransportConnection>)> callback);
 
-protected:
+public:
 	EXPORT_FUNC virtual void OnRDHUP();
 	EXPORT_FUNC virtual void OnREAD(int fd);									// 可读事件
 	EXPORT_FUNC virtual void OnREAD(int fd, Buffer &buf);						// 可读事件
