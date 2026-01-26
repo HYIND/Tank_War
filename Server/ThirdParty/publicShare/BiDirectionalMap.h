@@ -86,8 +86,9 @@ public:
         if (it == l_to_r.end())
             return false; // 左键不存在
 
+        R rightvalue = std::move(it->second);
         l_to_r.erase(it);
-        r_to_l.erase(it->second);
+        r_to_l.erase(rightvalue);
         return true;
     }
 
@@ -98,8 +99,9 @@ public:
         if (it == r_to_l.end())
             return false; // 右键不存在
 
+        L leftvalue = std::move(it->second);
         r_to_l.erase(it);
-        l_to_r.erase(it->second);
+        l_to_r.erase(leftvalue);
         return true;
     }
 

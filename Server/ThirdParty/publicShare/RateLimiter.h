@@ -3,12 +3,14 @@
 #ifdef __linux__
 #include <mutex>
 
+#include "PublicShareExportMacro.h"
+
 using namespace std;
 
 #define RETRY_IMEDIATELY_TIMES 30
 #define RATE_LIMIT 50
 
-class RateLimiter
+class PUBLICSHARE_API RateLimiter
 {
 public:
     RateLimiter(int qps);

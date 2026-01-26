@@ -4,9 +4,11 @@
 
 #include <vector>
 
+#include "PublicShareExportMacro.h"
+
 using namespace std;
 
-class SigManager
+class PUBLICSHARE_API SigManager
 {
 public:
     static SigManager *Instance()

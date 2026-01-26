@@ -4,9 +4,11 @@
 #include <memory>
 #include <string>
 
+#include "PublicShareExportMacro.h"
+
 struct TimerTaskHandle;
 
-class TimerTask
+class PUBLICSHARE_API TimerTask
 {
 public:
     using Callback = std::function<void()>;

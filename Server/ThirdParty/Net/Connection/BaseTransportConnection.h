@@ -5,17 +5,8 @@
 
 #pragma once
 
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/tcp.h>
-#include <unistd.h>
-#include <sys/epoll.h>
-#include <sys/time.h>
-#include <sys/timerfd.h>
-#include <net/if.h>
-#include <sys/ioctl.h>
-#include "fmt/core.h"
+#include "Core/BaseSocket.h"
+
 #include <atomic>
 #include <string.h>
 #include <signal.h>
@@ -43,9 +34,12 @@
 
 #include "Helper/Buffer.h"
 #include "SafeStl.h"
-#include "Coroutine.h"
 #include "SpinLock.h"
 #include "Core/DeleteLater.h"
+
+#ifdef __linux__
+#include "Coroutine.h"
+#endif
 
 enum NetType
 {
@@ -59,14 +53,14 @@ enum SocketType
 	UDP = 2
 };
 
-class BaseTransportConnection : public std::enable_shared_from_this<BaseTransportConnection>, public DeleteLaterImpl
+class NET_API BaseTransportConnection : public std::enable_shared_from_this<BaseTransportConnection>, public DeleteLaterImpl
 {
 
 public:
 	template <typename T>
 	std::shared_ptr<T> GetShared()
 	{
-		if (auto ptr = dynamic_cast<T *>(this))
+		if (auto ptr = dynamic_cast<T*>(this))
 		{
 			return std::shared_ptr<T>(
 				shared_from_this(),
@@ -79,33 +73,37 @@ public:
 public:
 	BaseTransportConnection(SocketType type = SocketType::TCP, bool isclient = false);
 
-	EXPORT_FUNC int GetFd();
-	EXPORT_FUNC SocketType GetType();
-	EXPORT_FUNC sockaddr_in GetAddr();
-	EXPORT_FUNC char *GetIPAddr();
-	EXPORT_FUNC uint16_t GetPort();
-	EXPORT_FUNC NetType GetNetType();
-	EXPORT_FUNC bool ValidSocket();
+	BaseSocket GetSocket();
+	SocketType GetType();
+	sockaddr_in GetAddr();
+	char* GetIPAddr();
+	uint16_t GetPort();
+	NetType GetNetType();
+	bool ValidSocket();
 
-	EXPORT_FUNC bool isOnCallback();
+	bool isOnCallback();
 
 public:
-	EXPORT_FUNC void RDHUP();
-	EXPORT_FUNC void READ(int fd);
-	EXPORT_FUNC void READ(int fd, Buffer &buf);
-	EXPORT_FUNC void ACCEPT(int fd);
-	EXPORT_FUNC void ACCEPT(int fd, int newclient, sockaddr_in addr);
+#ifdef __linux__
+	void READ(BaseSocket fd);
+	void ACCEPT(BaseSocket fd);
+#endif
+	void READ(BaseSocket fd, Buffer& buf);
+	void ACCEPT(BaseSocket fd, BaseSocket newsocket, sockaddr_in addr);
+	void RDHUP();
 
 protected:
-	EXPORT_FUNC virtual void OnRDHUP() = 0;											// 对端关闭事件，即断开连接
-	EXPORT_FUNC virtual void OnREAD(int fd) = 0;									// 可读事件
-	EXPORT_FUNC virtual void OnREAD(int fd, Buffer &buf) = 0;						// 可读事件
-	EXPORT_FUNC virtual void OnACCEPT(int fd) = 0;									// 接受新连接事件
-	EXPORT_FUNC virtual void OnACCEPT(int fd, int newclient, sockaddr_in addr) = 0; // 接受新连接事件
+#ifdef __linux__
+	virtual void OnREAD(BaseSocket socket) = 0;												// 可读事件
+	virtual void OnACCEPT(BaseSocket socket) = 0;											// 接受新连接事件
+#endif
+	virtual void OnREAD(BaseSocket socket, Buffer& buf) = 0;								// 可读事件
+	virtual void OnACCEPT(BaseSocket socket, BaseSocket newsocket, sockaddr_in addr) = 0;	// 接受新连接事件
+	virtual void OnRDHUP() = 0;																// 对端关闭事件，即断开连接
 
 protected:
 	sockaddr_in _addr;
-	int _fd = -1;
+	BaseSocket _socket;
 	SocketType _type = SocketType::TCP;
 	bool _isclient;
 
@@ -113,3 +111,4 @@ protected:
 	std::atomic<int> _OnREADCount;
 	std::atomic<int> _OnACCEPTCount;
 };
+

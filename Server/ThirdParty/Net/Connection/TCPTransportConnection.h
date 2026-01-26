@@ -6,49 +6,55 @@
 #pragma once
 
 #include "BaseTransportConnection.h"
+#include "SpinLock.h"
 
-// TCP传输层客户端(连接对象)
-class TCPTransportConnection : public BaseTransportConnection
+ // TCP传输层客户端(连接对象)
+class NET_API TCPTransportConnection : public BaseTransportConnection
 {
 
 public:
-	EXPORT_FUNC TCPTransportConnection();
-	EXPORT_FUNC ~TCPTransportConnection();
-	EXPORT_FUNC bool Connect(const std::string &IP, uint16_t Port);
-	EXPORT_FUNC Task<bool> ConnectAsync(const std::string &IP, uint16_t Port);
-	EXPORT_FUNC void Apply(const int fd, const sockaddr_in &sockaddr, const SocketType type);
-	EXPORT_FUNC bool Release();
-	EXPORT_FUNC bool Send(const Buffer &buffer);
-	EXPORT_FUNC int Read(Buffer &buffer, int length);
+	TCPTransportConnection();
+	~TCPTransportConnection();
+	bool Connect(const std::string& IP, uint16_t Port);
+#ifdef __linux__
+	Task<bool> ConnectAsync(const std::string& IP, uint16_t Port);
+#endif
+	void Apply(const BaseSocket fd, const sockaddr_in& sockaddr, const SocketType type);
+	bool Release();
+	bool Send(const Buffer& buffer);
 
-	EXPORT_FUNC void BindBufferCallBack(std::function<void(TCPTransportConnection *, Buffer *)> callback);
-	EXPORT_FUNC void BindRDHUPCallBack(std::function<void(TCPTransportConnection *)> callback);
+	void BindBufferCallBack(std::function<void(TCPTransportConnection*, Buffer*)> callback);
+	void BindRDHUPCallBack(std::function<void(TCPTransportConnection*)> callback);
 
-	EXPORT_FUNC SafeQueue<Buffer *> &GetRecvData();
-	EXPORT_FUNC SafeQueue<Buffer *> &GetSendData();
-	EXPORT_FUNC CriticalSectionLock &GetSendMtx();
-
-protected:
-	EXPORT_FUNC virtual void OnRDHUP();
-	EXPORT_FUNC virtual void OnREAD(int fd);									// 可读事件
-	EXPORT_FUNC virtual void OnREAD(int fd, Buffer &buf);						// 可读事件
-	EXPORT_FUNC virtual void OnACCEPT(int fd);									// 接受新连接事件
-	EXPORT_FUNC virtual void OnACCEPT(int fd, int newclient, sockaddr_in addr); // 接受新连接事件
+	SafeQueue<Buffer*>& GetRecvData();
+	SafeQueue<Buffer*>& GetSendData();
+	CriticalSectionLock& GetSendMtx();
 
 protected:
-	EXPORT_FUNC virtual void OnBindBufferCallBack();
-	EXPORT_FUNC virtual void OnBindRDHUPCallBack();
+#ifdef __linux__
+	virtual void OnREAD(BaseSocket socket);									// 可读事件
+	virtual void OnACCEPT(BaseSocket socket);									// 接受新连接事件
+#endif
+	virtual void OnREAD(BaseSocket socket, Buffer& buf);						// 可读事件
+	virtual void OnACCEPT(BaseSocket socket, BaseSocket newsocket, sockaddr_in addr); // 接受新连接事件
+	virtual void OnRDHUP();
+
+protected:
+	virtual void OnBindBufferCallBack();
+	virtual void OnBindRDHUPCallBack();
 
 private:
 	void ProcessRecvQueue();
 
 private:
-	SafeQueue<Buffer *> _RecvDatas;
-	SafeQueue<Buffer *> _SendDatas;
+	SafeQueue<Buffer*> _RecvDatas;
+	SafeQueue<Buffer*> _SendDatas;
 
 private:
-	std::function<void(TCPTransportConnection *, Buffer *)> _callbackBuffer;
-	std::function<void(TCPTransportConnection *)> _callbackRDHUP;
+	std::function<void(TCPTransportConnection*, Buffer*)> _callbackBuffer;
+	std::function<void(TCPTransportConnection*)> _callbackRDHUP;
 	CriticalSectionLock _SendResMtx;
 	SpinLock _ProcessLock;
 };
+
+

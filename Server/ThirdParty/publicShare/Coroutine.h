@@ -11,14 +11,16 @@
 #include <stdexcept>
 #include <thread>
 
-struct RegisterTaskAwaiter
+#include "PublicShareExportMacro.h"
+
+struct PUBLICSHARE_API RegisterTaskAwaiter
 {
     bool await_ready();
     void await_suspend(std::coroutine_handle<> coro);
     void await_resume();
 };
 
-struct TaskHandle
+struct PUBLICSHARE_API TaskHandle
 {
     std::coroutine_handle<> coroutine;
 
@@ -345,7 +347,7 @@ namespace CoroTask
 }
 
 // 协程定时器包装器
-class CoTimer
+class PUBLICSHARE_API CoTimer
 {
 public:
     enum class WakeType
@@ -393,10 +395,10 @@ private:
     std::shared_ptr<Handle> handle;
 };
 
-Task<bool> CoSleep(std::chrono::milliseconds timeout);
+Task<bool> PUBLICSHARE_API CoSleep(std::chrono::milliseconds timeout);
 
 // 协程连接器包装器
-class CoConnection
+class PUBLICSHARE_API CoConnection
 {
 public:
     struct Handle

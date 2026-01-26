@@ -9,72 +9,74 @@
 #include <condition_variable>
 #include <chrono>
 
-class CriticalSectionLock
+#include "PublicShareExportMacro.h"
+
+class PUBLICSHARE_API CriticalSectionLock
 {
 public:
-    CriticalSectionLock();
-    ~CriticalSectionLock();
-    bool TryEnter();
-    void Enter();
-    void Leave();
+	CriticalSectionLock();
+	~CriticalSectionLock();
+	bool TryEnter();
+	void Enter();
+	void Leave();
 
-    // 适配std::lock_guard和condition_variable
+	// 适配std::lock_guard和condition_variable
 public:
-    bool try_lock();
-    void lock();
-    void unlock();
+	bool try_lock();
+	void lock();
+	void unlock();
 
 private:
 #ifdef __linux__
-    pthread_mutex_t _mutex;
-    pthread_mutexattr_t _attr;
+	pthread_mutex_t _mutex;
+	pthread_mutexattr_t _attr;
 #elif defined(_WIN32)
-    CRITICAL_SECTION _cs;
+	CRITICAL_SECTION _cs;
 #endif
 };
 
-class LockGuard
+class PUBLICSHARE_API LockGuard
 {
 public:
-    LockGuard(CriticalSectionLock &lock, bool istrylock = false);
-    bool isownlock();
-    ~LockGuard();
+	LockGuard(CriticalSectionLock& lock, bool istrylock = false);
+	bool isownlock();
+	~LockGuard();
 
-    LockGuard(const LockGuard &) = delete;
-    LockGuard &operator=(const LockGuard &) = delete;
-    LockGuard(LockGuard &&) = delete;
-    LockGuard &operator=(LockGuard &&) = delete;
+	LockGuard(const LockGuard&) = delete;
+	LockGuard& operator=(const LockGuard&) = delete;
+	LockGuard(LockGuard&&) = delete;
+	LockGuard& operator=(LockGuard&&) = delete;
 
-    void lock();
-    void unlock();
+	void lock();
+	void unlock();
 
 private:
-    CriticalSectionLock &_lock;
-    bool _isownlock;
+	CriticalSectionLock& _lock;
+	bool _isownlock;
 };
 
-class ConditionVariable
+class PUBLICSHARE_API ConditionVariable
 {
 public:
-    ConditionVariable() = default;
-    ~ConditionVariable() = default;
+	ConditionVariable() = default;
+	~ConditionVariable() = default;
 
-    ConditionVariable(const ConditionVariable &) = delete;
-    ConditionVariable &operator=(const ConditionVariable &) = delete;
-    ConditionVariable(ConditionVariable &&) = delete;
-    ConditionVariable &operator=(ConditionVariable &&) = delete;
+	ConditionVariable(const ConditionVariable&) = delete;
+	ConditionVariable& operator=(const ConditionVariable&) = delete;
+	ConditionVariable(ConditionVariable&&) = delete;
+	ConditionVariable& operator=(ConditionVariable&&) = delete;
 
-    void Wait(LockGuard &lock);
-    bool WaitFor(LockGuard &lock, const std::chrono::microseconds ms);
-    template <class BoolFunc>
-    bool WaitFor(LockGuard &lock, const std::chrono::microseconds ms, BoolFunc func)
-    {
-        return _cv.wait_for(lock, ms, func);
-    }
+	void Wait(LockGuard& lock);
+	bool WaitFor(LockGuard& lock, const std::chrono::microseconds ms);
+	template <class BoolFunc>
+	bool WaitFor(LockGuard& lock, const std::chrono::microseconds ms, BoolFunc func)
+	{
+		return _cv.wait_for(lock, ms, func);
+	}
 
-    void NotifyAll();
-    void NotifyOne();
+	void NotifyAll();
+	void NotifyOne();
 
 private:
-    std::condition_variable_any _cv;
+	std::condition_variable_any _cv;
 };

@@ -1,13 +1,9 @@
 #pragma once
 
-#ifdef _WIN32
-#define EXPORT_FUNC __declspec(dllexport)
-#elif __linux__
-#define EXPORT_FUNC
-#endif
+#include "NetExportMarco.h"
 
-class DeleteLaterImpl {
+class NET_API DeleteLaterImpl {
 public:
-    virtual ~DeleteLaterImpl() = default;
+	virtual ~DeleteLaterImpl() = default;
 };
-EXPORT_FUNC void DeleteLater(DeleteLaterImpl* ptr);
+NET_API void DeleteLater(DeleteLaterImpl* ptr);

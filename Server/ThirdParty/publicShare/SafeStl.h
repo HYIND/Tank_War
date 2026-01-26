@@ -21,11 +21,10 @@ public:
 
 	SafeMap &operator=(const SafeMap &rhs)
 	{
+		if (this == &rhs)
+			return *this;
 		std::lock_guard<CriticalSectionLock> lock(_lock);
-		if (&rhs != this)
-		{
-			_map = rhs._map;
-		}
+		_map = rhs._map;
 		return *this;
 	}
 
@@ -70,13 +69,6 @@ public:
 			return;
 		}
 		return;
-	}
-
-	bool Exist(const K &key)
-	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
-		auto iter = _map.find(key);
-		return iter != _map.end();
 	}
 
 	bool Find(const K &key, V &value)
@@ -151,7 +143,7 @@ public:
 
 private:
 	std::map<K, V> _map;
-	CriticalSectionLock _lock;
+	mutable CriticalSectionLock _lock;
 };
 
 template <typename T>
@@ -159,7 +151,7 @@ class SafeQueue
 {
 private:
 	std::queue<T> _queue;
-	CriticalSectionLock _lock;
+	mutable CriticalSectionLock _lock;
 
 public:
 	SafeQueue() {}
@@ -250,7 +242,7 @@ class SafeArray
 {
 private:
 	std::vector<T> _array;
-	CriticalSectionLock _lock;
+	mutable CriticalSectionLock _lock;
 
 public:
 	SafeArray() {}
@@ -266,8 +258,11 @@ public:
 	}
 	SafeArray &operator=(const SafeArray &other)
 	{
+		if (this == &other)
+			return *this;
 		std::lock_guard<CriticalSectionLock> lock(other._lock);
 		_array = other._array;
+		return *this;
 	}
 	~SafeArray() {}
 	void clear()
@@ -368,7 +363,7 @@ class SafeDeQue
 {
 private:
 	std::deque<T> _deque;
-	CriticalSectionLock _lock;
+	mutable CriticalSectionLock _lock;
 
 public:
 	SafeDeQue() {}
