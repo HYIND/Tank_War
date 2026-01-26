@@ -71,6 +71,13 @@ public:
 		return;
 	}
 
+	bool Exist(const K &key)
+	{
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		auto iter = _map.find(key);
+		return iter != _map.end();
+	}
+
 	bool Find(const K &key, V &value)
 	{
 		std::lock_guard<CriticalSectionLock> lock(_lock);
