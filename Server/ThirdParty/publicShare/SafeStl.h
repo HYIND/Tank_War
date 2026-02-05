@@ -5,6 +5,8 @@
 #include <functional>
 #include <iostream>
 #include "CriticalSectionLock.h"
+#include <unordered_map>
+#include <set>
 
 template <typename K, typename V>
 class SafeMap
@@ -133,6 +135,16 @@ public:
 		}
 	}
 
+	std::vector<K> GetKeys() const
+	{
+		std::vector<K> keys;
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		keys.reserve(_map.size());
+		for (const auto &[key, value] : _map)
+			keys.push_back(key);
+		return keys;
+	}
+
 	void Lock()
 	{
 		_lock.Enter();
@@ -150,6 +162,163 @@ public:
 
 private:
 	std::map<K, V> _map;
+	mutable CriticalSectionLock _lock;
+};
+
+template <typename K, typename V>
+class SafeUnorderedMap
+{
+public:
+	SafeUnorderedMap() {}
+
+	~SafeUnorderedMap() {}
+
+	SafeUnorderedMap(const SafeUnorderedMap &rhs)
+	{
+		_map = rhs._map;
+	}
+
+	SafeUnorderedMap &operator=(const SafeUnorderedMap &rhs)
+	{
+		if (this == &rhs)
+			return *this;
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		_map = rhs._map;
+		return *this;
+	}
+
+	V &operator[](const K &key)
+	{
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		return _map[key];
+	}
+
+	int Size() const
+	{
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		return _map.size();
+	}
+
+	bool IsEmpty()
+	{
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		return _map.empty();
+	}
+
+	bool Insert(const K &key, const V &value)
+	{
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		if (_map.find(key) != _map.end())
+		{
+			return false;
+		}
+		auto ret = _map.insert(std::pair<K, V>(key, value));
+		return true;
+	}
+
+	void EnsureInsert(const K &key, const V &value)
+	{
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		auto ret = _map.insert(std::pair<K, V>(key, value));
+		// find key and cannot insert
+		if (!ret.second)
+		{
+			_map.erase(ret.first);
+			_map.insert(std::pair<K, V>(key, value));
+			return;
+		}
+		return;
+	}
+
+	bool Exist(const K &key)
+	{
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		auto iter = _map.find(key);
+		return iter != _map.end();
+	}
+
+	bool Find(const K &key, V &value)
+	{
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+
+		auto iter = _map.find(key);
+		if (iter != _map.end())
+		{
+			value = iter->second;
+			return true;
+		}
+
+		return false;
+	}
+
+	bool FindOldAndSetNew(const K &key, V &oldValue, const V &newValue)
+	{
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+
+		if (_map.size() > 0)
+		{
+			auto iter = _map.find(key);
+			if (iter != _map.end())
+			{
+				oldValue = iter->second;
+				_map.erase(iter);
+				_map.insert(std::pair<K, V>(key, newValue));
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	void Erase(const K &key)
+	{
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		_map.erase(key);
+	}
+
+	void Clear()
+	{
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		_map.clear();
+		return;
+	}
+
+	void EnsureCall(std::function<void(std::map<K, V> &map)> callback)
+	{
+		if (callback)
+		{
+			std::lock_guard<CriticalSectionLock> lock(_lock);
+			callback(this->_map);
+		}
+	}
+
+	std::vector<K> GetKeys() const
+	{
+		std::vector<K> keys;
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		keys.reserve(_map.size());
+		for (const auto &[key, value] : _map)
+			keys.push_back(key);
+		return keys;
+	}
+
+	void Lock()
+	{
+		_lock.Enter();
+	}
+
+	void UnLock()
+	{
+		_lock.Leave();
+	}
+
+	LockGuard MakeLockGuard()
+	{
+		return LockGuard(_lock);
+	}
+
+private:
+	std::unordered_map<K, V> _map;
 	mutable CriticalSectionLock _lock;
 };
 
@@ -454,4 +623,94 @@ public:
 	{
 		return LockGuard(_lock);
 	}
+};
+
+template <typename T>
+class SafeSet
+{
+public:
+	SafeSet() {}
+	~SafeSet() {}
+	SafeSet(const SafeSet &rhs)
+	{
+		std::lock_guard<CriticalSectionLock> lock(rhs._lock);
+		_set = rhs._set;
+	}
+
+	SafeSet &operator=(const SafeSet &rhs)
+	{
+		if (this == &rhs)
+			return *this;
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		_set = rhs._set;
+		return *this;
+	}
+
+	int Size() const
+	{
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		return _set.size();
+	}
+
+	bool IsEmpty()
+	{
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		return _set.empty();
+	}
+
+	bool Insert(const T &value)
+	{
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		if (_set.find(value) != _set.end())
+			return false;
+
+		_set.insert(value);
+		return true;
+	}
+
+	bool Exist(const T &value)
+	{
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		return _set.find(value) != _set.end();
+	}
+
+	void Erase(const T &value)
+	{
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		_set.erase(value);
+	}
+
+	void Clear()
+	{
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		_set.clear();
+	}
+
+	void EnsureCall(std::function<void(std::set<T> &set)> callback)
+	{
+		if (callback)
+		{
+			std::lock_guard<CriticalSectionLock> lock(_lock);
+			callback(this->_set);
+		}
+	}
+
+	void Lock()
+	{
+		_lock.Enter();
+	}
+
+	void UnLock()
+	{
+		_lock.Leave();
+	}
+
+	LockGuard MakeLockGuard()
+	{
+		return LockGuard(_lock);
+	}
+
+private:
+	std::set<T> _set;
+	mutable CriticalSectionLock _lock;
 };
