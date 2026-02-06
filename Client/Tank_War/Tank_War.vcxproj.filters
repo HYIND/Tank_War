@@ -1,139 +1,468 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="源文件">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="头文件">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="资源文件">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="资源文件\Resource">
-      <UniqueIdentifier>{8be8d9cd-e014-4b6f-8c88-5a3eaf31eeee}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="doc">
-      <UniqueIdentifier>{14759265-64af-4f9b-9320-8341ee3d0835}</UniqueIdentifier>
-    </Filter>
+    <ClCompile Include="source\src\BulletFactory.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\D2DTools.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\D2DWrapper.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\DynamicFpsController.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\Entity.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\EntityManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\FileIO.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\GameWorldManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\LocalInputSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\keymap.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\LifeTimeSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\MovementSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\PhysicsSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\PropFactory.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\Render.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\Renderer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\RenderManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\RenderFrameManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\RenderSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\ResourceManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\Scene_inner.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\Scene_outer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\Style.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\System.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\SystemManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\TankFactory.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\Tools.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\VelocityControlSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\WallFactory.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\WeaponSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\World.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\DestroySystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\HealthSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\TankSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\EffectSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\MapManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\WallSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\PropSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\UserInfoManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\ConnectManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="public\src\JsonProtocolClient.cpp">
+      <Filter>源文件\public</Filter>
+    </ClCompile>
+    <ClCompile Include="public\src\ServiceDiscoveryClient.cpp">
+      <Filter>源文件\public</Filter>
+    </ClCompile>
+    <ClCompile Include="public\src\ServiceRegistryData.cpp">
+      <Filter>源文件\public</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\BulletSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\RequestManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\MsgManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\LobbyManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\ClientInputSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\ClientStateSyncStstem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\InterpolationSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\PredictionSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\D2D.h">
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="source\include\header.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\Game.h">
+    <ClInclude Include="source\include\Render.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\Game_Component.h">
+    <ClInclude Include="source\include\Scene.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\header.h">
+    <ClInclude Include="source\include\stdafx.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\keymap.h">
+    <ClInclude Include="source\include\Tank_War.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\Log.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="source\include\ECS\Systems\AllSystem.h">
+      <Filter>头文件\ECS\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="include\Map.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="source\include\ECS\Components\AIControl.h">
+      <Filter>头文件\ECS\Components</Filter>
     </ClInclude>
-    <ClInclude Include="include\Network.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="source\include\ECS\Components\AllComponent.h">
+      <Filter>头文件\ECS\Components</Filter>
     </ClInclude>
-    <ClInclude Include="include\Prop.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="source\include\ECS\Factory\BulletFactory.h">
+      <Filter>头文件\ECS\Factory</Filter>
     </ClInclude>
-    <ClInclude Include="include\Render.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="source\include\ECS\Components\BulletProperty.h">
+      <Filter>头文件\ECS\Components</Filter>
     </ClInclude>
-    <ClInclude Include="include\Scene.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="source\include\ECS\Core\ComponentArray.h">
+      <Filter>头文件\ECS\Core</Filter>
     </ClInclude>
-    <ClInclude Include="include\Style.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="source\include\ECS\Core\ComponentManager.h">
+      <Filter>头文件\ECS\Core</Filter>
     </ClInclude>
-    <ClInclude Include="include\Tank.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="source\include\ECS\Core\ComponentTypes.h">
+      <Filter>头文件\ECS\Core</Filter>
     </ClInclude>
-    <ClInclude Include="include\Tank_AI.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="source\include\ECS\Components\Controller.h">
+      <Filter>头文件\ECS\Components</Filter>
     </ClInclude>
-    <ClInclude Include="include\Tank_War.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="source\include\RenderEngine\D2DWrapper.h">
+      <Filter>头文件\RenderEegine</Filter>
     </ClInclude>
-    <ClInclude Include="include\GameScene_CollisionManager.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="source\include\RenderEngine\D2DTools.h">
+      <Filter>头文件\RenderEegine</Filter>
     </ClInclude>
-    <ClInclude Include="include\Bullet.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="source\include\RenderEngine\RenderContext.h">
+      <Filter>头文件\RenderEegine</Filter>
     </ClInclude>
-    <ClInclude Include="include\Object.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="source\include\RenderEngine\Renderer.h">
+      <Filter>头文件\RenderEegine</Filter>
     </ClInclude>
-    <ClInclude Include="include\FileIO.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="source\include\RenderEngine\RenderFrameManager.h">
+      <Filter>头文件\RenderEegine</Filter>
     </ClInclude>
-    <ClInclude Include="include\stdafx.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="source\include\ECS\Core\Entity.h">
+      <Filter>头文件\ECS\Core</Filter>
     </ClInclude>
-    <ClInclude Include="include\ResourceManager.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="source\include\ECS\Core\EntityManager.h">
+      <Filter>头文件\ECS\Core</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="source\include\ECS\Components\Health.h">
+      <Filter>头文件\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Components\HealthShow.h">
+      <Filter>头文件\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Systems\LocalInputSystem.h">
+      <Filter>头文件\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Components\GIFAnimator.h">
+      <Filter>头文件\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Systems\LifeTimeSystem.h">
+      <Filter>头文件\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\Helper\Log.h">
+      <Filter>头文件\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\Helper\FileIO.h">
+      <Filter>头文件\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\Helper\math2d.h">
+      <Filter>头文件\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\Helper\Style.h">
+      <Filter>头文件\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Factory\PropFactory.h">
+      <Filter>头文件\ECS\Factory</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Components\PropProperty.h">
+      <Filter>头文件\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Components\PlayerInput.h">
+      <Filter>头文件\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\Helper\keymap.h">
+      <Filter>头文件\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Components\Tags.h">
+      <Filter>头文件\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Components\TankProperty.h">
+      <Filter>头文件\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Components\TankVisual.h">
+      <Filter>头文件\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Components\Transform.h">
+      <Filter>头文件\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Components\WallProperty.h">
+      <Filter>头文件\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Systems\PhysicsSystem.h">
+      <Filter>头文件\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Systems\RenderSystem.h">
+      <Filter>头文件\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Systems\MovementSystem.h">
+      <Filter>头文件\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\Manager\GameWorldManager.h">
+      <Filter>头文件\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\Manager\RenderManager.h">
+      <Filter>头文件\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Components\RenderBase.h">
+      <Filter>头文件\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\Helper\Tools.h">
+      <Filter>头文件\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Components\Sprite.h">
+      <Filter>头文件\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Components\Movement.h">
+      <Filter>头文件\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Core\Types.h">
+      <Filter>头文件\ECS\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Core\System.h">
+      <Filter>头文件\ECS\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Core\SystemManager.h">
+      <Filter>头文件\ECS\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Systems\WeaponSystem.h">
+      <Filter>头文件\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Systems\VelocityControlSystem.h">
+      <Filter>头文件\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Core\World.h">
+      <Filter>头文件\ECS\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Components\Weapon.h">
+      <Filter>头文件\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Components\Physics.h">
+      <Filter>头文件\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Factory\TankFactory.h">
+      <Filter>头文件\ECS\Factory</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Factory\WallFactory.h">
+      <Filter>头文件\ECS\Factory</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Components\BoundaryPhysisc.h">
+      <Filter>头文件\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Core\IComponent.h">
+      <Filter>头文件\ECS\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Systems\DestroySystem.h">
+      <Filter>头文件\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Event\ECSEventDef.h">
+      <Filter>头文件\ECS\Event</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Systems\BulletSystem.h">
+      <Filter>头文件\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Systems\TankSystem.h">
+      <Filter>头文件\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Core\SystemTypes.h">
+      <Filter>头文件\ECS\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Systems\HealthSystem.h">
+      <Filter>头文件\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Systems\EffectSystem.h">
+      <Filter>头文件\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Core\EventSystem.h">
+      <Filter>头文件\ECS\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\Manager\ResourceManager.h">
+      <Filter>头文件\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\Manager\MapManager.h">
+      <Filter>头文件\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Systems\WallSystem.h">
+      <Filter>头文件\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Systems\PropSystem.h">
+      <Filter>头文件\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\Manager\ConnectManager.h">
+      <Filter>头文件\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\Manager\UserInfoManager.h">
+      <Filter>头文件\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="public\include\ServiceDiscoveryClient.h">
+      <Filter>头文件\public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\include\ServiceRegistryData.h">
+      <Filter>头文件\public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\include\command.h">
+      <Filter>头文件\public</Filter>
+    </ClInclude>
+    <ClInclude Include="public\include\EndPointConfig.h">
+      <Filter>头文件\public</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\Manager\RequestManager.h">
+      <Filter>头文件\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="public\include\ApplicationLayerCommunication\JsonProtocolClient.h">
+      <Filter>头文件\public\ApplicationLayerCommunication</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\Manager\MsgManager.h">
+      <Filter>头文件\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="public\include\LobbyDataDef.h">
+      <Filter>头文件\public</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\Manager\LobbyManager.h">
+      <Filter>头文件\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Components\LifeTime.h">
+      <Filter>头文件\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\Helper\DynamicFpsController.h">
+      <Filter>头文件\public</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Systems\ClientInputSystem.h">
+      <Filter>头文件\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\Helper\TripleBuffer.h">
+      <Filter>头文件\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Systems\ClientStateSyncStstem.h">
+      <Filter>头文件\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="public\include\GameDataDef.h">
+      <Filter>头文件\public</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Systems\InterpolationSystem.h">
+      <Filter>头文件\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Systems\PredictionSystem.h">
+      <Filter>头文件\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Components\Interpolation.h">
+      <Filter>头文件\ECS\Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Tank_War.rc">
-      <Filter>资源文件</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="Tank_War.ico">
-      <Filter>资源文件\Resource</Filter>
-    </Image>
-    <Image Include="..\Resource\Tank2.bmp">
+    <Image Include="..\resource\bitmap3.bmp">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\Resource\liangliang.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\Resource\Text_BK.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\Resource\Bullet.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\Resource\Fail.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\Resource\Win.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\Resource\Bullet_Purple.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\Resource\Bullet_Orange.png">
+    <Image Include="..\Resource\BRICK_WALL.png">
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="..\Resource\Bullet_Green.png">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\Resource\Tank2.png">
+    <Image Include="..\Resource\Bullet.png">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\Resource\Pause.png">
+    <Image Include="..\Resource\Bullet_Orange.png">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\Resource\Return.png">
+    <Image Include="..\Resource\Bullet_Purple.png">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\Resource\BRICK_WALL.png">
+    <Image Include="..\Resource\Fail.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\explosion.gif">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\GAME_BG_SAND.jpg">
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="..\Resource\Health_Kit.png">
@@ -142,102 +471,108 @@
     <Image Include="..\Resource\IRON_WALL.png">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\Resource\SNOW.png">
+    <Image Include="..\Resource\jiaran.jpg">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\Resource\WATER.png">
+    <Image Include="..\Resource\liangliang.bmp">
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="..\Resource\OP_KB.png">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\Resource\jiaran.jpg">
+    <Image Include="..\Resource\Pause.png">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\Resource\GAME_BG_SAND.jpg">
+    <Image Include="..\Resource\Return.png">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\Resource\explosion.gif">
+    <Image Include="..\Resource\SNOW.png">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\resource\bitmap3.bmp">
+    <Image Include="..\Resource\Tank2.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\Tank2.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="Tank_War.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\Text_BK.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\WATER.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\Win.png">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\README.md">
-      <Filter>doc</Filter>
-    </None>
     <None Include="..\Resource\Cursor.cur">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="..\README.md">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="source\include\ECS\Core\Entity.inl">
+      <Filter>头文件\ECS\Core</Filter>
+    </None>
+    <None Include="source\include\ECS\Core\SystemManager.inl">
+      <Filter>头文件\ECS\Core</Filter>
+    </None>
+    <None Include="source\include\ECS\Core\World.inl">
+      <Filter>头文件\ECS\Core</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\header.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\keymap.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Map.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Network.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Prop.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Render.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Scene_inner.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Scene_outer.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Style.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Tank.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Tank_AI.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Tank_War.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\D2D.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Game.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Game_Component.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\protobuf\myprotocol.pb.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Bullet.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Object.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\GameScene_CollisionManager.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\MapEdit.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\FileIO.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ResourceManager.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{903795f7-1fa0-48e1-a6d9-95251f94c835}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{62d5c8f1-8ec0-434b-9f88-2e6bf35cc0a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{6b924a41-7b84-4f3e-8d4d-57b9b7055268}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\ECS">
+      <UniqueIdentifier>{099232d2-3e60-4c08-aedf-00f1c3908452}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\ECS\Core">
+      <UniqueIdentifier>{759611a6-839f-4e71-8729-23f66f7fe1b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\ECS\Components">
+      <UniqueIdentifier>{6324fdbe-eafe-4bb2-af07-a1a27bd88c5a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\ECS\Systems">
+      <UniqueIdentifier>{453aa050-394d-4ca8-adfd-7dd3bea85a02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\ECS\Factory">
+      <UniqueIdentifier>{19d2896a-76fb-4cbb-a9a7-973f2b747182}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Helper">
+      <UniqueIdentifier>{ab76f02b-1fea-41d2-b589-db9cbb0a90b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\RenderEegine">
+      <UniqueIdentifier>{3c0c4152-065f-486e-a793-fff6882b20dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Manager">
+      <UniqueIdentifier>{b7ac37c2-c829-4302-9db9-ea166d49fd3b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\ECS\Event">
+      <UniqueIdentifier>{80e47544-d547-4129-b94d-a1180a396d09}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\public">
+      <UniqueIdentifier>{3510ed07-e724-455f-bdec-47c94f74e84f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\public\ApplicationLayerCommunication">
+      <UniqueIdentifier>{3558872e-a79e-41d1-84b2-f905e8e848f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\public">
+      <UniqueIdentifier>{f4696f62-1d92-4931-ac64-5fa4b8d01405}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Tank_War.rc" />
   </ItemGroup>
 </Project>
