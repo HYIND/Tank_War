@@ -1,11 +1,13 @@
 #pragma once
 
-#include "Core/TCPTransportWarpper.h"
+#include "Connection/BaseTransportConnection.h"
 #include "Core/DeleteLater.h"
+
+#include "NetExportMarco.h"
 
 class IOuringCoreProcessImpl;
 
-class IOuringCoreProcess
+class NET_API IOuringCoreProcess
 {
 public:
     static IOuringCoreProcess *Instance();

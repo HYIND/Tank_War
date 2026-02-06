@@ -45,7 +45,7 @@ struct WebSocketDataframe
     Buffer payload;
 };
 
-class WebSocketAnalysisHelp
+class NET_API WebSocketAnalysisHelp
 {
 public:
     // 生成握手请求

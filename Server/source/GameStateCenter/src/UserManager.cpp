@@ -13,7 +13,7 @@ bool UserManager::add_user(const std::string &name, const std::string &token)
     auto user = std::make_shared<User>();
     user->token = token;
     user->name = name;
-    user->status = UserStatus::None;
+    user->status = UserStatus::IN_LOBBY;
 
     users_[token] = user;
     return true;
@@ -23,6 +23,21 @@ bool UserManager::add_user(const std::string &name, const std::string &token)
 bool UserManager::remove_user(const std::string &token)
 {
     return users_.erase(token) > 0;
+}
+
+bool UserManager::remove_user_from_service(const std::string &token, const std::string &serviceid)
+{
+    auto it = users_.find(token);
+    if (it == users_.end())
+        return false;
+
+    auto &connectedservices = it->second->connectedservices;
+    bool result = connectedservices.erase(serviceid) > 0;
+
+    if (connectedservices.size() <= 0)
+        remove_user(token);
+
+    return result;
 }
 
 // 获取用户
@@ -50,6 +65,17 @@ std::vector<UserPtr> UserManager::get_all_users()
     for (auto &[id, user] : users_)
     {
         result.push_back(user);
+    }
+    return result;
+}
+
+std::vector<UserPtr> UserManager::get_all_lobby_users()
+{
+    std::vector<UserPtr> result;
+    for (auto &[id, user] : users_)
+    {
+        if (user->status == UserStatus::IN_LOBBY)
+            result.push_back(user);
     }
     return result;
 }

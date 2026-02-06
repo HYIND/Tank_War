@@ -10,6 +10,8 @@
 #include "fmt/core.h"
 #include "Config.h"
 
+#include "PublicShareExportMacro.h"
+
 enum class RedisResult
 {
     RedisOK = 0,           // 查询正常返回
@@ -22,7 +24,7 @@ enum class RedisResult
     RedisOtherError = -7,  // 其他错误
 };
 
-class Redis_Server
+class PUBLICSHARE_API Redis_Server
 {
 public:
     RedisResult Connect();

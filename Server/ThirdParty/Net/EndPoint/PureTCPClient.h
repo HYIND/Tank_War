@@ -4,37 +4,41 @@
 #include "SpinLock.h"
 
 // 基于TCP协议的应用层客户端封装
-class PureTCPClient : public TCPEndPoint
+class NET_API PureTCPClient : public TCPEndPoint
 {
 public:
-    EXPORT_FUNC PureTCPClient(TCPTransportConnection *con = nullptr);
-    EXPORT_FUNC PureTCPClient(std::shared_ptr<TCPTransportConnection> con);
-    EXPORT_FUNC ~PureTCPClient();
+	PureTCPClient(TCPTransportConnection* con = nullptr);
+	PureTCPClient(std::shared_ptr<TCPTransportConnection> con);
+	~PureTCPClient();
 
 public:
-    EXPORT_FUNC virtual bool Connect(const std::string &IP, uint16_t Port);
-    EXPORT_FUNC virtual Task<bool> ConnectAsync(const std::string &IP, uint16_t Port);
-    EXPORT_FUNC virtual bool Release();
+	virtual bool Connect(const std::string& IP, uint16_t Port);
+#ifdef __linux__
+	virtual Task<bool> ConnectAsync(const std::string& IP, uint16_t Port);
+#endif
+	virtual bool Release();
 
-    EXPORT_FUNC virtual bool OnRecvBuffer(Buffer *buffer);
-    EXPORT_FUNC virtual bool OnConnectClose();
+	virtual bool OnRecvBuffer(Buffer* buffer);
+	virtual bool OnConnectClose();
 
-    EXPORT_FUNC virtual bool Send(const Buffer &buffer);
+	virtual bool Send(const Buffer& buffer);
 
 public:
-    EXPORT_FUNC virtual bool TryHandshake(uint32_t timeOutMs);
-    EXPORT_FUNC virtual Task<bool> TryHandshakeAsync(uint32_t timeOutMs);
-    EXPORT_FUNC virtual CheckHandshakeStatus CheckHandshakeTryMsg(Buffer &buffer);
-    EXPORT_FUNC virtual CheckHandshakeStatus CheckHandshakeConfirmMsg(Buffer &buffer);
+	virtual bool TryHandshake(uint32_t timeOutMs);
+#ifdef __linux__
+	virtual Task<bool> TryHandshakeAsync(uint32_t timeOutMs);
+#endif
+	virtual CheckHandshakeStatus CheckHandshakeTryMsg(Buffer& buffer);
+	virtual CheckHandshakeStatus CheckHandshakeConfirmMsg(Buffer& buffer);
 
 protected:
-    EXPORT_FUNC virtual void OnBindMessageCallBack();
-    EXPORT_FUNC virtual void OnBindCloseCallBack();
+	virtual void OnBindMessageCallBack();
+	virtual void OnBindCloseCallBack();
 
 private:
-    EXPORT_FUNC void ProcessCacheBuffer();
+	void ProcessCacheBuffer();
 
 private:
-    Buffer cacheBuffer;
-    SpinLock _ProcessLock;
+	Buffer cacheBuffer;
+	SpinLock _ProcessLock;
 };

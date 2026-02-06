@@ -8,12 +8,14 @@
 #include <thread>
 #include <condition_variable>
 
+#include "PublicShareExportMacro.h"
+
 struct MySQL_Query_Result
 {
     MYSQL_RES Res;
 };
 
-class Mysql_Server
+class PUBLICSHARE_API Mysql_Server
 {
 public:
     static Mysql_Server *Instance()

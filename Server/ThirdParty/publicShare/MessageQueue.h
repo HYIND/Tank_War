@@ -4,9 +4,11 @@
 #include <amqp.h>
 #include <amqp_tcp_socket.h>
 
+#include "PublicShareExportMacro.h"
+
 using namespace std;
 
-class MQ
+class PUBLICSHARE_API MQ
 {
 public:
     MQ();

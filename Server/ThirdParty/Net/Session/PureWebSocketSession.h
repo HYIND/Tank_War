@@ -5,40 +5,44 @@
 
 struct PureWebSocketSessionPakage
 {
-    Buffer buffer;
+	Buffer buffer;
 };
 
-class PureWebSocketSession : public BaseNetWorkSession
+class NET_API PureWebSocketSession : public BaseNetWorkSession
 {
 
 public:
-    PureWebSocketSession(WebSocketClient *client = nullptr);
-    ~PureWebSocketSession();
-    EXPORT_FUNC virtual bool Connect(const std::string &IP, uint16_t Port);
-    EXPORT_FUNC virtual Task<bool> ConnectAsync(const std::string &IP, uint16_t Port);
-    EXPORT_FUNC virtual bool Release();
+	PureWebSocketSession(WebSocketClient* client = nullptr);
+	~PureWebSocketSession();
+	virtual bool Connect(const std::string& IP, uint16_t Port);
+#ifdef __linux__
+	virtual Task<bool> ConnectAsync(const std::string& IP, uint16_t Port);
+#endif
+	virtual bool Release();
 
-    EXPORT_FUNC virtual bool AsyncSend(const Buffer &buffer); // 异步发送，不关心返回结果
+	virtual bool AsyncSend(const Buffer& buffer); // 异步发送，不关心返回结果
 
-    EXPORT_FUNC WebSocketClient *GetBaseClient();
+	WebSocketClient* GetBaseClient();
 
 public:
-    EXPORT_FUNC virtual bool TryHandshake(uint32_t timeOutMs);
-    EXPORT_FUNC virtual Task<bool> TryHandshakeAsync(uint32_t timeOutMs);
-    EXPORT_FUNC virtual CheckHandshakeStatus CheckHandshakeTryMsg(Buffer &buffer);
-    EXPORT_FUNC virtual CheckHandshakeStatus CheckHandshakeConfirmMsg(Buffer &buffer);
+	virtual bool TryHandshake(uint32_t timeOutMs);
+#ifdef __linux__
+	virtual Task<bool> TryHandshakeAsync(uint32_t timeOutMs);
+#endif
+	virtual CheckHandshakeStatus CheckHandshakeTryMsg(Buffer& buffer);
+	virtual CheckHandshakeStatus CheckHandshakeConfirmMsg(Buffer& buffer);
 
 protected:
-    EXPORT_FUNC virtual bool OnSessionClose();
-    EXPORT_FUNC virtual bool OnRecvData(Buffer *buffer);
-    EXPORT_FUNC virtual void OnBindRecvDataCallBack();
-    EXPORT_FUNC virtual void OnBindSessionCloseCallBack();
+	virtual bool OnSessionClose();
+	virtual bool OnRecvData(Buffer* buffer);
+	virtual void OnBindRecvDataCallBack();
+	virtual void OnBindSessionCloseCallBack();
 
 private:
-    EXPORT_FUNC bool Send(const Buffer &buffer);
-    EXPORT_FUNC void ProcessPakage(PureWebSocketSessionPakage *newPak = nullptr);
-    SpinLock _ProcessLock;
+	bool Send(const Buffer& buffer);
+	void ProcessPakage(PureWebSocketSessionPakage* newPak = nullptr);
+	SpinLock _ProcessLock;
 
 private:
-    SafeQueue<PureWebSocketSessionPakage *> _RecvPaks;
+	SafeQueue<PureWebSocketSessionPakage*> _RecvPaks;
 };

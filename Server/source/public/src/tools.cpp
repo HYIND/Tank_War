@@ -3,6 +3,9 @@
 #include <random>
 #include "fmt/core.h"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 int64_t Tool::GetTimestampMilliseconds()
 {
     auto now = std::chrono::system_clock::now();
@@ -15,6 +18,14 @@ int64_t Tool::GetTimestampSecond()
     auto now = std::chrono::system_clock::now();
     auto duration = now.time_since_epoch();
     return std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+}
+
+std::string Tool::GetFormatSecondStr(int64_t timestamp_seconds)
+{
+    auto tp = std::chrono::time_point_cast<std::chrono::seconds>(
+        std::chrono::system_clock::from_time_t(
+            static_cast<std::time_t>(timestamp_seconds)));
+    return std::format("{:%Y-%m-%d %H:%M:%S}", tp);
 }
 
 std::string Tool::GenerateSimpleUuid()
@@ -62,4 +73,14 @@ json Tool::ParseJson(const Buffer &buf)
         std::cout << fmt::format("Tool ParseJson error : {}\n", js_str);
     }
     return result;
+}
+
+float Tool::RadianToAngle(float radian)
+{
+    return radian / M_PI * 180.f;
+}
+
+float Tool::AngleToRadian(float angle)
+{
+    return angle / 180.f * M_PI;
 }

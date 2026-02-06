@@ -1,7 +1,7 @@
 #pragma once
 
-#include "StateDef/LobbyDef.h"
-#include "StateDef/UserDef.h"
+#include "GameStateDef/LobbyDef.h"
+#include "GameStateDef/UserDef.h"
 #include <memory>
 
 using namespace GameStateDef;

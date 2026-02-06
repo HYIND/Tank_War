@@ -1,5 +1,6 @@
 #pragma once
 
+#if __linux__
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -11,6 +12,9 @@
 #include <net/if.h>
 #include <sys/ioctl.h>
 #include "fmt/core.h"
+#elif _WIN32
+
+#endif
 #include <string.h>
 #include <signal.h>
 #include <thread>
@@ -35,11 +39,7 @@
 #include <shared_mutex>
 #include <map>
 
-#ifdef _WIN32
-#define EXPORT_FUNC __declspec(dllexport)
-#elif __linux__
-#define EXPORT_FUNC
-#endif
+#include "NetExportMarco.h"
 
 #define exit_if(r, ...)                                                                          \
     if (r)                                                                                       \
@@ -49,7 +49,7 @@
         exit(1);                                                                                 \
     }
 
-EXPORT_FUNC void InitNetCore();
-EXPORT_FUNC void RunNetCoreLoop(bool isBlock = false);
-EXPORT_FUNC void StopNetCoreLoop();
-EXPORT_FUNC bool NetCoreRunning();
+NET_API void InitNetCore();
+NET_API void RunNetCoreLoop(bool isBlock = false);
+NET_API void StopNetCoreLoop();
+NET_API bool NetCoreRunning();

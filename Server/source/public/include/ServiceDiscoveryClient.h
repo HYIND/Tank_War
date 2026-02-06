@@ -1,11 +1,15 @@
 #pragma once
 
-#include "ServiceRegistryManager.h"
+#include "ServiceRegistryData.h"
+#include "ApplicationLayerCommunication/JsonProtocolClient.h"
 
-// 服务注册表，用于接收服务注册请求
+using namespace ServiceRegistryDataDef;
+
+// 服务发现客户端
 class ServiceDiscoveryClient
 {
 public:
+    ServiceDiscoveryClient();
     ServiceDiscoveryClient(const std::string &IP, int Port);
     ~ServiceDiscoveryClient();
 
@@ -15,6 +19,7 @@ public:
 
     bool GetAvailableServiceInfo(ServiceType type, std::vector<ServiceInfo> &services);
     bool GetAllAvailableServiceInfo(std::vector<ServiceInfo> &services);
+    bool GetAvailableServiceInfoByServicesIds(std::vector<std::string> &serviceid_list, std::vector<ServiceInfo> &services);
 
 private:
     bool Connect();
@@ -24,7 +29,7 @@ private:
     std::string _ip;
     int _port;
 
-    CustomTcpSession _tcpsession;
+    JsonProtocolClient _client;
     std::atomic<bool> isConnected;
     CriticalSectionLock _sessionStatusChangeLock;
 };

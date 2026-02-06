@@ -4,8 +4,10 @@ using namespace ServiceRegistryDataDef;
 
 void NetworkEndpoint::update_from_json(const json &j)
 {
-    ip = j.value("ip", ip);
-    port = j.value("port", port);
+    if (j.contains("ip") && j["ip"].is_string())
+        ip = j.value("ip", ip);
+    if (j.contains("port") && j["port"].is_number_integer())
+        port = j.value("port", port);
 }
 json NetworkEndpoint::to_json() const
 {
@@ -175,6 +177,12 @@ void ServiceInfo::set_endpoint(const std::string &ip, uint16_t port)
     endpoint.port = port;
 }
 
+void ServiceRegistryDataDef::ServiceInfo::set_stub_endpoint(const std::string &ip, uint16_t port)
+{
+    stub_endpoint.ip = ip;
+    stub_endpoint.port = port;
+}
+
 // 获取Lobby元数据（方便使用）
 LobbyMetadata *ServiceInfo::lobby_metadata()
 {
@@ -246,8 +254,9 @@ json ServiceInfo::to_json() const
         {"service_id", service_id},
         {"service_type", static_cast<int>(service_type)},
         {"status", static_cast<int>(status)},
+        {"metadata", metadata_.to_json()},
         {"endpoint", {{"ip", endpoint.ip}, {"port", endpoint.port}}},
-        {"metadata", metadata_.to_json()}};
+        {"stub_endpoint", {{"ip", stub_endpoint.ip}, {"port", stub_endpoint.port}}}};
 }
 
 std::shared_ptr<ServiceInfo> ServiceInfo::create_from_json_shared(const json &j)
@@ -262,6 +271,12 @@ std::shared_ptr<ServiceInfo> ServiceInfo::create_from_json_shared(const json &j)
     {
         serviceinfo->endpoint.ip = j["endpoint"].value("ip", "");
         serviceinfo->endpoint.port = j["endpoint"].value("port", 0);
+    }
+
+    if (j.contains("stub_endpoint"))
+    {
+        serviceinfo->stub_endpoint.ip = j["stub_endpoint"].value("ip", "");
+        serviceinfo->stub_endpoint.port = j["stub_endpoint"].value("port", 0);
     }
 
     if (j.contains("metadata"))
@@ -282,6 +297,12 @@ ServiceInfo ServiceInfo::create_from_json(const json &j)
     {
         serviceinfo.endpoint.ip = j["endpoint"].value("ip", "");
         serviceinfo.endpoint.port = j["endpoint"].value("port", 0);
+    }
+
+    if (j.contains("stub_endpoint"))
+    {
+        serviceinfo.stub_endpoint.ip = j["stub_endpoint"].value("ip", "");
+        serviceinfo.stub_endpoint.port = j["stub_endpoint"].value("port", 0);
     }
 
     if (j.contains("metadata"))

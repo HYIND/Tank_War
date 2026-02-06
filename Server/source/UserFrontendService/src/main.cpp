@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "ApplicationLayerConnectManager/JsonCommunicateConnectManager.h"
+#include "ApplicationLayerCommunication/JsonProtocolServer.h"
 #include "UserFrontendService.h"
 #include "ServiceRegistrar.h"
 #include "EndPointConfig.h"
@@ -15,11 +15,15 @@ void signal_handler(int sig)
 
 auto g_ServiceRegistrar = std::make_shared<ServiceRegistrar>();
 auto g_userfrontendservice = std::make_shared<UserFrontendService>();
-bool StartService(const std::string &IP, int Port)
+bool StartService(
+    const std::string &IP, int Port,
+    const std::string &stub_IP, int stub_Port,
+    const std::string &gameStateService_IP, int gameStateService_Port)
 {
-    auto conn = std::make_shared<JsonCommunicateConnectManager>();
-    g_userfrontendservice->SetConnectManager(conn);
-    return g_userfrontendservice->Start(IP, Port);
+    g_userfrontendservice->SetServiceEndPoint(IP, Port);
+    g_userfrontendservice->SetStubEndPoint(stub_IP, stub_Port);
+    g_userfrontendservice->SetGameStateEndPoint(gameStateService_IP, gameStateService_Port);
+    return g_userfrontendservice->Start();
 }
 
 bool StartServiceRegistrar(const std::string &IP, int Port)
@@ -41,7 +45,9 @@ int main()
     sigaction(SIGINT, &sa, NULL);
 
     {
-        if (!StartService(UserFrontendServiceIP, UserFrontendServicePort))
+        if (!StartService(UserFrontendServiceIP, UserFrontendServicePort,
+                          UserFrontendServiceStubIP, UserFrontendServiceStubPort,
+                          GameStatesServiceStubIP, GameStatesServiceStubPort))
         {
             std::cout << "StartService Error!\n";
             return -1;
@@ -63,5 +69,6 @@ int main()
         } while (NetCoreRunning());
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
+
     return 0;
 }

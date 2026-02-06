@@ -1,11 +1,13 @@
 #pragma once
 
 #include "Core/DeleteLater.h"
-#include "Core/TCPTransportWarpper.h"
+#include "Connection/BaseTransportConnection.h"
+
+#include "NetExportMarco.h"
 
 class EpollCoreProcessImpl;
 
-class EpollCoreProcess
+class NET_API EpollCoreProcess
 {
 public:
     static EpollCoreProcess *Instance();

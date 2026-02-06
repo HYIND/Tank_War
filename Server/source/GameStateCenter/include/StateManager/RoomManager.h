@@ -1,6 +1,6 @@
 #pragma once
 
-#include "StateDef/RoomDef.h"
+#include "GameStateDef/RoomDef.h"
 #include <unordered_map>
 #include <memory>
 
@@ -17,7 +17,10 @@ public:
     // 玩家进入房间
     bool player_enter_room(const std::string &room_id, UserPtr user);
     // 玩家退出房间
-    bool player_leave_room(const std::string &room_id, const std::string &token);
+    bool player_leave_room(const std::string &room_id, UserPtr user);
+    // 玩家准备/取消准备
+    bool change_ready_status(const std::string &room_id, UserPtr user, bool isready);
+
     // 获取房间
     RoomPtr get_room(const std::string &room_id);
     // 获取所有房间

@@ -26,70 +26,127 @@ bool RoomManager::player_enter_room(const std::string &room_id, UserPtr user)
     if (!room || !user)
         return false;
 
+    if (room->status == RoomStatus::IN_GAME)
+        return false;
+
+    auto guard = room->members.MakeLockGuard();
+
+    if (room->status == RoomStatus::IN_GAME)
+        return false;
+
     // 检查房间是否已满
     if (room->player_count >= room->max_players)
     {
         return false;
     }
 
-    for (auto it = room->members.begin(); it != room->members.end();)
-    {
-        auto &member = *it;
-        auto roomuser = member.user.lock();
-        if (!user)
-        {
-            it = room->members.erase(it);
-            room->player_count--;
-        }
-        else if (user->token == roomuser->token)
-        {
-            return false;
-        }
-        it++;
-    }
+    if (room->members.Exist(user->token))
+        return false;
 
     // 添加用户到房间
-    room->members.push_back(RoomMemeber{user, MemberStatus::READY});
-    room->player_count++;
+    auto roommember = std::make_shared<RoomMemeber>();
+    roommember->userweak = user;
+    roommember->name = user->name;
+    roommember->status = MemberStatus::NO_READY;
+
+    room->members.Insert(user->token, roommember);
+    room->player_count = room->members.Size();
 
     // 更新用户状态和房间引用
     user->status = UserStatus::IN_ROOM;
     user->room = room;
 
+    if (room->player_count == 1)
+    {
+        room->room_host_token = user->token;
+        roommember->status = MemberStatus::READY;
+    }
+
     return true;
 }
 
 // 玩家退出房间
-bool RoomManager::player_leave_room(const std::string &room_id, const std::string &token)
+bool RoomManager::player_leave_room(const std::string &room_id, UserPtr user)
 {
     auto room = get_room(room_id);
     if (!room)
         return false;
 
-    // 查找并移除用户
-    bool result = false;
-    for (auto it = room->members.begin(); it != room->members.end();)
-    {
-        auto &member = *it;
-        auto user = member.user.lock();
-        bool needremove = (!user || user->token == token); // 顺便清理引用失效用户
-        if (needremove)
-        {
-            it = room->members.erase(it);
-            room->player_count--;
+    if (room->status == RoomStatus::IN_GAME)
+        return false;
 
-            if (user)
-            {
-                result = true;
-                user->status = UserStatus::IN_LOBBY;
-                user->room.reset();
-            }
-            continue;
+    auto guard = room->members.MakeLockGuard();
+
+    if (room->status == RoomStatus::IN_GAME)
+        return false;
+
+    if (!room->members.Exist(user->token))
+        return false;
+
+    std::shared_ptr<RoomMemeber> member;
+    if (room->members.Find(user->token, member))
+    {
+        auto user = member->userweak.lock();
+        if (user)
+        {
+            user->status = UserStatus::IN_LOBBY;
+            user->room.reset();
         }
-        ++it;
+        room->members.Erase(user->token);
+    }
+    room->player_count = room->members.Size();
+
+    if (room->player_count <= 0)
+        remove_room(room_id);
+    else
+    {
+        // 更换房主
+        if (user->token == room->room_host_token && room->player_count > 0)
+        {
+            room->members.EnsureCall(
+                [&](std::map<std::string, std::shared_ptr<GameStateDef::RoomMemeber>> &map) -> void
+                {
+                    auto it = map.begin();
+                    if (it != map.end())
+                    {
+                        room->room_host_token = it->first;
+                        it->second->status = MemberStatus::READY;
+                    }
+                });
+        }
     }
 
-    return result; // 用户不在房间中
+    return true;
+}
+
+bool RoomManager::change_ready_status(const std::string &room_id, UserPtr user, bool isready)
+{
+    auto room = get_room(room_id);
+    if (!room)
+        return false;
+
+    if (room->status == RoomStatus::IN_GAME)
+        return false;
+
+    if(room->room_host_token == room_id)
+        return false;
+
+    auto guard = room->members.MakeLockGuard();
+
+    if (room->status == RoomStatus::IN_GAME)
+        return false;
+
+    if (!room->members.Exist(user->token))
+        return false;
+
+    std::shared_ptr<RoomMemeber> member;
+    if (room->members.Find(user->token, member))
+    {
+        if (!member)
+            return false;
+        member->status = isready ? MemberStatus::READY : MemberStatus::NO_READY;
+    }
+    return true;
 }
 
 // 获取房间
@@ -117,15 +174,21 @@ bool RoomManager::remove_room(const std::string &room_id)
     if (!room)
         return false;
 
+    auto guard = room->members.MakeLockGuard();
     // 清理房间内所有用户的房间引用
-    for (auto &member : room->members)
-    {
-        if (auto user = member.user.lock())
+    room->members.EnsureCall(
+        [](std::map<std::string, std::shared_ptr<RoomMemeber>> &map) -> void
         {
-            user->room.reset();
-            user->status = UserStatus::IN_LOBBY;
-        }
-    }
+            for (auto &pair : map)
+            {
+                auto &member = pair.second;
+                if (auto user = member->userweak.lock())
+                {
+                    user->status = UserStatus::IN_LOBBY;
+                    user->room.reset();
+                }
+            }
+        });
 
     rooms_.erase(room_id);
     return true;

@@ -2,7 +2,9 @@
 
 #include "Buffer.h"
 
-class CRC32Helper {
+#include "NetExportMarco.h"
+
+class NET_API CRC32Helper {
 private:
     static uint32_t crc_table[256];
     static bool table_initialized;

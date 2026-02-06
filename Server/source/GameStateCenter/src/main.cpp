@@ -28,26 +28,21 @@ void signal_handler(int sig)
 
 bool StartServiceRegistry(const std::string &IP, int Port)
 {
-    auto con = std::make_shared<JsonCommunicateConnectManager>();
-    g_SRy->SetConnectManager(con);
     g_SRy->SetServiceRegistryManager(g_SRM);
     return g_SRy->Start(IP, Port);
 }
 
 bool StartServiceDiscovery(const std::string &IP, int Port)
 {
-    auto con = std::make_shared<JsonCommunicateConnectManager>();
-    g_SD->SetConnectManager(con);
     g_SD->SetServiceRegistryManager(g_SRM);
     return g_SD->Start(IP, Port);
 }
 
 bool StartService(const std::string &IP, int Port)
 {
-    auto con = std::make_shared<JsonCommunicateConnectManager>();
-    g_GSS->SetConnectManager(con);
+    g_GSS->SetStubEndPoint(IP, Port);
     g_GSS->SetGameStateManager(g_GSM);
-    return g_GSS->Start(IP, Port);
+    return g_GSS->Start();
 }
 
 bool StartServiceRegistrar(const std::string &IP, int Port)
@@ -85,7 +80,7 @@ int main()
     }
 
     {
-        if (!StartService(GameStatesServiceIP, GameStatesServicePort))
+        if (!StartService(GameStatesServiceStubIP, GameStatesServiceStubPort))
         {
             std::cout << "StartService Error!\n";
             return -1;

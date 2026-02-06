@@ -13,12 +13,12 @@ LoginSubService::~LoginSubService()
 {
 }
 
-void LoginSubService::OnSessionEstablish(BaseNetWorkSession *session)
+void LoginSubService::OnSessionEstablish(JsonProtocolSession session)
 {
     ConnectionEnter(session);
 }
 
-void LoginSubService::OnRecvMessage(BaseNetWorkSession *session, json &src)
+void LoginSubService::OnRecvMessage(JsonProtocolSession session, json &src)
 {
     std::vector<json> dests;
     ProcessMsg(session, src, dests);
@@ -26,22 +26,20 @@ void LoginSubService::OnRecvMessage(BaseNetWorkSession *session, json &src)
     {
         for (auto &js : dests)
         {
-            const std::string js_str = js.dump();
-            Buffer buf(js_str.c_str(), js_str.length());
-            session->AsyncSend(js_str);
+            session.AsyncSendJson(js);
         }
     }
 }
 
-void LoginSubService::OnRecvRequest(BaseNetWorkSession *session, json &src, json &dest)
+void LoginSubService::OnRecvRequest(JsonProtocolSession session, json &src, json &dest)
 {
     std::vector<json> dests;
     ProcessMsg(session, src, dests);
-    if (!dest.empty())
-        dest = dest[0];
+    if (!dests.empty())
+        dest = dests[0];
 }
 
-void LoginSubService::OnSessionClose(BaseNetWorkSession *session)
+void LoginSubService::OnSessionClose(JsonProtocolSession session)
 {
 }
 
@@ -50,22 +48,32 @@ void LoginSubService::SetLobbySubService(std::shared_ptr<LobbySubService> servic
     _weaklobbyservice = std::weak_ptr<LobbySubService>(service);
 }
 
-void LoginSubService::SetConnectManager(std::shared_ptr<JsonCommunicateConnectManager> m)
+void LoginSubService::SetServer(std::shared_ptr<JsonProtocolServer> m)
 {
-    _connectmanager = m;
-    _connectmanager->SetCallbackSessionEstablish(std::bind(&LoginSubService::OnSessionEstablish, this, std::placeholders::_1));
+    _server = m;
+    _server->SetCallbackSessionEstablish(std::bind(&LoginSubService::OnSessionEstablish, this, std::placeholders::_1));
 }
 
-bool LoginSubService::ConnectionEnter(BaseNetWorkSession *session)
+void LoginSubService::SetGameStateStub(std::shared_ptr<JsonProtocolClient> stub)
 {
-    _connectmanager->SetCallBackRecvJsonMessage(session, std::bind(&LoginSubService::OnRecvMessage, this, std::placeholders::_1, std::placeholders::_2));
-    _connectmanager->SetCallBackRecvJsonRequest(session, std::bind(&LoginSubService::OnRecvRequest, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-    _connectmanager->SetCallBackCloseConnect(session, std::bind(&LoginSubService::OnSessionClose, this, std::placeholders::_1));
+    _gameStateStub = stub;
+}
+
+void LoginSubService::SetServiceInfo(std::shared_ptr<ServiceInfo> info)
+{
+    _serviceinfo = info;
+}
+
+bool LoginSubService::ConnectionEnter(JsonProtocolSession session)
+{
+    _server->SetCallBackRecvJsonMessage(session, std::bind(&LoginSubService::OnRecvMessage, this, std::placeholders::_1, std::placeholders::_2));
+    _server->SetCallBackRecvJsonRequest(session, std::bind(&LoginSubService::OnRecvRequest, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    _server->SetCallBackCloseConnect(session, std::bind(&LoginSubService::OnSessionClose, this, std::placeholders::_1));
 
     return true;
 }
 
-void LoginSubService::ProcessMsg(BaseNetWorkSession *session, json &js_src, std::vector<json> &js_dests)
+void LoginSubService::ProcessMsg(JsonProtocolSession session, json &js_src, std::vector<json> &js_dests)
 {
     if (!js_src.contains("command"))
         return;
@@ -79,7 +87,7 @@ void LoginSubService::ProcessMsg(BaseNetWorkSession *session, json &js_src, std:
     }
 }
 
-void LoginSubService::ProcessLogin(BaseNetWorkSession *session, json &js_src, json &js_dest)
+void LoginSubService::ProcessLogin(JsonProtocolSession session, json &js_src, json &js_dest)
 {
 
     js_dest["command"] = LoginSubService_LoginRes;
