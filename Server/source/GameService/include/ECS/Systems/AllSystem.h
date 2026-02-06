@@ -1,0 +1,15 @@
+#pragma once
+
+#include "ECS/Systems/ServerInputSystem.h"
+#include "ECS/Systems/LifeTimeSystem.h"
+#include "ECS/Systems/MovementSystem.h"
+#include "ECS/Systems/VelocityControlSystem.h"
+#include "ECS/Systems/WeaponSystem.h"
+#include "ECS/Systems/PhysicsSystem.h"
+#include "ECS/Systems/DestroySystem.h"
+#include "ECS/Systems/BulletSystem.h"
+#include "ECS/Systems/HealthSystem.h"
+#include "ECS/Systems/WallSystem.h"
+#include "ECS/Systems/PropSystem.h"
+#include "ECS/Systems/TankSystem.h"
+#include "ECS/Systems/ServerStateSyncStstem.h"

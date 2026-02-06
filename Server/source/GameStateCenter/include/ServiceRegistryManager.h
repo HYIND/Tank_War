@@ -1,8 +1,8 @@
 #pragma once
 
 #include "ServiceRegistryData.h"
-#include "ApplicationLayerConnectManager/JsonCommunicateConnectManager.h"
 #include <memory>
+#include "SafeStl.h"
 
 using namespace ServiceRegistryDataDef;
 struct ServiceState
@@ -32,6 +32,7 @@ public:
     bool UpdateService(json &js);
     std::vector<ServiceInfo> QueryAvailableService(ServiceType type);
     std::vector<ServiceInfo> QueryAllAvailableService();
+    std::vector<ServiceInfo> QueryServiceInfoByServiceIds(const std::vector<std::string> &serviceid_list);
 
 private:
     SafeMap<ServiceType, ServiceStateMap> _service_map;

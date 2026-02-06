@@ -6,6 +6,14 @@
 #include <iostream>
 #include "stdafx.h"
 
+struct NetworkEndpoint
+{
+    std::string ip; // IP或域名
+    uint16_t port;  // 端口
+
+    void update_from_json(const json &j);
+    json to_json() const;
+};
 namespace ServiceRegistryDataDef
 {
     enum class ServiceType
@@ -23,15 +31,6 @@ namespace ServiceRegistryDataDef
         STARTING = 0, // 启动中
         DRAINING = 1, // 排空中
         OFFLINE = 2   // 离线
-    };
-
-    struct NetworkEndpoint
-    {
-        std::string ip; // IP或域名
-        uint16_t port;  // 端口
-
-        void update_from_json(const json &j);
-        json to_json() const;
     };
 
     // GameState服务专用元数据
@@ -110,11 +109,14 @@ namespace ServiceRegistryDataDef
         std::string service_id;   // 服务唯一ID
         ServiceType service_type; // 服务类型
         ServiceStatus status;     // 服务状态
-        NetworkEndpoint endpoint;
         DynamicMetadata metadata_;
+
+        NetworkEndpoint endpoint;
+        NetworkEndpoint stub_endpoint;
 
         ServiceInfo(const std::string &service_id, ServiceType type);
         void set_endpoint(const std::string &ip, uint16_t port);
+        void set_stub_endpoint(const std::string &ip, uint16_t port);
 
         // ========== 类型化元数据访问 ==========
         template <typename T>

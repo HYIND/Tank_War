@@ -5,6 +5,8 @@ using namespace ServiceRegistryCommand;
 
 ServiceRegistry::ServiceRegistry()
 {
+    _connectmanager = std::make_shared<JsonProtocolServer>();
+    _connectmanager->SetCallbackSessionEstablish(std::bind(&ServiceRegistry::OnSessionEstablish, this, std::placeholders::_1));
 }
 
 ServiceRegistry::~ServiceRegistry()
@@ -13,31 +15,17 @@ ServiceRegistry::~ServiceRegistry()
 
 bool ServiceRegistry::Start(const std::string &IP, int Port)
 {
-    if (!_connectmanager)
-    {
-        _connectmanager = std::make_shared<JsonCommunicateConnectManager>();
-        SetConnectManager(_connectmanager);
-    }
     return _connectmanager->Start(IP, Port);
 }
 
-void ServiceRegistry::SetConnectManager(std::shared_ptr<JsonCommunicateConnectManager> m)
-{
-    assert(m);
-    if (m != _connectmanager)
-        _connectmanager = m;
-
-    _connectmanager->SetCallbackSessionEstablish(std::bind(&ServiceRegistry::OnSessionEstablish, this, std::placeholders::_1));
-}
-
-void ServiceRegistry::OnSessionEstablish(BaseNetWorkSession *session)
+void ServiceRegistry::OnSessionEstablish(JsonProtocolSession session)
 {
     _connectmanager->SetCallBackRecvJsonMessage(session, std::bind(&ServiceRegistry::OnRecvMessage, this, std::placeholders::_1, std::placeholders::_2));
     _connectmanager->SetCallBackRecvJsonRequest(session, std::bind(&ServiceRegistry::OnRecvRequest, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     _connectmanager->SetCallBackCloseConnect(session, std::bind(&ServiceRegistry::OnSessionClose, this, std::placeholders::_1));
 }
 
-void ServiceRegistry::OnRecvMessage(BaseNetWorkSession *session, json &src)
+void ServiceRegistry::OnRecvMessage(JsonProtocolSession session, json &src)
 {
     json dest;
     ProcessMsg(src, dest);
@@ -45,19 +33,17 @@ void ServiceRegistry::OnRecvMessage(BaseNetWorkSession *session, json &src)
     {
         for (auto &js : dest)
         {
-            const std::string js_str = js.dump();
-            Buffer buf(js_str.c_str(), js_str.length());
-            session->AsyncSend(js_str);
+            session.AsyncSendJson(js);
         }
     }
 }
 
-void ServiceRegistry::OnRecvRequest(BaseNetWorkSession *session, json &src, json &dest)
+void ServiceRegistry::OnRecvRequest(JsonProtocolSession session, json &src, json &dest)
 {
     ProcessMsg(src, dest);
 }
 
-void ServiceRegistry::OnSessionClose(BaseNetWorkSession *session)
+void ServiceRegistry::OnSessionClose(JsonProtocolSession session)
 {
 }
 

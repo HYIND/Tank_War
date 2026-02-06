@@ -13,11 +13,15 @@ void signal_handler(int sig)
 auto g_ServiceRegistrar = std::make_shared<ServiceRegistrar>();
 auto g_gameservice = std::make_shared<GameService>();
 
-bool StartService(const std::string &IP, int Port)
+bool StartService(
+    const std::string &IP, int Port,
+    const std::string &stub_IP, int stub_Port,
+    const std::string &gameStateService_IP, int gameStateService_Port)
 {
-    auto conn = std::make_shared<JsonCommunicateConnectManager>();
-    g_gameservice->SetConnectManager(conn);
-    return g_gameservice->Start(IP, Port);
+    g_gameservice->SetServiceEndPoint(IP, Port);
+    g_gameservice->SetStubEndPoint(stub_IP, stub_Port);
+    g_gameservice->SetGameStateEndPoint(gameStateService_IP, gameStateService_Port);
+    return g_gameservice->Start();
 }
 
 bool StartServiceRegistrar(const std::string &IP, int Port)
@@ -39,7 +43,9 @@ int main()
     sigaction(SIGINT, &sa, NULL);
 
     {
-        if (!StartService(GameServiceIP, GameServicePort))
+        if (!StartService(GameServiceIP, GameServicePort,
+                          GameServiceStubIP, GameServiceStubPort,
+                          GameStatesServiceStubIP, GameStatesServiceStubPort))
         {
             std::cout << "StartService Error!\n";
             return -1;

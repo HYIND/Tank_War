@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BaseService.h"
+#include "ApplicationLayerCommunication/JsonProtocolClient.h"
 #include "Timer.h"
 
 using namespace ServiceRegistryDataDef;
@@ -22,7 +23,7 @@ public:
     void RemoveServiceSource(std::shared_ptr<BaseService> source);
 
 public:
-    void ConnectClose(BaseNetWorkSession *session);
+    void ConnectClose(JsonProtocolClient *session);
 
 private:
     void SendAllServiceInfo();
@@ -32,6 +33,6 @@ private:
     uint32_t _send_interval_mssecond;
     SafeMap<BaseService *, std::shared_ptr<ServiceSourceHandle>> _sources;
 
-    CustomTcpSession _tcpsession;
+    JsonProtocolClient _client;
     std::shared_ptr<TimerTask> _timer;
 };

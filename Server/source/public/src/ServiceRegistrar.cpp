@@ -17,20 +17,20 @@ ServiceRegistrar::~ServiceRegistrar()
         _timer->Clean();
         _timer.reset();
     }
-    _tcpsession.Release();
+    _client.Release();
 }
 
 bool ServiceRegistrar::Start(const std::string &IP, int Port)
 {
-    _tcpsession.Release();
+    _client.Release();
     if (_timer)
     {
         _timer->Clean();
         _timer.reset();
     }
 
-    _tcpsession.BindSessionCloseCallBack(std::bind(&ServiceRegistrar::ConnectClose, this, std::placeholders::_1));
-    bool success = _tcpsession.Connect(IP, Port);
+    _client.BindCallBackCloseClient(std::bind(&ServiceRegistrar::ConnectClose, this, std::placeholders::_1));
+    bool success = _client.Connect(IP, Port);
     if (success)
     {
         _timer = TimerTask::CreateRepeat("ServiceRegistrar_SendServiceInfo", _send_interval_mssecond, std::bind(&ServiceRegistrar::SendAllServiceInfo, this), 0);
@@ -60,7 +60,7 @@ void ServiceRegistrar::RemoveServiceSource(std::shared_ptr<BaseService> source)
     }
 }
 
-void ServiceRegistrar::ConnectClose(BaseNetWorkSession *session)
+void ServiceRegistrar::ConnectClose(JsonProtocolClient *session)
 {
     if (_timer)
     {
@@ -76,22 +76,25 @@ void ServiceRegistrar::SendAllServiceInfo()
         {
             for (auto it = map.begin(); it != map.end();)
             {
-                auto &handle = it->second;
+                auto handle = it->second;
                 if (auto servicesource = handle->weakservicesource.lock())
                 {
                     try
                     {
                         handle->ServiceInfos = servicesource->GetServiceInfo();
+                        SendServiceInfo(*handle);
                     }
                     catch (...)
                     {
                         std::cout << "ServiceRegistrar GetServiceInfo Execption!\n";
                     }
-                    SendServiceInfo(*handle);
                     it++;
                 }
                 else
                 {
+                    for (auto &serviceinfo : handle->ServiceInfos)
+                        serviceinfo.status = ServiceStatus::OFFLINE;
+                    SendServiceInfo(*handle);
                     it = map.erase(it);
                 }
             }
@@ -107,10 +110,10 @@ void ServiceRegistrar::SendServiceInfo(ServiceSourceHandle &handle)
         js_info["service"] = serviceinfo.to_json();
 
         std::string str = js_info.dump();
-        if (!_tcpsession.AsyncSend(Buffer(str)))
+        if (!_client.Send(js_info))
         {
-            _tcpsession.Release();
-            ConnectClose(&_tcpsession);
+            _client.Release();
+            ConnectClose(&_client);
         }
     }
 }

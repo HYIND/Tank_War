@@ -145,6 +145,16 @@ public:
 		return keys;
 	}
 
+	std::vector<V> GetValues() const
+	{
+		std::vector<V> values;
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		values.reserve(_map.size());
+		for (const auto &[key, value] : _map)
+			values.push_back(value);
+		return values;
+	}
+
 	void Lock()
 	{
 		_lock.Enter();
@@ -300,6 +310,16 @@ public:
 		for (const auto &[key, value] : _map)
 			keys.push_back(key);
 		return keys;
+	}
+
+	std::vector<V> GetValues() const
+	{
+		std::vector<V> values;
+		std::lock_guard<CriticalSectionLock> lock(_lock);
+		values.reserve(_map.size());
+		for (const auto &[key, value] : _map)
+			values.push_back(value);
+		return values;
 	}
 
 	void Lock()

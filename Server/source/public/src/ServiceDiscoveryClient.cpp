@@ -3,6 +3,11 @@
 
 using namespace ServiceDiscoveryCommand;
 
+ServiceDiscoveryClient::ServiceDiscoveryClient()
+    : isConnected{false}
+{
+}
+
 ServiceDiscoveryClient::ServiceDiscoveryClient(const std::string &IP, int Port)
     : _ip(IP), _port(Port), isConnected{false}
 {
@@ -12,7 +17,7 @@ ServiceDiscoveryClient::~ServiceDiscoveryClient()
 {
     LockGuard guard(_sessionStatusChangeLock);
     isConnected.store(false);
-    _tcpsession.Release();
+    _client.Release();
 }
 
 void ServiceDiscoveryClient::SetAddr(const std::string &IP)
@@ -23,7 +28,7 @@ void ServiceDiscoveryClient::SetAddr(const std::string &IP)
     LockGuard guard(_sessionStatusChangeLock);
     isConnected.store(false);
     _ip = IP;
-    _tcpsession.Release();
+    _client.Release();
 }
 
 void ServiceDiscoveryClient::SetPort(int Port)
@@ -34,7 +39,7 @@ void ServiceDiscoveryClient::SetPort(int Port)
     LockGuard guard(_sessionStatusChangeLock);
     isConnected.store(false);
     _port = Port;
-    _tcpsession.Release();
+    _client.Release();
 }
 
 void ServiceDiscoveryClient::SetEndpoint(const std::string &IP, int Port)
@@ -46,7 +51,7 @@ void ServiceDiscoveryClient::SetEndpoint(const std::string &IP, int Port)
     isConnected.store(false);
     _ip = IP;
     _port = Port;
-    _tcpsession.Release();
+    _client.Release();
 }
 
 bool ServiceDiscoveryClient::GetAvailableServiceInfo(ServiceType type, std::vector<ServiceInfo> &services)
@@ -114,6 +119,44 @@ bool ServiceDiscoveryClient::GetAllAvailableServiceInfo(std::vector<ServiceInfo>
     return true;
 }
 
+bool ServiceDiscoveryClient::GetAvailableServiceInfoByServicesIds(std::vector<std::string> &serviceid_list, std::vector<ServiceInfo> &services)
+{
+    if (!Connect())
+        return false;
+
+    json js_request;
+    js_request["command"] = ServiceDiscovery_GetServiceInfoByServiceIds;
+
+    json js_ids = json::array();
+    for (auto &serviceid : serviceid_list)
+        js_ids.push_back(serviceid);
+
+    js_request["serviceids"] = js_ids;
+
+    json js_response;
+    if (!Request(js_request, js_response) || js_response.is_null())
+        return false;
+
+    int result = js_response.value("result", -1);
+    if (result != 1)
+        return false;
+
+    if (!js_response.contains("services") || !js_response["services"].is_array())
+        return false;
+
+    json js_services = js_response["services"];
+    for (int i = 0; i < js_services.size(); i++)
+    {
+        auto info = ServiceInfo::create_from_json(js_services.at(i));
+        if (info.service_id.empty())
+            return false;
+
+        services.emplace_back(std::move(info));
+    }
+
+    return true;
+}
+
 bool ServiceDiscoveryClient::Connect()
 {
     if (!isConnected.load())
@@ -121,8 +164,8 @@ bool ServiceDiscoveryClient::Connect()
         LockGuard guard(_sessionStatusChangeLock);
         if (!isConnected.load())
         {
-            _tcpsession.Release();
-            isConnected = _tcpsession.Connect(_ip, _port);
+            _client.Release();
+            isConnected.store(_client.Connect(_ip, _port));
         }
     }
     return isConnected;
@@ -130,12 +173,5 @@ bool ServiceDiscoveryClient::Connect()
 
 bool ServiceDiscoveryClient::Request(json &src, json &dest)
 {
-    std::string str = src.dump();
-    Buffer buf_request(str);
-    Buffer buf_response;
-    if (!_tcpsession.AwaitSend(buf_request, buf_response))
-        return false;
-
-    dest = Tool::ParseJson(buf_response);
-    return true;
+    return _client.Request(src, dest);
 }
