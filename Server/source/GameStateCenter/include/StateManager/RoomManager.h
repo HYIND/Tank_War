@@ -21,6 +21,9 @@ public:
     // 玩家准备/取消准备
     bool change_ready_status(const std::string &room_id, UserPtr user, bool isready);
 
+    bool player_leave_game(const std::string &room_id, UserPtr user);
+    bool game_end(const std::string &gameid);
+
     // 获取房间
     RoomPtr get_room(const std::string &room_id);
     // 获取所有房间

@@ -7,6 +7,7 @@
 #include "GameSession.h"
 #include "SafeStl.h"
 #include "BiDirectionalMap.h"
+#include "ServiceDiscoveryClient.h"
 
 using namespace ServiceRegistryDataDef;
 
@@ -36,6 +37,7 @@ public:
     void SendToPlayers(const GameID &gameId, const std::vector<PlayerID> &playerIds, const json &message);
     void SendToPlayer(const GameID &gameId, const PlayerID &playerId, const json &message);
     void BroadcastToGame(const GameID &gameId, const json &message, const std::vector<PlayerID> &exclude);
+    void GameOver(const GameID &gameId);
 
 private:
     void ProcessMsg(JsonProtocolSession &session, json &js_src, json &js_dest);
@@ -45,10 +47,15 @@ private:
     void ProcessPlayerJoin(const JsonProtocolSession &session, json &js_src, json &js_dest);
     void ProcessPlayerInput(const PlayerID &playerId, json &js_src, json &js_dest);
     void ProcessPlayerLeave(const PlayerID &playerId, json &js_src, json &js_dest);
-    void ProcessGameEnd(json &js_src, json &js_dest);
 
 private:
-    void Stub_ProcessNewGame(json &js_src, json &js_dest);
+    void OnStub_ProcessNewGame(json &js_src, json &js_dest);
+
+private:
+    bool Stub_PlayerLeaveGame(const PlayerID &playerId, const GameID &gameId);
+    bool Stub_GameEnd(const GameID &gameId);
+
+    bool Stub_Request(JsonProtocolClient &client, const json &js_request, json &response);
 
 private:
     std::shared_ptr<GameInstance> CreateNewGame(const GameID &gameId);
@@ -68,4 +75,6 @@ private:
     // 玩家会话管理
     SafeBiDirectionalMap<JsonProtocolSession, PlayerID> _SessionToplayerId;
     SafeUnorderedMap<PlayerID, GameID> _PlayerIdToGameId;
+
+    ServiceDiscoveryClient _servcieDiscoverClient;
 };

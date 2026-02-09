@@ -13,3 +13,4 @@
 #include "ECS/Systems/PropSystem.h"
 #include "ECS/Systems/TankSystem.h"
 #include "ECS/Systems/ServerStateSyncStstem.h"
+#include "ECS/Systems/CheckGameOverSystem.h"

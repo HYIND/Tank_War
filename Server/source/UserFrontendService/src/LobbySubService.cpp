@@ -1,6 +1,7 @@
 #include "LobbySubService.h"
 #include "command.h"
 #include "jwtHelper.h"
+#include "GameStateDef/RoomDef.h"
 
 using namespace LobbySubServiceCommand;
 using namespace GameStateServiceCommand;
@@ -276,8 +277,71 @@ void LobbySubService::ProcessHallMsg(std::shared_ptr<LobbyUser> sender, json &js
     }
 }
 
-void LobbySubService::ProcessRoomMsg(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
+void LobbySubService::ProcessRoomMsg(std::shared_ptr<LobbyUser> sender, json &js_src, json &js_dest)
 {
+    js_dest["command"] = LobbySubService_SendRoomMsgRes;
+
+    bool success = true;
+    std::string error_reason;
+
+    std::string msg;
+    if (success)
+    {
+        msg = js_src.value("msg", "");
+        if (msg.empty())
+        {
+            success = false;
+            error_reason = "不能发送空消息!";
+        }
+    }
+
+    json js_roominfo;
+    if (success)
+    {
+        success = Stub_RoomInfo(sender, js_roominfo);
+        if (!success)
+            error_reason = "服务器内部错误!";
+    }
+
+    GameStateDef::Room roominfo;
+    if (success)
+    {
+        if (!js_roominfo.is_object())
+        {
+            success = false;
+            error_reason = "服务器解析错误!";
+        }
+        else
+            roominfo.UpdateFromJson(js_roominfo);
+    }
+
+    if (success)
+    {
+        json js_broadcast;
+        js_broadcast["command"] = LobbySubService_RoomMsgBroadcast;
+        js_broadcast["srctoken"] = sender->token;
+        js_broadcast["name"] = sender->name;
+        js_broadcast["msg"] = msg;
+
+        roominfo.members.EnsureCall(
+            [&](std::map<std::string, std::shared_ptr<GameStateDef::RoomMemeber>> &map) -> void
+            {
+                for (auto &[token, memberinfo] : map)
+                {
+                    DelegateDispatch(token, js_broadcast);
+                }
+            });
+    }
+
+    if (success)
+    {
+        js_dest["result"] = 1;
+    }
+    else
+    {
+        js_dest["result"] = -1;
+        js_dest["reason"] = error_reason;
+    }
 }
 
 void LobbySubService::ProcessPrivateMsg(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)

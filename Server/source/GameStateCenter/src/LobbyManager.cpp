@@ -22,7 +22,7 @@ bool LobbyManager::player_join_lobby(UserPtr user)
         {
             if (existing->token == user->token && existing->name == user->name)
             {
-                return false; // 已在列表中
+                return true; // 已在列表中
             }
         }
     }

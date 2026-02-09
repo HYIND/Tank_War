@@ -22,6 +22,9 @@ public:
     bool leave_room(const std::string &room_id, const std::string &token);
     bool change_ready_status(const std::string &room_id, const std::string &token, bool isready);
 
+    bool leave_game(const std::string &room_id, const std::string &token);
+    bool game_end(const std::string &gameid);
+
     // 获取管理器引用（用于直接操作）
     UserManager &get_user_manager();
     RoomManager &get_room_manager();

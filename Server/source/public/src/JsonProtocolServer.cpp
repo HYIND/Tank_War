@@ -91,18 +91,20 @@ bool JsonProtocolServer::AwaitSend(const JsonProtocolSession &session, const jso
 
 bool JsonProtocolServer::ReleaseSession(const std::string &sessionId)
 {
-    auto guard1 = _SessionIdToSessionHandle.MakeLockGuard();
-    auto guard2 = _ConIdToSessionId.MakeLockGuard();
-
-    std::shared_ptr<JsonProtocolServer::SessionHandle> temp;
-    if (!_SessionIdToSessionHandle.FindByLeft(sessionId, temp) || !temp)
-        return false;
-
-    _SessionIdToSessionHandle.EraseByLeft(sessionId);
-
     std::string conId;
-    if (!_ConIdToSessionId.FindByRight(sessionId, conId) || conId.empty())
-        return false;
+    {
+        auto guard1 = _SessionIdToSessionHandle.MakeLockGuard();
+        auto guard2 = _ConIdToSessionId.MakeLockGuard();
+
+        std::shared_ptr<JsonProtocolServer::SessionHandle> temp;
+        if (!_SessionIdToSessionHandle.FindByLeft(sessionId, temp) || !temp)
+            return false;
+
+        _SessionIdToSessionHandle.EraseByLeft(sessionId);
+
+        if (!_ConIdToSessionId.FindByRight(sessionId, conId) || conId.empty())
+            return false;
+    }
 
     return _sessionmanager.ReleaseSession(conId);
 }

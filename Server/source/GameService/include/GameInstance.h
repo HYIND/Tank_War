@@ -10,9 +10,11 @@
 #include "ECS/Core/World.h"
 #include "SafeStl.h"
 #include "NetworkMessageSender.h"
+#include "GameService.h"
 
+class GameService;
 class NetworkMessageSender;
-class GameInstance
+class GameInstance : public std::enable_shared_from_this<GameInstance>
 {
 public:
     enum class State
@@ -28,6 +30,7 @@ public:
     ~GameInstance();
 
     void SetNetworkMessageSender(std::shared_ptr<NetworkMessageSender> sender);
+    void SetGameService(std::shared_ptr<GameService> service);
 
     // 游戏生命周期
     bool Initialize();
@@ -48,8 +51,15 @@ public:
 
     // 游戏逻辑
     void ProcessPlayerInput(const PlayerID &playerId, const json &input);
+
+    // 状态获取
     json GetGameState() const;
     json GetPlayerView(const PlayerID &playerId) const;
+
+    // 状态游戏变更
+    void GameOver();
+    void GameOverWithWinner(const PlayerID &winner);
+    void PlayerEliminated(const PlayerID &playerId, const PlayerID &killer);
 
 private:
     void GameLoop();
@@ -72,6 +82,7 @@ private:
     bool _stop = true;
 
     std::shared_ptr<NetworkMessageSender> _sender;
+    std::shared_ptr<GameService> _service;
 
     MapID _mapid;
     std::shared_ptr<World> _world;

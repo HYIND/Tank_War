@@ -113,6 +113,13 @@ namespace GameStateServiceCommand
 
     constexpr int GameStateService_StartGame = 100011;
     constexpr int GameStateService_StartGameRes = 101011;
+
+    constexpr int GameStateService_PlayerLeaveGame = 100012;
+    constexpr int GameStateService_PlayerLeaveGameRes = 101012;
+
+    constexpr int GameStateService_GameEnd = 100013;
+    constexpr int GameStateService_GameEndRes = 101013;
+
 }
 
 namespace GameServiceCommand
@@ -130,4 +137,8 @@ namespace GameServiceCommand
     constexpr int GameService_InputToGameRes = 201003;
 
     constexpr int GameService_BroadCastGameState = 202000;
+
+    constexpr int GameService_EliminateInfo = 202001;
+
+    constexpr int GameService_GameOverInfo = 202002;
 }

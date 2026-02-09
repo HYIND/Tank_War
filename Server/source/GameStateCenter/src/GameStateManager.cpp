@@ -42,6 +42,23 @@ bool GameStateManager::leave_room(const std::string &room_id, const std::string 
     return room_manager_.player_leave_room(room_id, user);
 }
 
+bool GameStateManager::leave_game(const std::string &room_id, const std::string &token)
+{
+    auto user = user_manager_.get_user(token);
+    if (!user)
+        return false;
+
+    if (user->status != UserStatus::IN_GAME)
+        return false;
+
+    return room_manager_.player_leave_game(room_id, user);
+}
+
+bool GameStateManager::game_end(const std::string &gameid)
+{
+    return room_manager_.game_end(gameid);
+}
+
 bool GameStateManager::change_ready_status(const std::string &room_id, const std::string &token, bool isready)
 {
     auto user = user_manager_.get_user(token);

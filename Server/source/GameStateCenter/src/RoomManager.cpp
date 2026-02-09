@@ -119,6 +119,136 @@ bool RoomManager::player_leave_room(const std::string &room_id, UserPtr user)
     return true;
 }
 
+// 玩家退出房间
+bool RoomManager::player_leave_game(const std::string &room_id, UserPtr user)
+{
+    auto room = get_room(room_id);
+    if (!room)
+        return false;
+
+    if (room->status != RoomStatus::IN_GAME)
+        return false;
+
+    auto guard = room->members.MakeLockGuard();
+
+    if (room->status != RoomStatus::IN_GAME)
+        return false;
+
+    if (!room->members.Exist(user->token))
+        return false;
+
+    std::shared_ptr<RoomMemeber> member;
+    if (room->members.Find(user->token, member))
+    {
+        auto user = member->userweak.lock();
+        if (user)
+        {
+            user->status = UserStatus::IN_LOBBY;
+            user->room.reset();
+        }
+        room->members.Erase(user->token);
+    }
+    room->player_count = room->members.Size();
+
+    if (room->player_count <= 0)
+        remove_room(room_id);
+    else
+    {
+        // 更换房主
+        if (user->token == room->room_host_token && room->player_count > 0)
+        {
+            room->members.EnsureCall(
+                [&](std::map<std::string, std::shared_ptr<GameStateDef::RoomMemeber>> &map) -> void
+                {
+                    auto it = map.begin();
+                    if (it != map.end())
+                    {
+                        room->room_host_token = it->first;
+                        it->second->status = MemberStatus::READY;
+                    }
+                });
+        }
+    }
+
+    return true;
+}
+
+bool RoomManager::game_end(const std::string &gameid)
+{
+    RoomPtr targetRoom;
+    for (auto &[roomid, roomptr] : rooms_)
+    {
+        if (!roomptr || !roomptr->service_handle)
+            continue;
+
+        if (roomptr->service_handle->game_id != gameid)
+            continue;
+
+        if (roomptr->status != RoomStatus::IN_GAME)
+            return false;
+
+        targetRoom = roomptr;
+        break;
+    }
+
+    if (!targetRoom)
+        return false;
+
+    targetRoom->status = RoomStatus::READY;
+
+    auto guard = targetRoom->members.MakeLockGuard();
+
+    targetRoom->members.EnsureCall(
+        [&](std::map<std::string, std::shared_ptr<RoomMemeber>> &map) -> void
+        {
+            for (auto it = map.begin(); it != map.end();)
+            {
+                auto &member = it->second;
+                auto &membertoken = it->first;
+                if (auto user = member->userweak.lock())
+                {
+                    if (auto room = user->room.lock())
+                    {
+                        if (room->room_id != targetRoom->room_id)
+                            it = map.erase(it);
+                        else
+                        {
+                            user->status = UserStatus::IN_ROOM;
+                            member->status = membertoken == targetRoom->room_host_token ? MemberStatus::READY : MemberStatus::NO_READY;
+                            it++;
+                        }
+                    }
+                    else
+                        it = map.erase(it);
+                }
+                else
+                    it = map.erase(it);
+            }
+        });
+
+    targetRoom->player_count = targetRoom->members.Size();
+    if (targetRoom->player_count <= 0)
+        remove_room(targetRoom->room_id);
+    else
+    {
+        if (!targetRoom->members.Exist(targetRoom->room_host_token))
+        {
+            targetRoom->members.EnsureCall(
+                [&](std::map<std::string, std::shared_ptr<GameStateDef::RoomMemeber>> &map) -> void
+                {
+                    auto it = map.begin();
+                    if (it != map.end())
+                    {
+                        targetRoom->room_host_token = it->first;
+                        it->second->status = MemberStatus::READY;
+                    }
+                });
+        }
+    }
+
+    return true;
+}
+
 bool RoomManager::change_ready_status(const std::string &room_id, UserPtr user, bool isready)
 {
     auto room = get_room(room_id);
@@ -128,7 +258,7 @@ bool RoomManager::change_ready_status(const std::string &room_id, UserPtr user, 
     if (room->status == RoomStatus::IN_GAME)
         return false;
 
-    if(room->room_host_token == room_id)
+    if (room->room_host_token == room_id)
         return false;
 
     auto guard = room->members.MakeLockGuard();

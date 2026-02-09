@@ -133,6 +133,14 @@ void GameStateService::ProcessMsg(json &js_src, json &js_dest)
         HandleStartGame(js_src, js_dest);
         break;
 
+    case GameStateService_PlayerLeaveGame:
+        HanlePlayerLeaveGame(js_src, js_dest);
+        break;
+
+    case GameStateService_GameEnd:
+        HanleGameEnd(js_src, js_dest);
+        break;
+
     default:
         // HandleUnknownCommand(js_src, js_dest);
         break;
@@ -497,21 +505,11 @@ void GameStateService::HandleCreateRoom(json &js_src, json &js_dest)
     std::string roomid = Tool::GenerateSimpleUuid();
     if (success)
     {
-        if (!gsm->create_room(roomid, "", 4))
+        if (!gsm->create_room(roomid, std::format("[{}]的房间", user->name), 4))
         {
             success = false;
             error_reason = "服务器内部错误！";
             gsm->get_room_manager().remove_room(roomid);
-        }
-    }
-
-    if (success)
-    {
-        auto user = gsm->get_user_manager().get_user(token);
-        if (!user || user->status != UserStatus::IN_LOBBY)
-        {
-            success = false;
-            error_reason = "用户不存在或状态异常！";
         }
     }
 
@@ -845,13 +843,19 @@ void GameStateService::HandleStartGame(json &js_src, json &js_dest)
     {
         bool canstart = true;
         room->members.EnsureCall(
-            [&canstart](std::map<std::string, std::shared_ptr<GameStateDef::RoomMemeber>> &map) -> void
+            [&room, &canstart](std::map<std::string, std::shared_ptr<GameStateDef::RoomMemeber>> &map) -> void
             {
                 for (auto &pair : map)
                 {
                     auto &member = pair.second;
+                    auto &membertoken = pair.first;
                     if (member->status != MemberStatus::READY)
                     {
+                        if (membertoken == room->room_host_token)
+                        {
+                            member->status = MemberStatus::READY;
+                            continue;
+                        }
                         canstart = false;
                         return;
                     }
@@ -880,6 +884,17 @@ void GameStateService::HandleStartGame(json &js_src, json &js_dest)
         room->status = RoomStatus::IN_GAME;
         room->service_handle = handle;
 
+        room->members.EnsureCall(
+            [&](std::map<std::string, std::shared_ptr<GameStateDef::RoomMemeber>> &map) -> void
+            {
+                for (auto &pair : map)
+                {
+                    auto &member = pair.second;
+                    if (auto user = member->userweak.lock())
+                        user->status = UserStatus::IN_GAME;
+                }
+            });
+
         js_dest["gameid"] = handle->game_id;
         js_dest["gameendpoint"] = handle->service_endpoint.to_json();
 
@@ -889,6 +904,140 @@ void GameStateService::HandleStartGame(json &js_src, json &js_dest)
         notify["gameendpoint"] = handle->service_endpoint.to_json();
         notify["gameid"] = handle->game_id;
         NotifyRoommember(room, notify, user);
+    }
+
+    if (success)
+    {
+        js_dest["result"] = 1;
+    }
+    else
+    {
+        js_dest["result"] = -1;
+        js_dest["reason"] = error_reason;
+    }
+}
+
+void GameStateService::HanlePlayerLeaveGame(json &js_src, json &js_dest)
+{
+    js_dest["command"] = GameStateService_PlayerLeaveGameRes;
+
+    bool success = true;
+    std::string error_reason;
+
+    if (success)
+    {
+        if (!js_src.contains("playerid") || !js_src["playerid"].is_string() ||
+            !js_src.contains("gameid") || !js_src["gameid"].is_string())
+        {
+            success = false;
+            error_reason = "请求数据缺失";
+        }
+    }
+
+    std::string token = js_src.value("playerid", "");
+    std::string gameid = js_src.value("gameid", "");
+    if (success)
+    {
+        if (token.empty() || gameid.empty())
+        {
+            success = false;
+            error_reason = "playerid或gameid不能为空";
+        }
+    }
+
+    auto gsm = _GSM_Weak.lock();
+    if (success)
+    {
+        if (!gsm)
+        {
+            success = false;
+            error_reason = "服务器内部错误！";
+        }
+    }
+
+    auto user = gsm->get_user_manager().get_user(token);
+    if (success)
+    {
+        if (!user || user->status != UserStatus::IN_GAME)
+        {
+            success = false;
+            error_reason = "用户不存在或状态异常！";
+        }
+    }
+
+    auto room = user->room.lock();
+    if (success)
+    {
+        if (!room || room->status != RoomStatus::IN_GAME || room->service_handle->game_id != gameid)
+        {
+            success = false;
+            error_reason = "服务器内部错误！";
+        }
+    }
+
+    if (success)
+    {
+        if (!gsm->leave_game(room->room_id, token))
+        {
+            success = false;
+            error_reason = "状态异常！";
+        }
+    }
+
+    if (success)
+    {
+        js_dest["result"] = 1;
+    }
+    else
+    {
+        js_dest["result"] = -1;
+        js_dest["reason"] = error_reason;
+    }
+}
+
+void GameStateService::HanleGameEnd(json &js_src, json &js_dest)
+{
+    js_dest["command"] = GameStateService_GameEndRes;
+
+    bool success = true;
+    std::string error_reason;
+
+    if (success)
+    {
+        if (!js_src.contains("gameid") || !js_src["gameid"].is_string())
+        {
+            success = false;
+            error_reason = "请求数据缺失";
+        }
+    }
+
+    std::string gameid = js_src.value("gameid", "");
+    if (success)
+    {
+        if (gameid.empty())
+        {
+            success = false;
+            error_reason = "gameid不能为空";
+        }
+    }
+
+    auto gsm = _GSM_Weak.lock();
+    if (success)
+    {
+        if (!gsm)
+        {
+            success = false;
+            error_reason = "服务器内部错误！";
+        }
+    }
+
+    if (success)
+    {
+        if (!gsm->game_end(gameid))
+        {
+            success = false;
+            error_reason = "状态异常！";
+        }
     }
 
     if (success)

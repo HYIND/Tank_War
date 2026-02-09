@@ -121,7 +121,7 @@ void GameInstance::BroadCaseGameState()
 }
 
 GameInstance::GameInstance(const GameID &gameId, MapID mapid)
-    : _gameId(gameId), _mapid(mapid)
+    : _gameId(gameId), _mapid(mapid), _state(State::RUNNING)
 {
 }
 
@@ -132,6 +132,11 @@ GameInstance::~GameInstance()
 void GameInstance::SetNetworkMessageSender(std::shared_ptr<NetworkMessageSender> sender)
 {
     _sender = sender;
+}
+
+void GameInstance::SetGameService(std::shared_ptr<GameService> service)
+{
+    _service = service;
 }
 
 bool GameInstance::Initialize()
@@ -176,6 +181,20 @@ void GameInstance::Start()
     if (!_world)
         return;
 
+    constexpr uint64_t gametimelimit = 30;
+    if (auto *system_ptr = _world->getSystem<CheckGameOverSystem>())
+    {
+        system_ptr->setPriority(999999);
+        system_ptr->SetInstance(shared_from_this());
+        system_ptr->SetGameTimeLimit(gametimelimit);
+    }
+    else
+    {
+        auto &system = _world->registerSystem<CheckGameOverSystem>(999999);
+        system.SetInstance(shared_from_this());
+        system.SetGameTimeLimit(gametimelimit);
+    }
+
     // 启动世界
     _world->setLogicDeltaTime(1000.f / 100.f);
     _world->setFixedDeltaTime(1000.f / 60.f);
@@ -207,6 +226,8 @@ void GameInstance::GameLoop()
         float dt = fpscontroller.getTimeDiffMS();
 
         _world->update(dt);
+        if (_stop)
+            break;
         BroadCaseGameState();
 
         fpscontroller.run();
@@ -280,4 +301,62 @@ json GameInstance::GetGameState() const
 json GameInstance::GetPlayerView(const PlayerID &playerId) const
 {
     return json();
+}
+
+void GameInstance::GameOver()
+{
+    _state = State::ENDED;
+    _stop = true;
+
+    json js_GameOver;
+    js_GameOver["command"] = GameService_GameOverInfo;
+    js_GameOver["gameid"] = _gameId;
+    js_GameOver["winnerid"] = "";
+
+    if (_sender)
+        _sender->Broadcast(js_GameOver);
+    if (_service)
+        _service->GameOver(_gameId);
+}
+
+void GameInstance::GameOverWithWinner(const PlayerID &winner)
+{
+    _state = State::ENDED;
+    _stop = true;
+
+    json js_GameOver;
+    js_GameOver["command"] = GameService_GameOverInfo;
+    js_GameOver["gameid"] = _gameId;
+    js_GameOver["winnerid"] = winner;
+
+    if (_sender)
+        _sender->Broadcast(js_GameOver);
+    if (_service)
+        _service->GameOver(_gameId);
+}
+
+void GameInstance::PlayerEliminated(const PlayerID &playerId, const PlayerID &killer)
+{
+    std::string killerDescription;
+    if (killer.empty())
+    {
+    }
+    else if (killer == "AI")
+    {
+        killerDescription = "人机";
+    }
+    else
+    {
+        if (_PlayerIdToGamePlayer.Exist(killer))
+            killerDescription = _PlayerIdToGamePlayer[killer]->name;
+    }
+    if (_sender)
+    {
+        json js_Eliminate;
+        js_Eliminate["command"] = GameService_EliminateInfo;
+        js_Eliminate["gameid"] = _gameId;
+        js_Eliminate["playerid"] = playerId;
+        js_Eliminate["killerDescription"] = killerDescription;
+        _sender->SendToPlayer(playerId, js_Eliminate);
+    }
 }

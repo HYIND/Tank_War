@@ -47,6 +47,9 @@ private:
     void HandleChangeReadyStatus(json &js_src, json &js_dest);
     void HandleStartGame(json &js_src, json &js_dest);
 
+    void HanlePlayerLeaveGame(json &js_src, json &js_dest);
+    void HanleGameEnd(json &js_src, json &js_dest);
+
 private:
     bool Stub_NewGame(std::shared_ptr<Room> room,std::shared_ptr<GameServiceHandle>& handle);
     bool NotifyRoommember(std::shared_ptr<Room> room, json &js, std::shared_ptr<User> excludeuser = nullptr);
