@@ -30,7 +30,7 @@ void Render_Thread(
 	{
 		STATUS m_status = Get_CurScene();
 
-		bool isrunningworld = m_status == STATUS::Game_Status;
+		bool isrunningworld = (m_status == STATUS::LocalGame_Status || m_status == STATUS::OnlineGame_Status);
 
 		{
 			//渲染

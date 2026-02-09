@@ -193,3 +193,26 @@ bool RequestManager::RequestStartGame(json& response)
 	return true;
 }
 
+bool RequestManager::RequestLeaveGame()
+{
+	json js;
+	js["command"] = GameServiceCommand::GameService_LeaveGame;
+
+	json js_resp;
+	if (!ConnectManager::Instance()->GameRequest(js, js_resp))
+		return false;
+
+	if (!js_resp.contains("result") || !js_resp["result"].is_number_integer())
+		return false;
+
+	int result = js_resp["result"];
+	if (result < 0)
+	{
+		std::string reason = js_resp.value("reason", "");
+		std::cout << "GameService_LeaveGame Request fail! reason:" << reason << '\n';
+		return false;
+	}
+
+	return true;
+}
+

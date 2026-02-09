@@ -1,24 +1,24 @@
 #pragma once
 
 #include <iostream>
+#include "Config.h"
 
-constexpr int offset = 5;
 
-const std::string ServiceRegistryIP = "192.168.58.130";
-constexpr int ServiceRegistryPort = 25059 + offset;
+const std::string ServiceRegistryIP = Config::Instance()->Read(std::string("ServiceRegistryIP"), std::string(""));
+const int ServiceRegistryPort = Config::Instance()->Read(std::string("ServiceRegistryPort"), 0);
 
-const std::string ServiceDiscoveryIP = "192.168.58.130";
-constexpr int ServiceDiscoveryPort = 26070 + offset;
+const std::string ServiceDiscoveryIP = Config::Instance()->Read(std::string("ServiceDiscoveryIP"), std::string(""));
+const int ServiceDiscoveryPort = Config::Instance()->Read(std::string("ServiceDiscoveryPort"), 0);
 
-const std::string GameStatesServiceStubIP = "127.0.0.1";
-constexpr int GameStatesServiceStubPort = 27080 + offset;
+const std::string GameStatesServiceStubIP = Config::Instance()->Read(std::string("GameStatesServiceStubIP"), std::string(""));
+const int GameStatesServiceStubPort = Config::Instance()->Read(std::string("GameStatesServiceStubPort"), 0);
 
-const std::string UserFrontendServiceIP = "192.168.58.130";
-constexpr int UserFrontendServicePort = 28092;
-const std::string UserFrontendServiceStubIP = "127.0.0.1";
-constexpr int UserFrontendServiceStubPort = 28092 + offset;
+const std::string UserFrontendServiceIP = Config::Instance()->Read(std::string("UserFrontendServiceIP"), std::string(""));
+const int UserFrontendServicePort = Config::Instance()->Read(std::string("UserFrontendServicePort"), 0);
+const std::string UserFrontendServiceStubIP = Config::Instance()->Read(std::string("UserFrontendServiceStubIP"), std::string(""));
+const int UserFrontendServiceStubPort = Config::Instance()->Read(std::string("UserFrontendServiceStubPort"), 0);
 
-const std::string GameServiceIP = "192.168.58.130";
-constexpr int GameServicePort = 29100 + offset;
-const std::string GameServiceStubIP = "127.0.0.1";
-constexpr int GameServiceStubPort = 29100 + offset;
+const std::string GameServiceIP = Config::Instance()->Read(std::string("GameServiceIP"), std::string(""));
+const int GameServicePort = Config::Instance()->Read(std::string("GameServicePort"), 0);
+const std::string GameServiceStubIP = Config::Instance()->Read(std::string("GameServiceStubIP"), std::string(""));
+const int GameServiceStubPort = Config::Instance()->Read(std::string("GameServiceStubPort"), 0);

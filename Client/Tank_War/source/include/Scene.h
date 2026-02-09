@@ -118,8 +118,7 @@ namespace _Scene
 	extern Scene_Main* SMain;
 	extern Scene_Hall* SHall;
 	extern Scene_Option* SOption;
-	extern Scene_Room_Host* SRoom_host;
-	extern Scene_Room_NoHost* SRoom_nothost;
+	extern Scene_Room* SRoom;
 	extern Scene_Gaming_local* SGaming_local;
 	extern Scene_Gaming_online* SGaming_online;
 	extern Scene_WinGame* SWinGame;
@@ -131,7 +130,7 @@ namespace _Scene
 extern HWND userid_in;
 
 //status 枚举
-enum class STATUS { Main, Option, Hall_Status, Room_Status, Game_Status, OnlineGame_Status };
+enum class STATUS { Main, Option, Hall_Status, Room_Status, LocalGame_Status, OnlineGame_Status };
 
 /* 以下为外部变量的声明 */
 extern HINSTANCE hInst;
@@ -250,31 +249,18 @@ public:
 class Scene_Room :public Scene
 {
 public:
-	static bool isLoad;
-	static HWND Room_user_list;
-	static HWND Room_edit_in;
-	static HWND edit_room;
+	bool isLoad;
+	HWND Room_user_list;
+	HWND Room_edit_in;
+	HWND edit_room;
 
 public:
 	using Scene::Scene;
 	void DrawRoom();
 	virtual void OnDrawScene(double time_diff);
-	static void Show_Room(bool flag);
+	void Show(bool flag);
 	virtual void Load(RECT& rect);
-};
-
-class Scene_Room_Host :public Scene_Room
-{
-public:
-	using Scene_Room::Scene_Room;
-	virtual void Load(RECT& rect);
-};
-
-class Scene_Room_NoHost :public Scene_Room
-{
-public:
-	using Scene_Room::Scene_Room;
-	virtual void Load(RECT& rect);
+	void SetScene(bool isHost, bool isready);
 };
 
 class Scene_Gaming_local :public Scene
@@ -329,3 +315,4 @@ void Init_Scene();
 void Set_CurScene(STATUS status_in);
 STATUS Get_CurScene();
 
+HWND CreateTooltip(HWND hwndParent, HWND hwndControl, LPCWSTR lpszText);

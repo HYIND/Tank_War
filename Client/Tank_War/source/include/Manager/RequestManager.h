@@ -22,6 +22,8 @@ public:
 	bool RequestChangeReadyStatus(bool isready);
 	bool RequestStartGame(json& response);
 
+	bool RequestLeaveGame();
+
 private:
 	RequestManager();
 	~RequestManager();

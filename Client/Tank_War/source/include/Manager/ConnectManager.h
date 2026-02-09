@@ -1,8 +1,11 @@
 #pragma once
 
-#include "stdafx.h"
 #include "ApplicationLayerCommunication/JsonProtocolClient.h"
 #include "ServiceRegistryData.h"
+
+#include "nlohmann/json.hpp"
+
+using json = nlohmann::json;
 
 //用于管理与服务器的连接
 

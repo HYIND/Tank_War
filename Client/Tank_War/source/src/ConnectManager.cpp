@@ -203,7 +203,9 @@ bool ConnectManager::LoginGameSeervice(NetworkEndpoint endpoint)
 
 bool ConnectManager::LogoutGameSeervice()
 {
-	return false;
+	_gameSession->Release();
+	UserInfoManager::Instance()->setGameId(""); 
+	return true;
 }
 
 bool ConnectManager::SocialSend(json& js)

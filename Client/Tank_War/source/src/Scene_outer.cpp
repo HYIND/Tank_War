@@ -5,6 +5,9 @@
 #include "Manager/UserInfoManager.h"
 #include "Manager/LobbyManager.h"
 
+#include <commctrl.h>
+#pragma comment(lib, "comctl32.lib")
+
 namespace RectBroder
 {
 	RECT rect;
@@ -44,6 +47,8 @@ namespace TextFormat
 
 HFONT edit_listbox_front;
 
+HWND g_hTooltip = NULL;
+
 D2D1_RECT_F DelayRect;	//	延迟显示位
 
 
@@ -56,21 +61,15 @@ namespace _Scene
 	Scene_Main* SMain;
 	Scene_Hall* SHall;
 	Scene_Option* SOption;
-	Scene_Room_Host* SRoom_host;
-	Scene_Room_NoHost* SRoom_nothost;
+	Scene_Room* SRoom;
 	Scene_Gaming_local* SGaming_local;
 	Scene_Gaming_online* SGaming_online;
 	Scene_WinGame* SWinGame;
 	Scene_FailGame* SFailGame;
 	Scene_Pause* SPause;
 }
-bool Scene_Room::isLoad = false;
 
 HWND userid_in;
-
-HWND Scene_Room::Room_user_list;
-HWND Scene_Room::Room_edit_in;
-HWND Scene_Room::edit_room;
 
 STATUS status = STATUS::Main;
 
@@ -151,6 +150,51 @@ LRESULT CALLBACK Edit_Room_Proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
 
 /* 暂停窗口回调函数 */
 INT_PTR CALLBACK Pause(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
+	UNREFERENCED_PARAMETER(lParam);
+	switch (message)
+	{
+	case WM_INITDIALOG:
+	{
+		RECT Father_rect;
+		RECT My_rect;
+		GetWindowRect(_hwnd, &Father_rect);
+		GetClientRect(hDlg, &My_rect);
+		SetWindowPos(
+			hDlg,
+			_hwnd,
+			(Father_rect.right - My_rect.right) / 2, (Father_rect.bottom - My_rect.bottom) / 2,
+			100, 200,
+			SWP_NOSIZE
+		);
+	}
+	case WM_COMMAND:
+	{
+		int wmId = LOWORD(wParam);
+		switch (wParam) {
+		case IDC_BUTTON1:
+			EndDialog(hDlg, 10);
+			break;
+		case IDC_BUTTON2:
+			EndDialog(hDlg, 20);
+			break;
+		case IDC_BUTTON3:
+			EndDialog(hDlg, 30);
+			break;
+		default: return DefWindowProc(hDlg, message, wParam, lParam);
+		}
+		break;
+	}
+	case WM_CLOSE:
+	{
+		EndDialog(hDlg, 10);
+		break;
+	}
+	}
+	return (INT_PTR)FALSE;
+}
+
+/* 在线游戏选项窗口回调函数 */
+INT_PTR CALLBACK Return(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 	UNREFERENCED_PARAMETER(lParam);
 	switch (message)
 	{
@@ -413,7 +457,7 @@ void Scene_Room::Load(RECT& rect)
 			len_x * 5, len_y * 2 - 10,
 			_hwnd, (HMENU)ROOM_EDIT_IN, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 
-		Edit_Room_PreProc = SetWindowLongPtr(Scene_Room::Room_edit_in, GWLP_WNDPROC, (LONG_PTR)Edit_Room_Proc);	//设置回调
+		Edit_Room_PreProc = SetWindowLongPtr(Room_edit_in, GWLP_WNDPROC, (LONG_PTR)Edit_Room_Proc);	//设置回调
 
 		/* 设置字体 */
 		SendMessage(
@@ -435,7 +479,78 @@ void Scene_Room::Load(RECT& rect)
 			NULL  //传空值即可
 		);
 
+		{
+			AddResourceBitmap(broder_left, broder_top, broder_right, broder_bottom, ResFactory->GetBitMapRes(ResName::textBK), 0.4f);
+			AddResourceBitmap(broder_left + len_x * 6 + 10, broder_top + len_y * 5, broder_right - 10, broder_bottom - len_y, ResFactory->GetBitMapRes(ResName::textBK), 0.2f);
+			{
+				AddButton(rect.left, rect.top, rect.left + 144, rect.top + 87,
+					IDB_EXITROOM,
+					AddResourceBitmap(rect.left, rect.top, rect.left + 144, rect.top + 87, ResFactory->GetBitMapRes(ResName::returnBP)));
+			}
+
+			{
+				AddText(broder_left + len_x, broder_top,
+					broder_left + len_x * 4, broder_top + len_y - 3,
+					L"当前房间内玩家情况", Brush::pHall_Brush, Brush::pHall_Brush, TextFormat::pHall_Format);
+
+				AddText(broder_left + len_x * 0.5, broder_top + len_y * 5.5,
+					broder_left + len_x, broder_top + len_y * 6,
+					L"房", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
+				AddText(broder_left + len_x * 0.5, broder_top + len_y * 6,
+					broder_left + len_x, broder_top + len_y * 6.5,
+					L"间", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
+				AddText(broder_left + len_x * 0.5, broder_top + len_y * 6.5,
+					broder_left + len_x, broder_top + len_y * 7,
+					L"频", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
+				AddText(broder_left + len_x * 0.5, broder_top + len_y * 7,
+					broder_left + len_x, broder_top + len_y * 7.5,
+					L"道", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
+			}
+
+			{
+				AddButton(broder_left + len_x * 6 + 10, broder_top + len_y * 5 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 6,
+					IDB_STARTGAME,
+					AddText(broder_left + len_x * 6 + 10, broder_top + len_y * 5 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 6,
+						L"开始游戏", Brush::pHall_Brush, Brush::pHall_ClickBrush, TextFormat::pHall_Format));
+
+				//AddButton(broder_left + len_x * 6 + 10, broder_top + len_y * 5 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 6,
+				//	IDB_READY,
+				//	AddText(broder_left + len_x * 6 + 10, broder_top + len_y * 5 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 6,
+				//		L"准备", Brush::pHall_Brush, Brush::pHall_ClickBrush, TextFormat::pHall_Format));
+
+				AddButton(broder_left + len_x * 6 + 10, broder_top + len_y * 8 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 9,
+					IDB_ROOM_SEND,
+					AddText(broder_left + len_x * 6 + 10, broder_top + len_y * 8 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 9,
+						L"发送", Brush::pHall_Brush, Brush::pHall_ClickBrush, TextFormat::pHall_Format));
+			}
+		}
+
 		isLoad = true;
+	}
+}
+
+void Scene_Room::SetScene(bool isHost, bool isready)
+{
+	if (!isHost)
+	{
+		if (isready)
+		{
+			if (_Scene::SRoom->ModifyButton_ID(IDB_READY, IDB_CANCELREADY)
+				|| _Scene::SRoom->ModifyButton_ID(IDB_STARTGAME, IDB_CANCELREADY))
+				_Scene::SRoom->ModifyText_byButton(IDB_CANCELREADY, L"取消准备");
+		}
+		else
+		{
+			if (_Scene::SRoom->ModifyButton_ID(IDB_CANCELREADY, IDB_READY)
+				|| _Scene::SRoom->ModifyButton_ID(IDB_STARTGAME, IDB_READY))
+				_Scene::SRoom->ModifyText_byButton(IDB_READY, L"准备");
+		}
+	}
+	else
+	{
+		if (_Scene::SRoom->ModifyButton_ID(IDB_CANCELREADY, IDB_STARTGAME)
+			|| _Scene::SRoom->ModifyButton_ID(IDB_READY, IDB_STARTGAME))
+			_Scene::SRoom->ModifyText_byButton(IDB_STARTGAME, L"开始游戏");
 	}
 }
 
@@ -628,95 +743,6 @@ void Scene_Option::Load(RECT& rect)
 		);
 	}
 	Get_Key();
-}
-
-void Scene_Room_Host::Load(RECT& rect)
-{
-	Scene_Room::Load(rect);
-	{
-		AddResourceBitmap(broder_left, broder_top, broder_right, broder_bottom, ResFactory->GetBitMapRes(ResName::textBK), 0.4f);
-		AddResourceBitmap(broder_left + len_x * 6 + 10, broder_top + len_y * 5, broder_right - 10, broder_bottom - len_y, ResFactory->GetBitMapRes(ResName::textBK), 0.2f);
-		{
-			AddButton(rect.left, rect.top, rect.left + 144, rect.top + 87,
-				IDB_EXITROOM,
-				AddResourceBitmap(rect.left, rect.top, rect.left + 144, rect.top + 87, ResFactory->GetBitMapRes(ResName::returnBP)));
-		}
-
-		{
-			AddText(broder_left + len_x, broder_top,
-				broder_left + len_x * 4, broder_top + len_y - 3,
-				L"当前房间内玩家情况", Brush::pHall_Brush, Brush::pHall_Brush, TextFormat::pHall_Format);
-
-			AddText(broder_left + len_x * 0.5, broder_top + len_y * 5.5,
-				broder_left + len_x, broder_top + len_y * 6,
-				L"房", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
-			AddText(broder_left + len_x * 0.5, broder_top + len_y * 6,
-				broder_left + len_x, broder_top + len_y * 6.5,
-				L"间", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
-			AddText(broder_left + len_x * 0.5, broder_top + len_y * 6.5,
-				broder_left + len_x, broder_top + len_y * 7,
-				L"频", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
-			AddText(broder_left + len_x * 0.5, broder_top + len_y * 7,
-				broder_left + len_x, broder_top + len_y * 7.5,
-				L"道", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
-		}
-
-		{
-			AddButton(broder_left + len_x * 6 + 10, broder_top + len_y * 5 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 6,
-				IDB_STARTGAME,
-				AddText(broder_left + len_x * 6 + 10, broder_top + len_y * 5 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 6,
-					L"开始游戏", Brush::pHall_Brush, Brush::pHall_ClickBrush, TextFormat::pHall_Format));
-
-			AddButton(broder_left + len_x * 6 + 10, broder_top + len_y * 8 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 9,
-				IDB_ROOM_SEND,
-				AddText(broder_left + len_x * 6 + 10, broder_top + len_y * 8 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 9,
-					L"发送", Brush::pHall_Brush, Brush::pHall_ClickBrush, TextFormat::pHall_Format));
-		}
-	}
-}
-
-void Scene_Room_NoHost::Load(RECT& rect)
-{
-	Scene_Room::Load(rect);
-	{
-		AddResourceBitmap(broder_left, broder_top, broder_right, broder_bottom, ResFactory->GetBitMapRes(ResName::textBK), 0.4f);
-		AddResourceBitmap(broder_left + len_x * 6 + 10, broder_top + len_y * 5, broder_right - 10, broder_bottom - len_y, ResFactory->GetBitMapRes(ResName::textBK), 0.5f);
-		{
-			AddText(broder_left + len_x, broder_top,
-				broder_left + len_x * 4, broder_top + len_y - 3,
-				L"当前房间内玩家情况", Brush::pHall_Brush, Brush::pHall_Brush, TextFormat::pHall_Format);
-
-			AddText(broder_left + len_x * 0.5, broder_top + len_y * 5.5,
-				broder_left + len_x, broder_top + len_y * 6,
-				L"房", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
-			AddText(broder_left + len_x * 0.5, broder_top + len_y * 6,
-				broder_left + len_x, broder_top + len_y * 6.5,
-				L"间", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
-			AddText(broder_left + len_x * 0.5, broder_top + len_y * 6.5,
-				broder_left + len_x, broder_top + len_y * 7,
-				L"频", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
-			AddText(broder_left + len_x * 0.5, broder_top + len_y * 7,
-				broder_left + len_x, broder_top + len_y * 7.5,
-				L"道", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
-		}
-		{
-			AddButton(rect.left, rect.top, rect.left + 144, rect.top + 87,
-				IDB_EXITROOM,
-				AddResourceBitmap(rect.left, rect.top, rect.left + 144, rect.top + 87, ResFactory->GetBitMapRes(ResName::returnBP)));
-		}
-
-		{
-			AddButton(broder_left + len_x * 6 + 10, broder_top + len_y * 5 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 6,
-				IDB_READY,
-				AddText(broder_left + len_x * 6 + 10, broder_top + len_y * 5 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 6,
-					L"准备", Brush::pHall_Brush, Brush::pHall_ClickBrush, TextFormat::pHall_Format));
-
-			AddButton(broder_left + len_x * 6 + 10, broder_top + len_y * 8 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 9,
-				IDB_ROOM_SEND,
-				AddText(broder_left + len_x * 6 + 10, broder_top + len_y * 8 + 10, broder_left + len_x * 8 - 10, broder_top + len_y * 9,
-					L"发送", Brush::pHall_Brush, Brush::pHall_ClickBrush, TextFormat::pHall_Format));
-		}
-	}
 }
 
 void Scene_Gaming_local::DrawGame()
@@ -933,8 +959,7 @@ void InitScene(ID2D1Factory*& pD2DFactory, ID2D1HwndRenderTarget*& pRenderTarget
 		::_Scene::SMain = new Scene_Main(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
 		::_Scene::SHall = new Scene_Hall(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
 		::_Scene::SOption = new Scene_Option(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
-		::_Scene::SRoom_host = new Scene_Room_Host(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
-		::_Scene::SRoom_nothost = new Scene_Room_NoHost(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
+		::_Scene::SRoom = new Scene_Room(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
 		::_Scene::SGaming_local = new Scene_Gaming_local(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
 		::_Scene::SGaming_online = new Scene_Gaming_online(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
 		::_Scene::SWinGame = new Scene_WinGame(pD2DFactory, pRenderTarget, pIWICFactory, pDWriteFactory);
@@ -945,8 +970,7 @@ void InitScene(ID2D1Factory*& pD2DFactory, ID2D1HwndRenderTarget*& pRenderTarget
 		::_Scene::Scene_list.emplace_back(::_Scene::SMain);
 		::_Scene::Scene_list.emplace_back(::_Scene::SHall);
 		::_Scene::Scene_list.emplace_back(::_Scene::SOption);
-		::_Scene::Scene_list.emplace_back(::_Scene::SRoom_host);
-		::_Scene::Scene_list.emplace_back(::_Scene::SRoom_nothost);
+		::_Scene::Scene_list.emplace_back(::_Scene::SRoom);
 		::_Scene::Scene_list.emplace_back(::_Scene::SGaming_local);
 		::_Scene::Scene_list.emplace_back(::_Scene::SGaming_online);
 		::_Scene::Scene_list.emplace_back(::_Scene::SWinGame);
@@ -1020,7 +1044,7 @@ void Scene_Room::OnDrawScene(double time_diff)
 	DrawRoom();
 	Scene::OnDrawScene(time_diff);
 }
-void Scene_Room::Show_Room(bool flag)
+void Scene_Room::Show(bool flag)
 {
 	if (flag)
 	{
@@ -1059,24 +1083,16 @@ void Show_Option(bool flag)
 void Set_CurScene(STATUS status_in)
 {
 	Show_Hall(false);
-	Scene_Room::Show_Room(false);
+	_Scene::SRoom->Show(false);
 	Show_Option(false);
 	switch (status_in)
 	{
 	case STATUS::Room_Status:
 	{
 		status = STATUS::Room_Status;
-		if (!LOBBYMANAGER->IsHost())
-		{
-			_Scene::SRoom_nothost->ModifyButton_ID(IDB_CANCELREADY, IDB_READY);
-			_Scene::SRoom_nothost->ModifyText_byButton(IDB_READY, L"准备");
-			_Scene::CurScene = _Scene::SRoom_nothost;
-		}
-		else
-		{
-			_Scene::CurScene = _Scene::SRoom_host;
-		}
-		Scene_Room::Show_Room(TRUE);
+		_Scene::SRoom->SetScene(LOBBYMANAGER->IsHost(), false);
+		_Scene::CurScene = _Scene::SRoom;
+		_Scene::SRoom->Show(true);
 		break;
 	}
 	case STATUS::Main:
@@ -1099,10 +1115,16 @@ void Set_CurScene(STATUS status_in)
 		Show_Hall(true);
 		break;
 	}
-	case STATUS::Game_Status:
+	case STATUS::LocalGame_Status:
 	{
-		status = STATUS::Game_Status;
+		status = STATUS::LocalGame_Status;
 		_Scene::CurScene = _Scene::SGaming_local;
+		break;
+	}
+	case STATUS::OnlineGame_Status:
+	{
+		status = STATUS::OnlineGame_Status;
+		_Scene::CurScene = _Scene::SGaming_online;
 		break;
 	}
 	default:
@@ -1112,4 +1134,53 @@ void Set_CurScene(STATUS status_in)
 
 STATUS Get_CurScene() {
 	return ::status;
+}
+
+HWND CreateTooltip(HWND hwndParent, HWND hwndControl, LPCWSTR lpszText)
+{
+	// 初始化通用控件
+	INITCOMMONCONTROLSEX icex;
+	icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+	icex.dwICC = ICC_WIN95_CLASSES;
+	InitCommonControlsEx(&icex);
+
+	// 创建 Tooltip 窗口
+	HWND hwndTip = CreateWindowEx(
+		0,
+		TOOLTIPS_CLASS,
+		NULL,
+		WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP | TTS_BALLOON,  // TTS_BALLOON 气球样式
+		CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT,
+		hwndParent,
+		NULL,
+		GetModuleHandle(NULL),
+		NULL
+	);
+
+	if (!hwndTip) {
+		return NULL;
+	}
+
+	// 设置 Tooltip 信息
+	TOOLINFO toolInfo = { 0 };
+	toolInfo.cbSize = sizeof(TOOLINFO);
+	toolInfo.hwnd = hwndParent;
+	toolInfo.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
+	toolInfo.uId = (UINT_PTR)hwndControl;  // 控件句柄作为ID
+	toolInfo.lpszText = (LPWSTR)lpszText;
+
+	// 发送消息到 Tooltip 窗口
+	SendMessage(hwndTip, TTM_ADDTOOL, 0, (LPARAM)&toolInfo);
+
+	// 设置延迟时间（毫秒）
+	SendMessage(hwndTip, TTM_SETDELAYTIME, TTDT_AUTOPOP, 3000);  // 5秒后自动消失
+	SendMessage(hwndTip, TTM_SETDELAYTIME, TTDT_INITIAL, 500);   // 500ms后显示
+	SendMessage(hwndTip, TTM_SETDELAYTIME, TTDT_RESHOW, 300);    // 300ms后重新显示
+
+	// 设置最大宽度（自动换行）
+	SendMessage(hwndTip, TTM_SETMAXTIPWIDTH, 0, 300);
+
+	g_hTooltip = hwndTip;
+	return hwndTip;
 }

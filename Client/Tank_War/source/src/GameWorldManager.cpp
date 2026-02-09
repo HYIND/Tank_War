@@ -1,4 +1,7 @@
+#include "Manager/ConnectManager.h"
 #include "Manager/GameWorldManager.h"
+#include "Manager/UserInfoManager.h"
+
 #include "Helper/DynamicFpsController.h"
 
 #include "ECS/Systems/AllSystem.h"
@@ -9,6 +12,8 @@
 #include "ECS/Factory/WallFactory.h"
 #include "ECS/Factory/PropFactory.h"
 #include "ECS/Factory/BulletFactory.h"
+
+#include "Scene.h"
 
 void LoadLocalGameMapInfoToWorld(std::shared_ptr<World> world, const MapInfo& mapinfo)
 {
@@ -129,8 +134,61 @@ void GameWorldManager::SyncFromServerState(const json& js)
 	}
 }
 
+void GameWorldManager::ProcessEliminateInfo(const json& js)
+{
+	if (!js.contains("gameid") || !js["gameid"].is_string())
+		return;
+	if (!js.contains("playerid") || !js["playerid"].is_string())
+		return;
+	if (!js.contains("killerDescription") || !js["killerDescription"].is_string())
+		return;
+
+	GameID gameid = js.value("gameid", "");
+	PlayerID playerid = js.value("playerid", "");
+	std::string killerDescription = js.value("killerDescription", "");
+
+	if (gameid == UserInfoManager::Instance()->gameid() && playerid == UserInfoManager::Instance()->usertoken())
+	{
+		std::wstring formatstring;
+		if (killerDescription.empty())
+		{
+			formatstring = std::format(L"您已经被淘汰！");
+		}
+		else
+		{
+			formatstring = std::format(L"您已经被{}淘汰！", Tool::UTF8ToWString(killerDescription));
+		}
+		//CreateTooltip(_hwnd, NULL, formatstring.c_str());
+	}
+}
+
+void GameWorldManager::ProcessGameOver(const json& js)
+{
+	StopWorld();
+	if (!js.contains("gameid") || !js["gameid"].is_string())
+		return;
+	if (!js.contains("winnerid") || !js["winnerid"].is_string())
+		return;
+
+	GameID gameid = js.value("gameid", "");
+	PlayerID winnerid = js.value("winnerid", "");
+
+
+	if (gameid == UserInfoManager::Instance()->gameid())
+	{
+		if (UserInfoManager::Instance()->isMyToken(winnerid))
+		{
+			PostMessage(_hwnd, WM_COMMAND, WIN, (LPARAM)_hwnd);
+		}
+		else
+		{
+			PostMessage(_hwnd, WM_COMMAND, FAIL, (LPARAM)_hwnd);
+		}
+	}
+}
+
 GameWorldManager::GameWorldManager()
-	:stop(true)
+	:_stop(true)
 {
 }
 
@@ -231,7 +289,7 @@ void GameWorldManager::RunWorld()
 	_world->setLogicDeltaTime(1000.f / 165.f);
 	_world->setFixedDeltaTime(1000.f / 60.f);
 	_world->start();
-	stop = false;
+	_stop = false;
 	_worldThread = std::make_shared<std::thread>(&GameWorldManager::WorldLoop, this);
 }
 
@@ -242,7 +300,7 @@ void GameWorldManager::WorldLoop()
 	fpscontroller.reset();
 
 	// 主循环
-	while (!stop)
+	while (!_stop)
 	{
 		float dt = fpscontroller.getTimeDiffMS();
 
@@ -254,7 +312,7 @@ void GameWorldManager::WorldLoop()
 
 void GameWorldManager::StopWorld()
 {
-	stop = true;
+	_stop = true;
 	if (_worldThread)
 	{
 		if (_worldThread->joinable())
