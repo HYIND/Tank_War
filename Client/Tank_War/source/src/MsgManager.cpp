@@ -59,6 +59,14 @@ void MsgManager::ProcessMsg(const json& js)
 		GameWorldManager::Instance()->SyncFromServerState(js);
 		break;
 
+	case GameService_EliminateInfo:
+		GameWorldManager::Instance()->ProcessEliminateInfo(js);
+		break;
+
+	case GameService_GameOverInfo:
+		GameWorldManager::Instance()->ProcessGameOver(js);
+		break;
+
 	default:
 		break;
 	}

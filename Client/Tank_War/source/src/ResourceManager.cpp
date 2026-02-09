@@ -1,5 +1,4 @@
 #include "Manager/ResourceManager.h"
-#include "stdafx.h"
 #include "resource.h"
 
 extern HINSTANCE hInst;

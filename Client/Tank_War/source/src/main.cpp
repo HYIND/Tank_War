@@ -119,6 +119,7 @@ ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    Pause(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK    Return(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK GetID_Proc(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -226,7 +227,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 //
 
-enum { _game, _online, hall_refreash, reconnect, ping, room_refreash, sceneTick };	//定时器ID
+enum { hall_refreash, room_refreash, sceneTick };	//定时器ID
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	GetClientRect(hWnd, &_rect);
@@ -263,25 +264,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		switch (wParam)
 		{
-		case _online:
-		{
-			break;
-		}
-		case _game:
-		{
-			//Game::Instance()->Tick();
-
-
-			break;
-		}
 		case hall_refreash:
 			REQUESTMANAGER->RequestLobbyUserData();
 			REQUESTMANAGER->RequestLobbyRoomData();
 			break;
 		case room_refreash:
 			REQUESTMANAGER->RequestRoomInfo();
-			break;
-		case ping:
 			break;
 		case sceneTick:
 			_Scene::CurScene->Tick();
@@ -299,18 +287,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_KILLFOCUS:
 	{
-		if (Get_CurScene() == STATUS::Game_Status)
+		if (Get_CurScene() == STATUS::LocalGame_Status)
 		{
-			KillTimer(hWnd, _game);
+			//KillTimer(hWnd, _game);
 		}
 		break;
 	}
 
 	case WM_SETFOCUS:
 	{
-		if (Get_CurScene() == STATUS::Game_Status)
+		if (Get_CurScene() == STATUS::LocalGame_Status)
 		{
-			SetTimer(hWnd, _game, 20, NULL);
+			//SetTimer(hWnd, _game, 20, NULL);
 		}
 		break;
 	}
@@ -326,10 +314,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				// 开始游戏
 			case IDB_LOCALGAME: {
-				SetTimer(hWnd, _game, 20, NULL);
 				GameWorldManager::Instance()->InitGameWorld(GameMode::RunGame, 0);
 				GameWorldManager::Instance()->RunWorld();
-				Set_CurScene(STATUS::Game_Status);
+				Set_CurScene(STATUS::LocalGame_Status);
 				InvalidateRect(hWnd, NULL, TRUE);
 				break;
 			}
@@ -340,9 +327,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				if (!ConnectManager::Instance()->Login())
 					break;
 				Set_CurScene(STATUS::Hall_Status);
-				SetTimer(hWnd, reconnect, 5000, NULL);
 				SetTimer(hWnd, hall_refreash, 3000, NULL);
-				SetTimer(hWnd, ping, 2000, NULL);
 				UpdateWindow(hWnd);
 				break;
 			}
@@ -429,9 +414,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			// 离开大厅
 			case IDB_EXITHALL:
 				ConnectManager::Instance()->Logout();
-				KillTimer(hWnd, reconnect);
 				KillTimer(hWnd, hall_refreash);
-				KillTimer(hWnd, ping);
 				Set_CurScene(STATUS::Main);
 				UpdateWindow(_hwnd);
 				break;
@@ -483,8 +466,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				if (LOBBYMANAGER->TryChangeReadyStatus(true))
 				{
 					REQUESTMANAGER->RequestRoomInfo();
-					_Scene::SRoom_nothost->ModifyButton_ID(IDB_READY, IDB_CANCELREADY);
-					_Scene::SRoom_nothost->ModifyText_byButton(IDB_CANCELREADY, L"取消准备");
+					_Scene::SRoom->ModifyButton_ID(IDB_READY, IDB_CANCELREADY);
+					_Scene::SRoom->ModifyText_byButton(IDB_CANCELREADY, L"取消准备");
 				}
 				break;
 			}
@@ -493,8 +476,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				if (LOBBYMANAGER->TryChangeReadyStatus(false))
 				{
 					REQUESTMANAGER->RequestRoomInfo();
-					_Scene::SRoom_nothost->ModifyButton_ID(IDB_CANCELREADY, IDB_READY);
-					_Scene::SRoom_nothost->ModifyText_byButton(IDB_READY, L"准备");
+					_Scene::SRoom->ModifyButton_ID(IDB_CANCELREADY, IDB_READY);
+					_Scene::SRoom->ModifyText_byButton(IDB_READY, L"准备");
 				}
 				break;
 			}
@@ -521,80 +504,52 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case START:
 			{
 				KillTimer(hWnd, room_refreash);
-				SetTimer(hWnd, _game, 20, NULL);
-				SetTimer(hWnd, _online, 25, NULL);
 
 				GameWorldManager::Instance()->InitOnlineGameWorld();
 				GameWorldManager::Instance()->RunWorld();
-				Set_CurScene(STATUS::Game_Status);
+				Set_CurScene(STATUS::OnlineGame_Status);
 
 				break;
 			}
 			case IDB_ROOM_SEND:
 			{
 				wchar_t temp[1024] = { '\0' };
-				GetWindowTextW(Scene_Room::Room_edit_in, temp, 1024);
+				GetWindowTextW(_Scene::SRoom->Room_edit_in, temp, 1024);
 				wstring str = temp;
+				if (!str.empty())
+				{
+					REQUESTMANAGER->SendRoomMsg(Tool::WStringToUTF8(str));
+					SendMessage(_Scene::SRoom->Room_edit_in, WM_SETTEXT, 0, (LPARAM)L"");
+				}
 				break;
 			}
 			}
 			break;
 		}
-		case STATUS::Game_Status:
+		case STATUS::LocalGame_Status:
 		{
 			switch (wmId)
 			{
 				// 暂停
 			case IDB_PAUSE:
 			{
-				KillTimer(hWnd, _game);
+				//KillTimer(hWnd, _game);
 				int i = DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG_PAUSE), hWnd, Pause);
 				switch (i) {
 				case 10:	//回到游戏
-					SetTimer(hWnd, _game, 20, NULL);
+					//SetTimer(hWnd, _game, 20, NULL);
 					break;
 				case 20:	//重新开始
 					GameWorldManager::Instance()->StopWorld();
 					GameWorldManager::Instance()->InitGameWorld(GameMode::RunGame, 1);
 					GameWorldManager::Instance()->RunWorld();
-					SetTimer(hWnd, _game, 20, NULL);
+					//SetTimer(hWnd, _game, 20, NULL);
 					break;
 				case 30:	//回到主菜单
 					GameWorldManager::Instance()->StopWorld();
 					Set_CurScene(STATUS::Main);
 					break;
 				}
-				break;
-			}
-			case WIN:
-			{
-				_Scene::CurScene = _Scene::SWinGame;
-				break;
-			}
-			case FAIL:
-			{
-				_Scene::CurScene = _Scene::SFailGame;
-				break;
-			}
-			case ReturnInEndGame:
-			{
-				KillTimer(_hwnd, _game);
-				KillTimer(_hwnd, _online);
-				SetTimer(hWnd, reconnect, 5000, NULL);
-				//SetTimer(hWnd, hall_refreash, 4000, NULL);
-				SetTimer(hWnd, room_refreash, 1000, NULL);
-				Set_CurScene(STATUS::Room_Status);
-				Scene_Room::Show_Room(TRUE);
-				break;
-			}
-			case DISBANDINEND:
-			{
-				MessageBox(hWnd, L"房主已将房间解散！", NULL, MB_OK);
-				KillTimer(_hwnd, _game);
-				KillTimer(_hwnd, _online);
-				SetTimer(hWnd, reconnect, 5000, NULL);
-				SetTimer(hWnd, hall_refreash, 4000, NULL);
-				Set_CurScene(STATUS::Hall_Status);
 				break;
 			}
 			case ReLoadMap:
@@ -604,6 +559,52 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			}
 			break;
+		}
+		case STATUS::OnlineGame_Status:
+		{
+			switch (wmId)
+			{
+			case IDB_RETURN:
+			{
+				int i = DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG_RETURN), hWnd, Return);
+				switch (i) {
+				case 10:	//回到游戏
+					break;
+				case 20:	//退出游戏
+					if (REQUESTMANAGER->RequestLeaveGame())
+					{
+						GameWorldManager::Instance()->StopWorld();
+						Set_CurScene(STATUS::Hall_Status);
+						SetTimer(hWnd, hall_refreash, 4000, NULL);
+					}
+					break;
+					//case 30:	//回到主菜单
+					//	GameWorldManager::Instance()->StopWorld();
+					//	Set_CurScene(STATUS::Main);
+					//	break;
+				}
+				break;
+			}
+			case WIN:
+			{
+				CONNECTMANAGER->LogoutGameSeervice();
+				_Scene::CurScene = _Scene::SWinGame;
+				break;
+			}
+			case FAIL:
+			{
+				CONNECTMANAGER->LogoutGameSeervice();
+				_Scene::CurScene = _Scene::SFailGame;
+				break;
+			}
+			case ReturnInEndGame:
+			{
+				SetTimer(hWnd, room_refreash, 1000, NULL);
+				Set_CurScene(STATUS::Room_Status);
+				_Scene::SRoom->Show(true);
+				break;
+			}
+			}
 		}
 		default:
 		{

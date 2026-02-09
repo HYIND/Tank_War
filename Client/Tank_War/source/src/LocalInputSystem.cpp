@@ -1,10 +1,10 @@
+#include "stdafx.h"
 #include "ECS/Systems/LocalInputSystem.h"
 #include "ECS/Core/World.h"
 #include "ECS/Components/PlayerInput.h"
 #include "ECS/Components/TankProperty.h"
 #include "ECS/Components/Controller.h"
 #include "Helper/keymap.h"
-#include "stdafx.h"
 
 bool Get_keymap(TankProperty::TankOwner owner, int key[5])
 {

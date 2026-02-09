@@ -1,4 +1,5 @@
 #include "ApplicationLayerCommunication/JsonProtocolClient.h"
+#include "Helper/Tools.h"
 
 JsonProtocolClient::JsonProtocolClient()
 {

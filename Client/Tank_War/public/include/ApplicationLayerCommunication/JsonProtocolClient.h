@@ -1,7 +1,10 @@
 #pragma once
 
-#include "stdafx.h"
 #include "Net/Session/CustomTcpSession.h"
+
+#include "nlohmann/json.hpp"
+
+using json = nlohmann::json;
 
 // 基于CustomTcpSession封装的Json通信客户端
 class JsonProtocolClient

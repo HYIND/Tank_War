@@ -1,4 +1,4 @@
-﻿//{{NO_DEPENDENCIES}}
+//{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ 生成的包含文件。
 // 供 Tank_War.rc 使用
 //
@@ -21,6 +21,7 @@
 #define IDD_DIALOG_Userid               135
 #define IDB_BITMAP8                     142
 #define IDD_DIALOG_ROOM                 143
+#define IDD_DIALOG_RETURN               144
 #define IDB_BITMAP1                     151
 #define TEXTBK_PNG                      162
 #define BULLET_PNG                      163

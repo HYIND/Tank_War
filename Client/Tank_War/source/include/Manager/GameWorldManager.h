@@ -28,8 +28,11 @@ public:
 
 	std::shared_ptr<std::thread> GetWorldThread();
 
-
+public:
 	void SyncFromServerState(const json& js);
+	void ProcessEliminateInfo(const json& js);
+	void ProcessGameOver(const json& js);
+
 private:
 	GameWorldManager();
 
@@ -37,5 +40,5 @@ private:
 private:
 	std::shared_ptr<World> _world;
 	std::shared_ptr<std::thread> _worldThread;
-	bool stop;
+	bool _stop;
 };
