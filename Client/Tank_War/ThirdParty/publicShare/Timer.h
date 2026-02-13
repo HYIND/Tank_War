@@ -49,8 +49,6 @@ private:
     TimerTask(const TimerTask &) = delete;
     TimerTask &operator=(const TimerTask &) = delete;
 
-    bool create_timer_fd();
-
 private:
     std::shared_ptr<TimerTaskHandle> _handle;
 };
