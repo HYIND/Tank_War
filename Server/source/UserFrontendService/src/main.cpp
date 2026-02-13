@@ -37,7 +37,7 @@ void signal_handler(int sig)
 
 auto g_ServiceRegistrar = std::make_shared<ServiceRegistrar>();
 auto g_userfrontendservice = std::make_shared<UserFrontendService>();
-bool StartService(
+bool StartUserFrontendService(
 	const std::string& IP, int Port,
 	const std::string& stub_IP, int stub_Port,
 	const std::string& gameStateService_IP, int gameStateService_Port)
@@ -77,7 +77,7 @@ int main()
 #endif
 
 	{
-		if (!StartService(UserFrontendServiceIP, UserFrontendServicePort,
+		if (!StartUserFrontendService(UserFrontendServiceIP, UserFrontendServicePort,
 			UserFrontendServiceStubIP, UserFrontendServiceStubPort,
 			GameStatesServiceStubIP, GameStatesServiceStubPort))
 		{

@@ -59,7 +59,7 @@ bool StartServiceDiscovery(const std::string& IP, int Port)
 	return g_SD->Start(IP, Port);
 }
 
-bool StartService(const std::string& IP, int Port)
+bool StartGameStateService(const std::string& IP, int Port)
 {
 	g_GSS->SetStubEndPoint(IP, Port);
 	g_GSS->SetGameStateManager(g_GSM);
@@ -111,7 +111,7 @@ int main()
 	}
 
 	{
-		if (!StartService(GameStatesServiceStubIP, GameStatesServiceStubPort))
+		if (!StartGameStateService(GameStatesServiceStubIP, GameStatesServiceStubPort))
 		{
 			std::cout << "StartService Error!\n";
 			return -1;

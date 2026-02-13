@@ -35,7 +35,7 @@ bool ServiceRegistrar::Start(const std::string &IP, int Port)
     bool success = _client.Connect(IP, Port);
     if (success)
     {
-        _timer = TimerTask::CreateRepeat("ServiceRegistrar_SendServiceInfo", _send_interval_mssecond, std::bind(&ServiceRegistrar::SendAllServiceInfo, this), 0);
+        _timer = TimerTask::CreateRepeat("ServiceRegistrar_SendServiceInfo", _send_interval_mssecond, std::bind(&ServiceRegistrar::SendAllServiceInfo, this), 100);
         _timer->Run();
     }
 
