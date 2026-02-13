@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <vector>
+#include <functional>
 #include "CriticalSectionLock.h"
 
 // 双向映射容器
