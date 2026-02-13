@@ -66,6 +66,7 @@ aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source/public/src DIR_PUBLIC_SR
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source/GameStateCenter/src DIR_GAMESTATECENTER_SRCS)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source/UserFrontendService/src DIR_USERFRONTENDSERVICE_SRCS)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source/GameService/src DIR_GAMESERVICE_SRCS)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/source/GameService/src/ECS DIR_GAMESERVICE_ECS_SRCS)
 
 
 add_executable(GameStateCenter ${DIR_GAMESTATECENTER_SRCS} ${DIR_PUBLIC_SRCS})
@@ -74,9 +75,9 @@ target_link_libraries(GameStateCenter ${ALL_LIBS})
 add_executable(UserFrontendService ${DIR_USERFRONTENDSERVICE_SRCS} ${DIR_PUBLIC_SRCS})
 target_link_libraries(UserFrontendService ${ALL_LIBS})
 
-add_executable(GameService ${DIR_GAMESERVICE_SRCS} ${DIR_PUBLIC_SRCS})
+add_executable(GameService ${DIR_GAMESERVICE_SRCS} ${DIR_PUBLIC_SRCS} ${DIR_GAMESERVICE_ECS_SRCS})
 target_link_libraries(GameService ${ALL_LIBS})
-
+target_link_libraries(GameService ${CMAKE_CURRENT_SOURCE_DIR}/libs/libbox2d.a)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     # Debug 配置添加 _d 后缀
