@@ -35,14 +35,6 @@ void signal_handler(int sig)
 }
 #endif
 
-void signal_handler(int sig)
-{
-	if (sig == SIGINT)
-	{
-		StopNetCoreLoop();
-	}
-}
-
 auto g_ServiceRegistrar = std::make_shared<ServiceRegistrar>();
 auto g_userfrontendservice = std::make_shared<UserFrontendService>();
 bool StartService(
