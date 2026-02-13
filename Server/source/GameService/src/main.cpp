@@ -1,4 +1,4 @@
-#include "Net/Core/NetCore.h"
+﻿#include "Net/Core/NetCore.h"
 #include "GameService.h"
 #include "ServiceRegistrar.h"
 #include "EndPointConfig.h"
@@ -55,6 +55,8 @@ bool StartServiceRegistrar(const std::string& IP, int Port)
 
 int main()
 {
+	system("chcp 65001 > nul"); // 切换到 UTF-8
+
 	// LOGGER->SetLoggerPath("server.log");
 	InitNetCore();
 	RunNetCoreLoop();
