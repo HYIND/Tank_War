@@ -11,7 +11,6 @@
 #include <sys/timerfd.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
-#include "fmt/core.h"
 #elif _WIN32
 
 #endif
