@@ -1,6 +1,6 @@
-#include "stdafx.h"
 #include "SessionManager/BaseSessionManager.h"
 #include "tools.h"
+#include "stdafx.h"
 
 BaseSessionManager::BaseSessionManager(SessionType type)
     : type(type)

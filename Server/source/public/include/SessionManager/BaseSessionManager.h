@@ -1,9 +1,9 @@
 #pragma once
 
-#include "stdafx.h"
 #include "Net/Session/SessionListener.h"
 #include "Net/Session/BaseNetWorkSession.h"
 #include "BiDirectionalMap.h"
+#include "stdafx.h"
 
 class BaseSessionManager
 {

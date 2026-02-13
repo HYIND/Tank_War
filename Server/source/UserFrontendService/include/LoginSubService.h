@@ -1,9 +1,9 @@
 #pragma once
 
-#include "stdafx.h"
 #include "LobbySubService.h"
 #include "ApplicationLayerCommunication/JsonProtocolServer.h"
 #include "ServiceRegistryData.h"
+#include "stdafx.h"
 
 using namespace ServiceRegistryDataDef;
 

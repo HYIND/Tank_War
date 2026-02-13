@@ -37,7 +37,7 @@ Entity TankFactory::CreateServerTank(World &world,
 	physics.shape = Physics::Shape::Rect;
 	physics.bodyType = Physics::BodyType::Dynamic;
 	physics.position = {x, y};
-	physics.size = {width, height};
+	physics.size = {(float)width, (float)height};
 	physics.isSensor = false;
 	physics.isBullet = true;
 	physics.groupIndex = getPhysicsGroupIndex();

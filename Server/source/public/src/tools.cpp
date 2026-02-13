@@ -1,7 +1,6 @@
 #include "tools.h"
 #include <chrono>
 #include <random>
-#include "fmt/core.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -70,7 +69,7 @@ json Tool::ParseJson(const Buffer &buf)
     }
     catch (...)
     {
-        std::cout << fmt::format("Tool ParseJson error : {}\n", js_str);
+        std::cout << std::format("Tool ParseJson error : {}\n", js_str);
     }
     return result;
 }

@@ -336,7 +336,7 @@ bool JsonProtocolServer::ParseJson(Buffer &buf, json &js)
     }
     catch (...)
     {
-        std::cout << fmt::format("JsonProtocolServer ParseJson error : {}\n", js_str);
+        std::cout << std::format("JsonProtocolServer ParseJson error : {}\n", js_str);
         return false;
     }
 }

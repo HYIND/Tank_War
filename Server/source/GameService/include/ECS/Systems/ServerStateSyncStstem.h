@@ -1,10 +1,10 @@
 ﻿#pragma once
 
-#include "stdafx.h"
 #include "ECS/Components/AllComponent.h"
 #include "ECS/Core/System.h"
 #include "Helper/TripleBuffer.h"
 #include "GameDataDef.h"
+#include "stdafx.h"
 
 struct TankState
 {

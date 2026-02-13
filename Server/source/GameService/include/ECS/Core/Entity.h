@@ -5,6 +5,14 @@
 #include "Types.h"
 #include <functional>
 
+#ifdef min
+#undef min
+#endif
+
+#ifdef max
+#undef max
+#endif
+
 class World;
 
 class Entity {

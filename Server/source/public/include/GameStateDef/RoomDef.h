@@ -5,8 +5,8 @@
 #include <string>
 #include <memory>
 #include "SafeStl.h"
-#include "stdafx.h"
 #include "ServiceRegistryData.h"
+#include "stdafx.h"
 
 struct NetworkEndpoint;
 

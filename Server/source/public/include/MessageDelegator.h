@@ -1,9 +1,9 @@
 #pragma once
 
+#include "BaseService.h"
 #include "GameStateDef/UserDef.h"
 #include "ServiceDiscoveryClient.h"
 #include "ServiceRegistryManager.h"
-#include "BaseService.h"
 
 struct LocalServiceHandle
 {

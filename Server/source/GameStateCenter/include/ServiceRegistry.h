@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ServiceRegistryManager.h"
 #include "ApplicationLayerCommunication/JsonProtocolServer.h"
+#include "ServiceRegistryManager.h"
 
 // 服务注册表，用于接收服务注册请求
 class ServiceRegistry

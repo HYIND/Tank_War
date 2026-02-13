@@ -1,8 +1,8 @@
 #pragma once
 
-#include "stdafx.h"
-#include "SessionManager/BaseSessionManager.h"
 #include "Net/Session/CustomTcpSession.h"
+#include "SessionManager/BaseSessionManager.h"
+#include "stdafx.h"
 
 class CustomTcpSessionConnectManager : public BaseSessionManager
 {

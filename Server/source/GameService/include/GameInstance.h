@@ -1,6 +1,5 @@
 #pragma once
 
-#include "stdafx.h"
 #include <string>
 #include <vector>
 #include <memory>
@@ -8,9 +7,10 @@
 #include "Manager/MapManager.h"
 #include "GameDataDef.h"
 #include "ECS/Core/World.h"
-#include "SafeStl.h"
 #include "NetworkMessageSender.h"
 #include "GameService.h"
+#include "SafeStl.h"
+#include "stdafx.h"
 
 class GameService;
 class NetworkMessageSender;

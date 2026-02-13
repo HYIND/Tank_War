@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ServiceRegistryData.h"
 #include "ApplicationLayerCommunication/JsonProtocolServer.h"
+#include "ServiceRegistryData.h"
 
 using namespace ServiceRegistryDataDef;
 

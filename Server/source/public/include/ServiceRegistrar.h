@@ -1,8 +1,7 @@
 #pragma once
 
-#include "BaseService.h"
 #include "ApplicationLayerCommunication/JsonProtocolClient.h"
-#include "Timer.h"
+#include "BaseService.h"
 
 using namespace ServiceRegistryDataDef;
 

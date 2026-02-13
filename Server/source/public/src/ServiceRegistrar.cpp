@@ -1,5 +1,7 @@
 #include "ServiceRegistrar.h"
 #include "command.h"
+#include "Timer.h"
+
 
 using namespace ServiceRegistryCommand;
 

@@ -5,9 +5,9 @@
 #include "BaseService.h"
 #include "GameInstance.h"
 #include "GameSession.h"
-#include "SafeStl.h"
-#include "BiDirectionalMap.h"
 #include "ServiceDiscoveryClient.h"
+#include "BiDirectionalMap.h"
+#include "SafeStl.h"
 
 using namespace ServiceRegistryDataDef;
 

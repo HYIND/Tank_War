@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ServiceRegistryManager.h"
 #include "ApplicationLayerCommunication/JsonProtocolServer.h"
+#include "ServiceRegistryManager.h"
 
 // 用于对外提供服务发现
 class ServiceDiscovery

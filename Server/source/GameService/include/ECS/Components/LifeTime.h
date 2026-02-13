@@ -5,6 +5,14 @@
 #include <functional>
 #include "ECS/Core/IComponent.h"
 
+#ifdef min
+#undef min
+#endif
+
+#ifdef max
+#undef max
+#endif
+
 struct LifeTime : public IComponent
 {
 	float remainingTime = 0.f;

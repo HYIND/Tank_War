@@ -29,7 +29,7 @@ bool LobbyManager::player_join_lobby(UserPtr user)
 
     lobby_.users.push_back(user);
     lobby_.online_count++;
-    user->status == UserStatus::IN_LOBBY;
+    user->status = UserStatus::IN_LOBBY;
     return true;
 }
 

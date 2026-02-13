@@ -1,7 +1,7 @@
 #pragma once
 
-#include "stdafx.h"
 #include "ApplicationLayerCommunication/JsonProtocolSession.h"
+#include "stdafx.h"
 
 class GameSession
 {

@@ -3,6 +3,14 @@
 #include <iostream>
 #include "ECS/Core/IComponent.h"
 
+#ifdef min
+#undef min
+#endif
+
+#ifdef max
+#undef max
+#endif
+
 struct Health :public IComponent
 {
 	int currentHealth = 100;

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Net/Core/NetCore.h"
-#include "fmt/core.h"
 #include <iostream>
 #include <string.h>
 #include <chrono>
