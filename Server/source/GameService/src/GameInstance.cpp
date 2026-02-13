@@ -184,7 +184,7 @@ void GameInstance::Start()
 	if (!_world)
 		return;
 
-	constexpr uint64_t gametimelimit = 30;
+	uint64_t gametimelimit = Config("../config/config.ini").Read(std::string("GameTimeLimit"), 300);
 	if (auto* system_ptr = _world->getSystem<CheckGameOverSystem>())
 	{
 		system_ptr->setPriority(999999);
