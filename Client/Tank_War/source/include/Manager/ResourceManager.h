@@ -17,6 +17,9 @@ namespace ResName
 	const std::string sandBK = "sandBK";
 	const std::string aidKit = "aidKit";
 	const std::string defTank = "defTank";
+	const std::string blueTank = "blueTank";
+	const std::string redTank = "redTank";
+	const std::string greenTank = "greenTank";
 	const std::string defBullet = "defBullet";
 	const std::string orangeBullet = "orangeBullet";
 	const std::string greenBullet = "greenBullet";

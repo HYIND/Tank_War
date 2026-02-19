@@ -125,6 +125,9 @@ bool ResourceManager::InitResource()
 	ID2D1Bitmap* sand_BK = LoadResourceBitmap(hInst, pRenderTarget, L"JPG", MAKEINTRESOURCE(BK_SAND));
 	ID2D1Bitmap* aidkit_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(AID_KIT));
 	ID2D1Bitmap* Def_Tank_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(TANK_PNG));
+	ID2D1Bitmap* Blue_Tank_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(TANK_BLUE));
+	ID2D1Bitmap* Red_Tank_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(TANK_RED));
+	ID2D1Bitmap* Green_Tank_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(TANK_GREEN));
 
 	ID2D1Bitmap* Def_Bullet_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(BULLET_PNG));
 	ID2D1Bitmap* Orange_Bullet_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(BULLET_ORANGE_PNG));
@@ -151,8 +154,14 @@ bool ResourceManager::InitResource()
 	BitMapRes[ResName::brickWall] = brick_wall_pBitmap;
 	BitMapRes[ResName::ironWall] = iron_wall_pBitmap;
 	BitMapRes[ResName::sandBK] = sand_BK;
+
 	BitMapRes[ResName::aidKit] = aidkit_pBitmap;
+
 	BitMapRes[ResName::defTank] = Def_Tank_pBitmap;
+	BitMapRes[ResName::blueTank] = Blue_Tank_pBitmap;
+	BitMapRes[ResName::redTank] = Red_Tank_pBitmap;
+	BitMapRes[ResName::greenTank] = Green_Tank_pBitmap;
+
 	BitMapRes[ResName::defBullet] = Def_Bullet_pBitmap;
 	BitMapRes[ResName::orangeBullet] = Orange_Bullet_pBitmap;
 	BitMapRes[ResName::greenBullet] = Green_Bullet_pBitmap;

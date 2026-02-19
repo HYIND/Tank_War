@@ -90,12 +90,13 @@ void RenderSystem::processGIFAnimation(std::shared_ptr<RenderFrameData> framebuf
 
 void RenderSystem::processTankVisual(std::shared_ptr<RenderFrameData> framebuffer)
 {
-	auto entities = m_world->getEntitiesWith<Transform, TankVisual>();
+	auto entities = m_world->getEntitiesWith<Transform, TankVisual, TankProperty>();
 
 	for (auto entity : entities)
 	{
 		auto& transform = entity.getComponent<Transform>();
 		auto& tankvisual = entity.getComponent<TankVisual>();
+		auto& tankproperty = entity.getComponent<TankProperty>();
 
 		if (tankvisual.visualstate == TankVisual::VisualState::NONE) continue;
 		if (tankvisual.width <= 0 || tankvisual.height <= 0) continue;
@@ -108,7 +109,18 @@ void RenderSystem::processTankVisual(std::shared_ptr<RenderFrameData> framebuffe
 		renderdata->rotation = transform.rotation;
 
 		if (tankvisual.visualstate == TankVisual::VisualState::BASIC)
+		{
+			if (tankproperty.owner == TankProperty::TankOwner::PLAYER1)
+				renderdata->bitmap = ResFactory->GetBitMapRes(ResName::redTank);			
+			else if (tankproperty.owner == TankProperty::TankOwner::PLAYER2)
+				renderdata->bitmap = ResFactory->GetBitMapRes(ResName::blueTank);			
+			else if (tankproperty.owner == TankProperty::TankOwner::AI)
+				renderdata->bitmap = ResFactory->GetBitMapRes(ResName::greenTank);
+		}
+
+		if (!renderdata->bitmap)
 			renderdata->bitmap = ResFactory->GetBitMapRes(ResName::defTank);
+
 		if (!renderdata->bitmap)
 			continue;
 
