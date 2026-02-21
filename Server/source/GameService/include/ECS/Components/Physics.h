@@ -44,7 +44,7 @@ struct Physics :public IComponent
 	int16 groupIndex = 0;
 
 
-	virtual void OnRemove() override
+	virtual void OnRemove(Entity& e) override
 	{
 		if (world && body)
 			world->DestroyBody(body);

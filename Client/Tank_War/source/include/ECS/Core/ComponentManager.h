@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <memory>
 #include <unordered_map>
@@ -29,22 +29,22 @@ public:
 	}
 
 	template<typename T, typename... Args>
-	T& addComponent(EntityID entityId, Args&&... args) {
+	T& addComponent(Entity& entity, Args&&... args) {
 		ComponentTypeID typeId = ComponentType<T>::getId();
 		if (componentArrays.find(typeId) == componentArrays.end())
 			registerComponent<T>();
 		auto array = std::static_pointer_cast<ComponentArray<T>>(componentArrays[typeId]);
-		return array->addComponent(entityId, std::forward<Args>(args)...);
+		return array->addComponent(entity, std::forward<Args>(args)...);
 	}
 
 	template<typename T>
-	void removeComponent(EntityID entityId)
+	void removeComponent(Entity& entity)
 	{
 		ComponentTypeID typeId = ComponentType<T>::getId();
 		assert(componentArrays.find(typeId) != componentArrays.end() &&
 			"ComponentArray do not exist!");
 		auto array = std::static_pointer_cast<ComponentArray<T>>(componentArrays[typeId]);
-		array->removeComponent(entityId);
+		array->removeComponent(entity);
 	}
 
 	template<typename T>
@@ -88,12 +88,12 @@ public:
 		return array->hasComponent(entityId);
 	}
 
-	void entityDestroyed(EntityID entityId)
+	void entityDestroyed(Entity& entity)
 	{
 		for (auto& pair : componentArrays)
 		{
 			auto array = std::static_pointer_cast<IComponentArray>(pair.second);
-			array->removeComponent(entityId);
+			array->removeComponent(entity);
 		}
 	}
 

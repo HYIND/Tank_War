@@ -6,8 +6,7 @@
 
 #include "ECS/Core/EventSystem.h"
 
-World::World()
-{
+World::World() {
 	m_entityManager = new EntityManager();
 	m_componentManager = new ComponentManager();
 	m_systemManager = new SystemManager();
@@ -17,8 +16,7 @@ World::World()
 	m_eventsystem = std::make_unique<EventSystem>();
 }
 
-World::~World()
-{
+World::~World() {
 	if (m_entityManager)
 		delete m_entityManager;
 	if (m_componentManager)
@@ -28,14 +26,12 @@ World::~World()
 }
 
 // 创建Entity
-Entity World::createEntity()
-{
+Entity World::createEntity() {
 	return Entity(this, m_entityManager->createEntity());
 }
 
 // 批量创建
-std::vector<Entity> World::createEntities(uint32_t count)
-{
+std::vector<Entity> World::createEntities(uint32_t count) {
 	std::vector<Entity> entities;
 	auto ids = m_entityManager->createMultiple(count);
 	for (auto id : ids)
@@ -45,25 +41,23 @@ std::vector<Entity> World::createEntities(uint32_t count)
 
 // ==== Entity 销毁 ====
 
-void World::destroyEntity(Entity entity)
-{
+void World::destroyEntity(Entity& entity) {
 	if (!IsValidWorldEntity(entity))
 		return;
 
 	if (entity)
 	{
-		m_componentManager->entityDestroyed(entity.getId()); // 清理组件
-		m_entityManager->destroyEntity(entity.getId());		 // 销毁实体
+		m_componentManager->entityDestroyed(entity); // 清理组件
+		m_entityManager->destroyEntity(entity.getId()); // 销毁实体
 	}
 }
 
-void World::destroyEntityLater(Entity entity)
-{
+void World::destroyEntityLater(Entity& entity) {
 	if (!IsValidWorldEntity(entity))
 		return;
 
 	m_eventsystem->Emit<EntityDestroyedEvent>(entity);
-	if (auto *destroysystem = getSystem<DestroySystem>())
+	if (auto* destroysystem = getSystem<DestroySystem>())
 	{
 		if (!entity.hasComponent<TagDestroy>())
 			entity.addComponent<TagDestroy>();
@@ -73,8 +67,7 @@ void World::destroyEntityLater(Entity entity)
 }
 
 // ==== 查询 ====
-bool World::hasComponent(Entity entity, ComponentTypeID componentTypeId) const
-{
+bool World::hasComponent(Entity entity, ComponentTypeID componentTypeId) const {
 	if (!IsValidWorldEntity(entity))
 		return false;
 
@@ -82,21 +75,19 @@ bool World::hasComponent(Entity entity, ComponentTypeID componentTypeId) const
 	return mask.test(componentTypeId);
 }
 
-void World::setSystemEnabled(const std::string &name, bool enabled)
-{
+void World::setSystemEnabled(const std::string& name, bool enabled) {
 	m_systemManager->setSystemEnabled(name, enabled);
 }
 
-void World::setSystemPriority(const std::string &name, int priority)
-{
+void World::setSystemPriority(const std::string& name, int priority) {
 	m_systemManager->setSystemPriority(name, priority);
 }
 
-bool World::isSystemEnabled(const std::string &name) const
+bool World::isSystemEnabled(const std::string& name) const
 {
 	return m_systemManager->isSystemEnabled(name);
 }
-int World::getSystemPriority(const std::string &name) const
+int World::getSystemPriority(const std::string& name) const
 {
 	return m_systemManager->getSystemPriority(name);
 }
@@ -156,7 +147,6 @@ void World::update(float deltaTime)
 		m_logicAccumulator = 0;
 	}
 }
-
 
 void World::start() { m_isRunning = true; }
 

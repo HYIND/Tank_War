@@ -10,9 +10,9 @@
 class IComponentArray {
 public:
 	virtual ~IComponentArray() = default;
-	virtual void removeComponent(EntityID entityId) = 0;
+	virtual void removeComponent(Entity& entity) = 0;
 	virtual bool hasComponent(EntityID entityId) const = 0;
-	virtual void entityDestroyed(EntityID entityId) = 0;
+	virtual void entityDestroyed(Entity& entity) = 0;
 };
 
 
@@ -21,8 +21,9 @@ class ComponentArray : public IComponentArray {
 
 public:
 	template<typename... Args>
-	T& addComponent(EntityID entityId, Args&&... args)
+	T& addComponent(Entity& entity, Args&&... args)
 	{
+		EntityID entityId = entity.getId();
 		assert(entityToIndex.find(entityId) == entityToIndex.end() &&
 			"Entity already has this component!");
 
@@ -31,11 +32,19 @@ public:
 		indexToEntity[newIndex] = entityId;
 
 		componentData[newIndex] = T(std::forward<Args>(args)...);
+		try {
+			T* elementPtr = &componentData[newIndex];
+			if (IComponent* com = dynamic_cast<IComponent*>(elementPtr))
+				com->OnAdd(entity);
+		}
+		catch (const std::bad_cast& e) {
+		}
 		return componentData[newIndex];
 	}
 
-	void removeComponent(EntityID entityId)
+	void removeComponent(Entity& entity)
 	{
+		EntityID entityId = entity.getId();
 		if (!hasComponent(entityId))
 			return;
 
@@ -46,7 +55,7 @@ public:
 		try {
 			T* elementPtr = &componentData[indexOfRemoved];
 			if (IComponent* com = dynamic_cast<IComponent*>(elementPtr))
-				com->OnRemove();
+				com->OnRemove(entity);
 		}
 		catch (const std::bad_cast& e) {
 		}
@@ -93,9 +102,10 @@ public:
 		return entityToIndex.find(entityId) != entityToIndex.end();
 	}
 
-	void entityDestroyed(EntityID entityId) override {
+	void entityDestroyed(Entity& entity) override {
+		EntityID entityId = entity.getId();
 		if (hasComponent(entityId)) {
-			removeComponent(entityId);
+			removeComponent(entity);
 		}
 	}
 

@@ -1,6 +1,5 @@
-﻿#pragma once
+#pragma once
 
-#include "Manager/ResourceManager.h"
 #include "ECS/Core/IComponent.h"
 
 struct PropProperty :public IComponent

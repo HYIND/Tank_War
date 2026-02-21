@@ -11,6 +11,15 @@ struct Vec2
 	float y;
 	Vec2() :x(0), y(0) {}
 	Vec2(float x, float y) :x(x), y(y) {}
+	Vec2& operator=(const Vec2& other)
+	{
+		if (this == &other)
+			return *this;
+
+		x = other.x;
+		y = other.y;
+		return *this;
+	}
 	Vec2 operator*(float e) const {
 		return Vec2(this->x * e, this->y * e);
 	}
@@ -39,6 +48,15 @@ struct Pos2
 		this->x = vec.x;
 		this->y = vec.y;
 	};
+	Pos2& operator=(const Pos2& other)
+	{
+		if (this == &other)
+			return *this;
+
+		x = other.x;
+		y = other.y;
+		return *this;
+	}
 	Pos2 operator*(float e) const {
 		return Pos2(this->x * e, this->y * e);
 	}

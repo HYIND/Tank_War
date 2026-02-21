@@ -35,19 +35,19 @@ public:
 	std::vector<Entity> createEntities(uint32_t count);	// 批量创建
 
 	// ==== Entity 销毁 ====
-	void destroyEntity(Entity entity);
+	void destroyEntity(Entity& entity);
 
-	void destroyEntityLater(Entity entity);
+	void destroyEntityLater(Entity& entity);
 
 	template<typename EventType>
-	void destroyEntityLaterWithEvent(Entity entity, const EventType& event);
+	void destroyEntityLaterWithEvent(Entity& entity, const EventType& event);
 
 	// ==== 组件操作 ====
 	template<typename T, typename... Args>
-	T& addComponent(Entity entity, Args&&... args);
+	T& addComponent(Entity& entity, Args&&... args);
 
 	template<typename T>
-	void removeComponent(Entity entity);
+	void removeComponent(Entity& entity);
 
 	template<typename T>
 	T& getComponent(Entity entity);

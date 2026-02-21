@@ -31,11 +31,9 @@ void GameInstance::LoadMapInfoToWorld()
 			tankInfo.position.x,
 			tankInfo.position.y,
 			tankInfo.width,
-			tankInfo.height);
-
-		// 设置旋转和视觉状态
-		if (auto* trans = tank.tryGetComponent<Transform>())
-			trans->rotation = tankInfo.rotation;
+			tankInfo.height,
+			tankInfo.rotation
+		);
 
 		if (auto* visual = tank.tryGetComponent<TankVisual>())
 			visual->visualstate = tankInfo.visual;
@@ -51,10 +49,9 @@ void GameInstance::LoadMapInfoToWorld()
 			aiTankInfo.position.x,
 			aiTankInfo.position.y,
 			aiTankInfo.width,
-			aiTankInfo.height);
-
-		if (auto* trans = aiTank.tryGetComponent<Transform>())
-			trans->rotation = aiTankInfo.rotation;
+			aiTankInfo.height,
+			aiTankInfo.rotation
+		);
 
 		if (auto* visual = aiTank.tryGetComponent<TankVisual>())
 			visual->visualstate = aiTankInfo.visual;
@@ -146,6 +143,7 @@ bool GameInstance::Initialize()
 
 	// 通过World注册系统
 	auto& inputSystem = _world->registerSystem<ServerInputSystem>();
+	auto& aiinputSystem = _world->registerSystem<AIInputSystem>();
 	auto& velocityControlSystem = _world->registerSystem<VelocityControlSystem>();
 	auto& movementSystem = _world->registerSystem<MovementSystem>();
 	auto& weaponSystem = _world->registerSystem<WeaponSystem>();
@@ -161,6 +159,7 @@ bool GameInstance::Initialize()
 
 	lifetimeSystem.setPriority(10000);
 	inputSystem.setPriority(1000);
+	aiinputSystem.setPriority(800);
 	velocityControlSystem.setPriority(500);
 	movementSystem.setPriority(500);
 	physicsSystem.setPriority(300);

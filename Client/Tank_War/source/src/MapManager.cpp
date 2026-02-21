@@ -1,4 +1,5 @@
 #include "Manager/MapManager.h"
+#include "Manager/ResourceManager.h"
 
 constexpr int DEF_BRICK_WIDTH = 56;
 constexpr int DEF_BRICK_HEIGHT = 56;
@@ -16,8 +17,8 @@ MapInfo Init_Map_1()
 	info.tankbirthinfos.emplace_back(Pos2(MapBoundary::right - 80, 280), 180.f, 36, 36, TankVisual::VisualState::BASIC);
 
 	info.aitankbirthinfos.emplace_back(Pos2(222, 100), 90.f, 36, 36, TankVisual::VisualState::BASIC);
-	info.aitankbirthinfos.emplace_back(Pos2(470, 300), 90.f, 36, 36, TankVisual::VisualState::BASIC);
-	info.aitankbirthinfos.emplace_back(Pos2(777, 477), 90.f, 36, 36, TankVisual::VisualState::BASIC);
+	info.aitankbirthinfos.emplace_back(Pos2(470, 300), -95.f, 36, 36, TankVisual::VisualState::BASIC);
+	info.aitankbirthinfos.emplace_back(Pos2(777, 477), -135.f, 36, 36, TankVisual::VisualState::BASIC);
 
 	// 墙体尺寸
 	constexpr int WALL_SIZE = 46;

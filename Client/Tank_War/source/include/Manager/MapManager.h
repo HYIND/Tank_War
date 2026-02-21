@@ -1,9 +1,12 @@
 #pragma once
 
-#include "ECS/Components/AllComponent.h"
+#include "ECS/Components/TankVisual.h"
+#include "ECS/Components/PropProperty.h"
+#include "ECS/Components/WallProperty.h"
 #include "Helper/math2d.h"
 #include <vector>
 #include <map>
+#include <iostream>
 
 namespace MapBoundary
 {

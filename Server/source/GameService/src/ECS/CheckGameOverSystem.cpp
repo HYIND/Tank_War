@@ -42,7 +42,7 @@ void CheckGameOverSystem::handleProcessKillEvent(const TankDestroyedEvent &event
 	{
 		{
 			auto &tankproperty = entity.getComponent<TankProperty>();
-			if (!tankproperty.owner != TankProperty::TankOwner::AI && !tankproperty.playerId.empty())
+			if (!(tankproperty.owner != TankProperty::TankOwner::AI) && !tankproperty.playerId.empty())
 			{
 				std::string killerId;
 				if (event.killer)
@@ -96,7 +96,7 @@ void CheckGameOverSystem::handleProcessKillEvent(const TankDestroyedEvent &event
 			{
 				auto &winner = entities[0];
 				auto &tankproperty = winner.getComponent<TankProperty>();
-				if (!tankproperty.owner != TankProperty::TankOwner::AI && !tankproperty.playerId.empty())
+				if (!(tankproperty.owner != TankProperty::TankOwner::AI) && !tankproperty.playerId.empty())
 				{
 					m_instance->GameOverWithWinner(tankproperty.playerId);
 				}

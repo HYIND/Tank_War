@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "box2d/box2d.h"
 #include "Helper/math2d.h"
@@ -44,7 +44,7 @@ struct Physics :public IComponent
 	int16 groupIndex = 0;
 
 
-	virtual void OnRemove() override
+	virtual void OnRemove(Entity& e) override
 	{
 		if (world && body)
 			world->DestroyBody(body);

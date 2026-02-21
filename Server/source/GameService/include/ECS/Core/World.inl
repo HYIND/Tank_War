@@ -21,7 +21,7 @@ Entity World::createEntityWithTag(Args&&... args) {
 }
 
 template<typename EventType>
-void World::destroyEntityLaterWithEvent(Entity entity, const EventType& event)
+void World::destroyEntityLaterWithEvent(Entity& entity, const EventType& event)
 {
 	if (!IsValidWorldEntity(entity))
 		return;
@@ -38,12 +38,12 @@ void World::destroyEntityLaterWithEvent(Entity entity, const EventType& event)
 }
 
 template<typename T, typename... Args>
-T& World::addComponent(Entity entity, Args&&... args) {
+T& World::addComponent(Entity& entity, Args&&... args) {
 	if (!IsValidWorldEntity(entity))
 		throw("is not a invaild entity in this world");
 
 	// 1. 添加组件数据
-	T& component = m_componentManager->addComponent<T>(entity.getId(), std::forward<Args>(args)...);
+	T& component = m_componentManager->addComponent<T>(entity, std::forward<Args>(args)...);
 
 	// 2. 更新实体掩码
 	size_t typeId = ComponentType<T>::getId();
@@ -53,16 +53,16 @@ T& World::addComponent(Entity entity, Args&&... args) {
 }
 
 template<typename T>
-void World::removeComponent(Entity entity) {
+void World::removeComponent(Entity& entity) {
 	if (!IsValidWorldEntity(entity))
 		return;
 
 	// 1. 移除组件数据
-	m_componentManager->removeComponent<T>(entity.getId());
+	m_componentManager->removeComponent<T>(entity);
 
 	// 2. 更新实体掩码
 	size_t typeId = ComponentType<T>::getId();
-	m_entityManager->removeComponent(entity.getId(), typeId);
+	m_entityManager->removeComponent(entity, typeId);
 }
 
 

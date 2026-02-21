@@ -20,7 +20,7 @@ struct BoundaryPhysisc :public IComponent
 	{
 	}
 
-	virtual void OnRemove() override
+	virtual void OnRemove(Entity& e) override
 	{
 		if (world && boundaryBody)
 			world->DestroyBody(boundaryBody);

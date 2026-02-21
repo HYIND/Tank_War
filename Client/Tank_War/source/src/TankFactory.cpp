@@ -4,7 +4,8 @@
 
 Entity TankFactory::CreateLocalGameTank(World& world,
 	TankProperty::TankOwner owner, float x, float y,
-	int width, int height
+	int width, int height,
+	float rotation
 )
 {
 	Entity tank = world.createEntityWithTag<TagTank>();
@@ -12,6 +13,7 @@ Entity TankFactory::CreateLocalGameTank(World& world,
 	auto& trans = tank.addComponent<Transform>();
 	trans.position.x = x;
 	trans.position.y = y;
+	trans.rotation = rotation;
 
 	tank.addComponent<PlayerInput>();
 	tank.addComponent<Controller>();
@@ -33,7 +35,7 @@ Entity TankFactory::CreateLocalGameTank(World& world,
 	if (owner == TankProperty::TankOwner::AI)
 	{
 		auto& aicontrol = tank.addComponent<AIControl>();
-		aicontrol.decisionIntervalms = 125.f;
+		aicontrol.decisionIntervalms = 120.f;
 	}
 
 

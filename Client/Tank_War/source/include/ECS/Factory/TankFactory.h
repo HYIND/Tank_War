@@ -7,7 +7,12 @@
 
 class TankFactory {
 public:
-	static Entity CreateLocalGameTank(World& world, TankProperty::TankOwner owner, float x, float y, int width, int height);
+	static Entity CreateLocalGameTank(World& world,
+		TankProperty::TankOwner owner,
+		float x, float y,
+		int width, int height,
+		float rotation
+	);
 
 	static Entity CreateClientTank(World& world,
 		TankProperty::TankOwner owner, SyncID syncid, PlayerID playerid,

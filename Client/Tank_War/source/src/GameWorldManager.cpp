@@ -43,12 +43,9 @@ void LoadLocalGameMapInfoToWorld(std::shared_ptr<World> world, const MapInfo& ma
 			tankInfo.position.x,
 			tankInfo.position.y,
 			tankInfo.width,
-			tankInfo.height
+			tankInfo.height,
+			tankInfo.rotation
 		);
-
-		// 设置旋转和视觉状态
-		if (auto* trans = tank.tryGetComponent<Transform>())
-			trans->rotation = tankInfo.rotation;
 
 		if (auto* visual = tank.tryGetComponent<TankVisual>())
 			visual->visualstate = tankInfo.visual;
@@ -63,11 +60,9 @@ void LoadLocalGameMapInfoToWorld(std::shared_ptr<World> world, const MapInfo& ma
 			aiTankInfo.position.x,
 			aiTankInfo.position.y,
 			aiTankInfo.width,
-			aiTankInfo.height
+			aiTankInfo.height,
+			aiTankInfo.rotation
 		);
-
-		if (auto* trans = aiTank.tryGetComponent<Transform>())
-			trans->rotation = aiTankInfo.rotation;
 
 		if (auto* visual = aiTank.tryGetComponent<TankVisual>())
 			visual->visualstate = aiTankInfo.visual;

@@ -6,7 +6,7 @@
 Entity TankFactory::CreateServerTank(World &world,
 									 TankProperty::TankOwner owner, PlayerID playerid,
 									 float x, float y,
-									 int width, int height)
+									 int width, int height, float rotation)
 {
 	Entity tank = world.createEntityWithTag<TagTank>();
 
@@ -17,6 +17,7 @@ Entity TankFactory::CreateServerTank(World &world,
 	auto &trans = tank.addComponent<Transform>();
 	trans.position.x = x;
 	trans.position.y = y;
+	trans.rotation = rotation;
 
 	tank.addComponent<PlayerInput>();
 	tank.addComponent<Controller>();
@@ -32,6 +33,12 @@ Entity TankFactory::CreateServerTank(World &world,
 
 	auto &tankvisual = tank.addComponent<TankVisual>(TankVisual::VisualState::BASIC, width, height);
 	tankvisual.layer = (int)RenderLayer::TankLayer;
+
+	if (owner == TankProperty::TankOwner::AI)
+	{
+		auto& aicontrol = tank.addComponent<AIControl>();
+		aicontrol.decisionIntervalms = 120.f;
+	}
 
 	auto &physics = tank.addComponent<Physics>();
 	physics.shape = Physics::Shape::Rect;

@@ -16,10 +16,12 @@
 #pragma comment(lib,"public_d.lib")
 #pragma comment(lib,"net_d.lib")
 #pragma comment(lib,"box2d_d.lib")
+#pragma comment(lib,"opencv_world4120d.lib")
 #else
 #pragma comment(lib,"public.lib")
 #pragma comment(lib,"net.lib")
 #pragma comment(lib,"box2d.lib")
+#pragma comment(lib,"opencv_world4120.lib")
 #endif
 
 #include <iostream>

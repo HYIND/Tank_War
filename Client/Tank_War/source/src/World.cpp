@@ -41,18 +41,18 @@ std::vector<Entity> World::createEntities(uint32_t count) {
 
 // ==== Entity 销毁 ====
 
-void World::destroyEntity(Entity entity) {
+void World::destroyEntity(Entity& entity) {
 	if (!IsValidWorldEntity(entity))
 		return;
 
 	if (entity)
 	{
-		m_componentManager->entityDestroyed(entity.getId()); // 清理组件
+		m_componentManager->entityDestroyed(entity); // 清理组件
 		m_entityManager->destroyEntity(entity.getId()); // 销毁实体
 	}
 }
 
-void World::destroyEntityLater(Entity entity) {
+void World::destroyEntityLater(Entity& entity) {
 	if (!IsValidWorldEntity(entity))
 		return;
 

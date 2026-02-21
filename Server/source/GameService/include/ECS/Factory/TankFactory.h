@@ -9,7 +9,11 @@
 class TankFactory
 {
 public:
-	static Entity CreateServerTank(World &world, TankProperty::TankOwner owner, PlayerID playerid, float x, float y, int width, int height);
+	static Entity CreateServerTank(World &world,
+								   TankProperty::TankOwner owner, PlayerID playerid,
+								   float x, float y,
+								   int width, int height,
+								   float rotation);
 
 private:
 	static int16 getPhysicsGroupIndex();
