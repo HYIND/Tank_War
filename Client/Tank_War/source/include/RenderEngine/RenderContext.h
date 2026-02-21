@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Manager/ResourceManager.h"
+#include "Helper/math2d.h"
 
 namespace Render
 {
@@ -42,8 +43,14 @@ namespace Render
 		float widthpadding = 0.f;
 	};
 
+	struct DebugLineRenderData :public BaseRenderData
+	{
+		Line2 line;
+	};
+
 	enum class RenderContextType
 	{
+		DebugLine,
 		Sprite,
 		GIFAnimation,
 		TankVisual,

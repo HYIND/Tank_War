@@ -71,11 +71,7 @@ static void handlePlayerInputToTank(PlayerInput& input, TankProperty& tank, Cont
 	controller.setWantToFire(pressFIRE);
 }
 
-void LocalInputSystem::update(float deltaTime)
-{
-}
-
-void LocalInputSystem::preUpdate(float fixedDeltaTime)
+void LocalInputSystem::preUpdate(float deltaTime)
 {
 	auto& world = getWorld();
 	std::vector<Entity> entities = world.getEntitiesWith<PlayerInput, TankProperty, Controller>();

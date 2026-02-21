@@ -17,3 +17,4 @@
 #include "ECS/Systems/ClientInputSystem.h"
 #include "ECS/Systems/InterpolationSystem.h"
 #include "ECS/Systems/PredictionSystem.h"
+#include "ECS/Systems/AIInputSystem.h"

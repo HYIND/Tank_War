@@ -9,7 +9,6 @@
 #include "Manager/RequestManager.h"
 #include "Manager/LobbyManager.h"
 
-
 #define MAX_LOADSTRING 100
 
 //#define AITEST
@@ -315,7 +314,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				// 开始游戏
 			case IDB_LOCALGAME: {
-				GameWorldManager::Instance()->InitGameWorld(GameMode::RunGame, 0);
+				GameWorldManager::Instance()->InitGameWorld(GameMode::RunGame, 1);
 				GameWorldManager::Instance()->RunWorld();
 				Set_CurScene(STATUS::LocalGame_Status);
 				InvalidateRect(hWnd, NULL, TRUE);

@@ -92,6 +92,11 @@ void Renderer::renderFrame(float delatTime)
 			processHealthShow(std::static_pointer_cast<HealthShowRenderData>(context->data));
 			break;
 		}
+		case RenderContextType::DebugLine:
+		{
+			processDebugLines(std::static_pointer_cast<DebugLineRenderData>(context->data));
+			break;
+		}
 		default:
 			break;
 		}
@@ -231,5 +236,26 @@ void Renderer::processHealthShow(std::shared_ptr<HealthShowRenderData> data)
 					pos2.x, pos2.y),
 				_redBrush);
 		}
+	}
+}
+
+void Render::Renderer::processDebugLines(std::shared_ptr<DebugLineRenderData> data)
+{
+	if (!data) return;
+
+	if (!_redBrush)
+		pRenderTarget->CreateSolidColorBrush(ColorF(1, 0, 0, 1), &_redBrush);
+
+	{
+		Pos2 pos1 = MapPosToRenderPos(data->line.pos1());
+		Pos2 pos2 = MapPosToRenderPos(data->line.pos2());
+
+		//画血条
+		pRenderTarget->DrawLine(
+			D2D1::Point2F(
+				pos1.x, pos1.y),
+			D2D1::Point2F(
+				pos2.x, pos2.y),
+			_redBrush);
 	}
 }

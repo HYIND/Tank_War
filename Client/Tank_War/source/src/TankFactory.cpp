@@ -30,6 +30,13 @@ Entity TankFactory::CreateLocalGameTank(World& world,
 	auto& healthshow = tank.addComponent<HealthShow>(std::max(10, width - 12), 3);
 	healthshow.layer = (int)RenderLayer::HealthShow;
 
+	if (owner == TankProperty::TankOwner::AI)
+	{
+		auto& aicontrol = tank.addComponent<AIControl>();
+		aicontrol.decisionIntervalms = 125.f;
+	}
+
+
 	auto& physics = tank.addComponent<Physics>();
 	physics.shape = Physics::Shape::Rect;
 	physics.bodyType = Physics::BodyType::Dynamic;

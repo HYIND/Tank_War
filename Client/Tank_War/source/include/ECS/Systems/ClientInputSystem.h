@@ -6,5 +6,5 @@ class ClientInputSystem :public System
 {
 public:
 	virtual void update(float deltaTime) override;
-	virtual void preUpdate(float fixedDeltaTime) override;
+	virtual void preUpdate(float deltaTime) override;
 };

@@ -13,8 +13,14 @@ void RenderSystem::postUpdate(float deltaTime)
 	processGIFAnimation(bufferframe);
 	processTankVisual(bufferframe);
 	processHealthShow(bufferframe);
+	processDebugLines(bufferframe);
 
 	RenderManager::Instance()->getBufferManager()->submitWriteBuffer();
+}
+
+void RenderSystem::pushDebugLine(const Line2& line)
+{
+	_DebugLines.push_back(line);
 }
 
 void RenderSystem::processSprite(std::shared_ptr<RenderFrameData> framebuffer)
@@ -169,4 +175,20 @@ void RenderSystem::processHealthShow(std::shared_ptr<RenderFrameData> framebuffe
 
 		framebuffer->renderContexts.emplace_back(context);
 	}
+}
+
+void RenderSystem::processDebugLines(std::shared_ptr<Render::RenderFrameData> framebuffer)
+{
+	for (auto& line : _DebugLines)
+	{
+		auto renderdata = std::make_shared <DebugLineRenderData>();
+		renderdata->line = line;
+
+		auto context = std::make_shared<RenderContext>();
+		context->type = RenderContextType::DebugLine;
+		context->data = renderdata;
+
+		framebuffer->renderContexts.emplace_back(context);
+	}
+	_DebugLines.clear();
 }

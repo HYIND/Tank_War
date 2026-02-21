@@ -430,7 +430,7 @@ class ClientStateSyncStstem : public System
 public:
 	ClientStateSyncStstem();
 	virtual ~ClientStateSyncStstem();
-	virtual void preUpdate(float fixedDeltaTime) override;
+	virtual void preUpdate(float deltaTime) override;
 
 	void InputGameState(const GameState& newstate);
 private:

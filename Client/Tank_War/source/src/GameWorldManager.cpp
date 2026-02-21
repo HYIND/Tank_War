@@ -1,3 +1,4 @@
+
 #include "Manager/ConnectManager.h"
 #include "Manager/GameWorldManager.h"
 #include "Manager/UserInfoManager.h"
@@ -200,6 +201,7 @@ void GameWorldManager::InitGameWorld(GameMode mode, MapID mapid)
 	{
 		// 通过World注册系统
 		auto& inputSystem = _world->registerSystem<LocalInputSystem>();
+		auto& aiinputSystem = _world->registerSystem<AIInputSystem>();
 		auto& velocityControlSystem = _world->registerSystem<VelocityControlSystem>();
 		auto& movementSystem = _world->registerSystem<MovementSystem>();
 		auto& weaponSystem = _world->registerSystem<WeaponSystem>();
@@ -217,6 +219,7 @@ void GameWorldManager::InitGameWorld(GameMode mode, MapID mapid)
 
 		lifetimeSystem.setPriority(10000);
 		inputSystem.setPriority(1000);
+		aiinputSystem.setPriority(800);
 		velocityControlSystem.setPriority(500);
 		movementSystem.setPriority(500);
 		physicsSystem.setPriority(300);

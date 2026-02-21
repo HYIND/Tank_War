@@ -26,6 +26,7 @@ namespace Render
 		void processGIFAnimation(std::shared_ptr<GIFAnimationRenderData> data);
 		void processTankVisual(std::shared_ptr<TankVisualRenderData> data);
 		void processHealthShow(std::shared_ptr<HealthShowRenderData> data);
+		void processDebugLines(std::shared_ptr<DebugLineRenderData> data);
 
 	private:
 		ID2D1HwndRenderTarget* _renderTarget = nullptr;

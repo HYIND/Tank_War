@@ -761,9 +761,9 @@ void Scene_Gaming_local::Load(RECT& rect)
 	AddButton(rect.left, rect.top, rect.left + 100, rect.top + 67,
 		IDB_PAUSE,
 		AddResourceBitmap(rect.left, rect.top, rect.left + 100, rect.top + 67, ResFactory->GetBitMapRes(ResName::pauseBP)));
-	AddButton(rect.left + 100, rect.top, rect.left + 200, rect.top + 67,
-		ReLoadMap,
-		AddText(rect.left + 100, rect.top, rect.left + 200, rect.top + 67, L"加载本地地图"));
+	//AddButton(rect.left + 100, rect.top, rect.left + 200, rect.top + 67,
+	//	ReLoadMap,
+	//	AddText(rect.left + 100, rect.top, rect.left + 200, rect.top + 67, L"加载本地地图"));
 
 }
 
