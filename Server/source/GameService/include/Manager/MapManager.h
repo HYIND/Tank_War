@@ -7,6 +7,7 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <cstdint>
 
 using MapID = uint32_t;
 
