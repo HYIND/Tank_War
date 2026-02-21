@@ -62,7 +62,7 @@ void World::removeComponent(Entity& entity) {
 
 	// 2. 更新实体掩码
 	size_t typeId = ComponentType<T>::getId();
-	m_entityManager->removeComponent(entity, typeId);
+	m_entityManager->removeComponent(entity.getId(), typeId);
 }
 
 

@@ -13,7 +13,7 @@ class ComponentManager
 {
 private:
 	// 存储所有组件数组的映射
-	std::unordered_map<ComponentTypeID, std::shared_ptr<void>> componentArrays;
+	mutable std::unordered_map<ComponentTypeID, std::shared_ptr<void>> componentArrays;
 
 	// 类型信息映射
 	std::unordered_map<ComponentTypeID, const char*> typeNames;
