@@ -43,13 +43,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>false</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -209,6 +209,7 @@
     <ClInclude Include="source\include\ECS\Factory\PropFactory.h" />
     <ClInclude Include="source\include\ECS\Factory\TankFactory.h" />
     <ClInclude Include="source\include\ECS\Factory\WallFactory.h" />
+    <ClInclude Include="source\include\ECS\Systems\AIInputSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\AllSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\BulletSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\ClientInputSystem.h" />
@@ -279,6 +280,11 @@
     <Image Include="..\Resource\SNOW.png" />
     <Image Include="..\Resource\Tank2.bmp" />
     <Image Include="..\Resource\Tank2.png" />
+    <Image Include="..\resource\tank_blu.png" />
+    <Image Include="..\Resource\Tank_Blue.png" />
+    <Image Include="..\Resource\Tank_Def.png" />
+    <Image Include="..\Resource\Tank_Green.png" />
+    <Image Include="..\Resource\Tank_Red.png" />
     <Image Include="..\Resource\Text_BK.png" />
     <Image Include="..\Resource\WATER.png" />
     <Image Include="..\Resource\Win.png" />
@@ -295,6 +301,7 @@
     <ClCompile Include="public\src\JsonProtocolClient.cpp" />
     <ClCompile Include="public\src\ServiceDiscoveryClient.cpp" />
     <ClCompile Include="public\src\ServiceRegistryData.cpp" />
+    <ClCompile Include="source\src\AIInputSystem.cpp" />
     <ClCompile Include="source\src\BulletFactory.cpp" />
     <ClCompile Include="source\src\BulletSystem.cpp" />
     <ClCompile Include="source\src\ClientInputSystem.cpp" />
