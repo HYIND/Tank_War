@@ -40,7 +40,7 @@ void AIInputSystem::preUpdate(float deltaTime)
 			aicontrol.timeAccumulator = 0.f;
 			handleAIInputToTank(entity);
 		}
-		drawDebugInfo(entity);
+		//drawDebugInfo(entity);
 	}
 }
 
