@@ -287,19 +287,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_KILLFOCUS:
 	{
-		if (Get_CurScene() == STATUS::LocalGame_Status)
-		{
-			//KillTimer(hWnd, _game);
-		}
+		//if (Get_CurScene() == STATUS::LocalGame_Status)
+		//	GameWorldManager::Instance()->PauseWorld();
 		break;
 	}
 
 	case WM_SETFOCUS:
 	{
-		if (Get_CurScene() == STATUS::LocalGame_Status)
-		{
-			//SetTimer(hWnd, _game, 20, NULL);
-		}
+		//if (Get_CurScene() == STATUS::LocalGame_Status)
+		//	GameWorldManager::Instance()->RunWorld();
 		break;
 	}
 
@@ -533,17 +529,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				// 暂停
 			case IDB_PAUSE:
 			{
-				//KillTimer(hWnd, _game);
+				GameWorldManager::Instance()->PauseWorld();
 				int i = DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG_PAUSE), hWnd, Pause);
 				switch (i) {
 				case 10:	//回到游戏
-					//SetTimer(hWnd, _game, 20, NULL);
+					GameWorldManager::Instance()->RunWorld();
 					break;
 				case 20:	//重新开始
 					GameWorldManager::Instance()->StopWorld();
 					GameWorldManager::Instance()->InitGameWorld(GameMode::RunGame, 1);
 					GameWorldManager::Instance()->RunWorld();
-					//SetTimer(hWnd, _game, 20, NULL);
 					break;
 				case 30:	//回到主菜单
 					GameWorldManager::Instance()->StopWorld();

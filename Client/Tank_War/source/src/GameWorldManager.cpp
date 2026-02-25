@@ -308,6 +308,17 @@ void GameWorldManager::WorldLoop()
 	}
 }
 
+void GameWorldManager::PauseWorld()
+{
+	_stop = true;
+	if (_worldThread)
+	{
+		if (_worldThread->joinable())
+			_worldThread->join();
+		_worldThread.reset();
+	}
+}
+
 void GameWorldManager::StopWorld()
 {
 	_stop = true;
