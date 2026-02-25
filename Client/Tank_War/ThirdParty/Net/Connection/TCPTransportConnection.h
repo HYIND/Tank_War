@@ -16,9 +16,8 @@ public:
 	TCPTransportConnection();
 	~TCPTransportConnection();
 	bool Connect(const std::string& IP, uint16_t Port);
-#ifdef __linux__
 	Task<bool> ConnectAsync(const std::string& IP, uint16_t Port);
-#endif
+
 	void Apply(const BaseSocket fd, const sockaddr_in& sockaddr, const SocketType type);
 	bool Release();
 	bool Send(const Buffer& buffer);

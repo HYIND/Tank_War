@@ -27,6 +27,8 @@ public:
     bool Run();
     bool Stop();
 
+    bool Wake();
+
     ~TimerTask();
     void Clean(); // 关闭定时器并清理资源
 

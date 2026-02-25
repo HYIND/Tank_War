@@ -1,5 +1,6 @@
 #pragma once
 
+
 #ifdef __linux__
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -11,14 +12,21 @@
 #include <sys/timerfd.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
-using BaseSocket = int;
 #elif _WIN32
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <Mswsock.h>
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "mswsock.lib")
+#endif
+
+#ifndef BASESOCKET_DEFINE
+#define BASESOCKET_DEFINE
+#ifdef __linux__
+using BaseSocket = int;
+#elif _WIN32
 using BaseSocket = SOCKET;
+#endif
 #endif
 
 #include "NetExportMarco.h"
@@ -26,4 +34,5 @@ using BaseSocket = SOCKET;
 bool NET_API CloseSocket(BaseSocket);
 
 constexpr BaseSocket Invaild_Socket = 0;
+
 

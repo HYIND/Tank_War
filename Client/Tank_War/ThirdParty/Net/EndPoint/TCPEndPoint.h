@@ -2,10 +2,7 @@
 
 #include "Connection/TCPTransportConnection.h"
 #include "Core/DeleteLater.h"
-
-#ifdef __linux__
 #include "Coroutine.h"
-#endif
 
 
 enum class TCPNetProtocol
@@ -31,9 +28,8 @@ public:
 	virtual ~TCPEndPoint();
 
 	virtual bool Connect(const std::string& IP, uint16_t Port);
-#ifdef __linux__
 	virtual Task<bool> ConnectAsync(const std::string& IP, uint16_t Port);
-#endif
+
 	virtual bool Release();
 
 	virtual bool OnRecvBuffer(Buffer* buffer) = 0;
@@ -46,9 +42,8 @@ public:
 public:
 	// 2表示协议握手所需的字节流长度不足，0表示握手失败，关闭连接，1表示握手成功，建立连接
 	virtual bool TryHandshake(uint32_t timeOutMs) = 0;                         // 作为发起连接的一方，主动发送握手信息
-#ifdef __linux__
 	virtual Task<bool> TryHandshakeAsync(uint32_t timeOutMs) = 0;              // 作为发起连接的一方，主动发送握手信息
-#endif
+#
 	virtual CheckHandshakeStatus CheckHandshakeTryMsg(Buffer& buffer) = 0;     // 作为接受连接的一方，检查连接发起者的握手信息，并返回回复信息
 	virtual CheckHandshakeStatus CheckHandshakeConfirmMsg(Buffer& buffer) = 0; // 作为发起连接的一方，检查连接接受者的返回的回复信息，若确认则连接建立
 
@@ -70,8 +65,6 @@ protected:
 	std::function<void(TCPEndPoint*, Buffer*)> _callbackMessage;
 	std::function<void(TCPEndPoint*)> _callbackClose;
 
-#ifdef __linux__
 	CoTimer* _handshaketimeout;
 	CriticalSectionLock _Colock;
-#endif
 };

@@ -7,7 +7,6 @@
 #include <unordered_map>
 #include <vector>
 #include <algorithm>
-#include "fmt/core.h"
 #include "Config.h"
 
 #include "PublicShareExportMacro.h"

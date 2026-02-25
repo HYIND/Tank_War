@@ -150,7 +150,7 @@ public:
 		std::vector<V> values;
 		std::lock_guard<CriticalSectionLock> lock(_lock);
 		values.reserve(_map.size());
-		for (const auto &[key, value] : _map)
+		for (const auto& [key, value] : _map)
 			values.push_back(value);
 		return values;
 	}
@@ -317,7 +317,7 @@ public:
 		std::vector<V> values;
 		std::lock_guard<CriticalSectionLock> lock(_lock);
 		values.reserve(_map.size());
-		for (const auto &[key, value] : _map)
+		for (const auto& [key, value] : _map)
 			values.push_back(value);
 		return values;
 	}

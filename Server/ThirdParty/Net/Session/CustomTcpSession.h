@@ -30,9 +30,8 @@ public:
 	CustomTcpSession(PureTCPClient* client = nullptr);
 	~CustomTcpSession();
 	virtual bool Connect(const std::string& IP, uint16_t Port);
-#ifdef __linux__
 	virtual Task<bool> ConnectAsync(const std::string& IP, uint16_t Port);
-#endif
+
 	virtual bool Release();
 
 	bool AsyncSend(const Buffer& buffer);                   // 异步发送，不关心返回结果
@@ -43,9 +42,8 @@ public:
 
 public:
 	virtual bool TryHandshake(uint32_t timeOutMs);
-#ifdef __linux__
 	virtual Task<bool> TryHandshakeAsync(uint32_t timeOutMs);
-#endif
+
 	virtual CheckHandshakeStatus CheckHandshakeTryMsg(Buffer& buffer);
 	virtual CheckHandshakeStatus CheckHandshakeConfirmMsg(Buffer& buffer);
 

@@ -35,7 +35,5 @@ private:
 	TcpEndPointListener BaseListener;
 	std::function<void(BaseNetWorkSession*)> _callBackSessionEstablish;
 	SafeArray<std::shared_ptr<SessionData>> waitSessions; // 等待校验协议的客户端
-#ifdef __linux__
 	std::shared_ptr<TimerTask> CleanExpiredTask;
-#endif
 };

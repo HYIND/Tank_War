@@ -37,9 +37,7 @@
 #include "SpinLock.h"
 #include "Core/DeleteLater.h"
 
-#ifdef __linux__
 #include "Coroutine.h"
-#endif
 
 enum NetType
 {

@@ -19,6 +19,7 @@
 #include <atomic>
 #include <stdexcept>
 #include <thread>
+#include "Timer.h"
 
 #include "PublicShareExportMacro.h"
 
@@ -367,8 +368,6 @@ namespace CoroTask
 	}
 }
 
-#ifdef __linux__
-
 // 协程定时器包装器
 class PUBLICSHARE_API CoTimer
 {
@@ -386,7 +385,7 @@ public:
 		Handle();
 		~Handle();
 
-		int fd;
+		std::shared_ptr<TimerTask> task;
 		bool active;
 
 		std::coroutine_handle<> coroutine;
@@ -420,7 +419,6 @@ private:
 
 Task<bool> PUBLICSHARE_API CoSleep(std::chrono::milliseconds timeout);
 
-#endif
 
 inline bool CoCloseSocket(BaseSocket socket)
 {
@@ -443,7 +441,6 @@ public:
 		~Handle();
 
 		BaseSocket socket;
-		sockaddr_in localaddr;
 		sockaddr_in remoteaddr;
 
 		bool active;
