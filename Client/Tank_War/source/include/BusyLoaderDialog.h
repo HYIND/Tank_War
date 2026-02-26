@@ -26,7 +26,7 @@ private:
 	static constexpr int LOGIC_SPEED = 10;			 // 逻辑更新间隔(ms)
 	static constexpr UINT_PTR ANIMATION_TIMER_ID = 1001;// 动画定时器ID
 	static constexpr UINT_PTR LOGIC_TIMER_ID = 1002;	// 逻辑定时器ID
-	static constexpr BYTE WINDOW_ALPHA = 255;			// 窗口透明度
+	static constexpr BYTE WINDOW_ALPHA = 215;			// 窗口透明度
 
 	struct Dot {
 		float progress;      // 0.0 到 1.0 的进度

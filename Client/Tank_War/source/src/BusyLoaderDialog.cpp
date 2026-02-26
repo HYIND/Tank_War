@@ -71,6 +71,10 @@ bool BusyLoaderDialog::Create(HWND parent, HINSTANCE hInstance) {
 
 	if (!hWnd) return false;
 
+	HRGN hRgn = CreateRoundRectRgn(0, 0, WIDTH, HEIGHT, 30, 30);
+	SetWindowRgn(hWnd, hRgn, TRUE);
+	DeleteObject(hRgn);
+
 	// 设置窗口透明度
 	SetLayeredWindowAttributes(hWnd, 0, WINDOW_ALPHA, LWA_ALPHA);
 
@@ -231,7 +235,7 @@ void BusyLoaderDialog::DrawAnimation() {
 	if (m_renderTarget)
 	{
 		m_renderTarget->BeginDraw();
-		m_renderTarget->Clear(ColorF(32.f / 255.f, 32.f / 255.f, 32.f / 255.f, 1));
+		m_renderTarget->Clear(ColorF(50.f / 255.f, 50.f / 255.f, 50.f / 255.f, 1.f));
 
 		if (!m_Text_Brush)
 			m_renderTarget->CreateSolidColorBrush(ColorF(1, 1, 1, 1), &m_Text_Brush);
@@ -321,7 +325,7 @@ LRESULT CALLBACK BusyLoaderDialog::WindowProc(HWND hwnd, UINT uMsg, WPARAM wPara
 			}
 		}
 		return 0;
-	
+
 	case WM_ERASEBKGND:
 	{
 		return true;
