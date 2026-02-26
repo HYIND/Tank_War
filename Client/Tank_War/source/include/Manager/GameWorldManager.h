@@ -24,6 +24,7 @@ public:
 
 	void RunWorld();
 	void WorldLoop();
+	void PauseWorld();
 	void StopWorld();
 
 	std::shared_ptr<std::thread> GetWorldThread();

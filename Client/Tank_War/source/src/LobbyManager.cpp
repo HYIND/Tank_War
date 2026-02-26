@@ -95,6 +95,7 @@ void LobbyManager::ProcessLobbyRoomData(const json& js)
 	}
 
 	{
+		int currentSel = (int)SendMessage(_Scene::SHall->Hall_room_list, LB_GETCURSEL, 0, 0);
 
 		(int)SendMessage(_Scene::SHall->Hall_room_list, LB_RESETCONTENT, 0, 0);
 
@@ -106,6 +107,13 @@ void LobbyManager::ProcessLobbyRoomData(const json& js)
 
 			int index = (int)SendMessage(_Scene::SHall->Hall_room_list, LB_ADDSTRING, 0, (LPARAM) & (Tool::UTF8ToWString(format_roomname))[0]);
 			SendMessage(_Scene::SHall->Hall_room_list, LB_SETITEMDATA, index, (LPARAM)room);  // 存储房间指针
+		}
+
+		if (currentSel != LB_ERR) {
+			int itemCount = (int)SendMessage(_Scene::SHall->Hall_room_list, LB_GETCOUNT, 0, 0);
+			if (currentSel < itemCount) {
+				SendMessage(_Scene::SHall->Hall_room_list, LB_SETCURSEL, currentSel, 0);
+			}
 		}
 	}
 }
@@ -318,25 +326,30 @@ void LobbyManager::ProcessStartGameRes(const json& js)
 	SendMessage(_hwnd, WM_COMMAND, START, (LPARAM)_hwnd);
 }
 
-bool LobbyManager::TryJoinRoom()
+std::shared_ptr<Room> LobbyManager::GetSelectRoom()
 {
 	LockGuard guard(_curroomsmutex);
 	int index = SendMessage(_Scene::SHall->Hall_room_list, LB_GETCURSEL, 0, 0);
 	if (index != LB_ERR && index < _currooms.size())
 	{
 		Room* room = (Room*)SendMessage(_Scene::SHall->Hall_room_list, LB_GETITEMDATA, index, 0);
-		if (room)
-		{
-			bool result = REQUESTMANAGER->RequestJoinRoom(room->room_id);
-			if (result)
-			{
-				SetIsHost(false);
-				_curroominfo = std::make_shared<Room>();
-			}
-			return result;
-		}
+		return std::make_shared<Room>(*room);
 	}
-	return false;
+	return nullptr;
+}
+
+bool LobbyManager::TryJoinRoom(std::shared_ptr<Room> room)
+{
+	if (!room)
+		return false;
+
+	bool result = REQUESTMANAGER->RequestJoinRoom(room->room_id);
+	if (result)
+	{
+		SetIsHost(false);
+		_curroominfo = std::make_shared<Room>();
+	}
+	return result;
 }
 
 bool LobbyManager::TryCreateRoom()

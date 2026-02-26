@@ -218,12 +218,15 @@ public:
 	using promise_type = TaskPromise<T>;
 	using value_type = T;
 
+	Task() {};
 	explicit Task(std::coroutine_handle<promise_type> coroutine, std::shared_ptr<CriticalSectionLock> lock, std::shared_ptr<ConditionVariable> cv) noexcept
 		: coroutine_(coroutine), _continuationlock(lock), _syncwaitcv(cv) {
 	}
 
 	Task(Task&& other) noexcept
-		: coroutine_(std::exchange(other.coroutine_, nullptr)), _continuationlock(other._continuationlock) {
+		: coroutine_(std::exchange(other.coroutine_, nullptr)), _continuationlock(other._continuationlock), _syncwaitcv(other._syncwaitcv) {
+		other._continuationlock.reset();
+		other._syncwaitcv.reset();
 	}
 
 	Task& operator=(Task&& other) noexcept
@@ -232,6 +235,10 @@ public:
 		{
 			coroutine_ = std::exchange(other.coroutine_, nullptr);
 			_continuationlock = other._continuationlock;
+			_syncwaitcv = other._syncwaitcv;
+
+			other._continuationlock.reset();
+			other._syncwaitcv.reset();
 		}
 		return *this;
 	}
@@ -290,6 +297,11 @@ public:
 	auto get_handle() const noexcept
 	{
 		return coroutine_;
+	}
+
+	explicit operator bool() const noexcept
+	{
+		return bool(coroutine_);
 	}
 
 private:

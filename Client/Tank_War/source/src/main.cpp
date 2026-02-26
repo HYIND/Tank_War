@@ -8,6 +8,7 @@
 #include "Manager/ConnectManager.h"
 #include "Manager/RequestManager.h"
 #include "Manager/LobbyManager.h"
+#include "BusyLoaderDialog.h"
 
 #define MAX_LOADSTRING 100
 
@@ -310,21 +311,56 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				// 开始游戏
 			case IDB_LOCALGAME: {
-				GameWorldManager::Instance()->InitGameWorld(GameMode::RunGame, 1);
-				GameWorldManager::Instance()->RunWorld();
-				Set_CurScene(STATUS::LocalGame_Status);
-				InvalidateRect(hWnd, NULL, TRUE);
+				BusyLoaderDialog dialog;
+				if (dialog.Create(_hwnd, hInst))
+				{
+					auto task = CoroTask::Run([]()->bool {
+						GameWorldManager::Instance()->InitGameWorld(GameMode::RunGame, 1);
+						return true;
+						});
+
+					dialog.Show(std::move(task), nullptr, "初始化游戏......");
+
+					auto result = dialog.WaitResultAndClose();
+					if (result == DialogResult::SUCCESSED)
+					{
+						GameWorldManager::Instance()->RunWorld();
+						Set_CurScene(STATUS::LocalGame_Status);
+						InvalidateRect(hWnd, NULL, TRUE);
+					}
+					else if (result == DialogResult::FAILED)
+					{
+						MessageBox(NULL, L"游戏初始化失败！", TEXT("开始游戏"), MB_OK);
+					}
+				}
 				break;
 			}
 							  // 联机大厅
 			case IDB_ENTERHALL: {
 				if (!DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG_Userid), hWnd, (DLGPROC)GetID_Proc))
 					break;
-				if (!ConnectManager::Instance()->Login())
-					break;
-				Set_CurScene(STATUS::Hall_Status);
-				SetTimer(hWnd, hall_refreash, 3000, NULL);
-				UpdateWindow(hWnd);
+
+				BusyLoaderDialog dialog;
+				if (dialog.Create(_hwnd, hInst))
+				{
+					auto task = CoroTask::Run([]()->bool {
+						return ConnectManager::Instance()->Login();
+						});
+
+					dialog.Show(std::move(task), nullptr, "登录中......");
+
+					auto result = dialog.WaitResultAndClose();
+					if (result == DialogResult::SUCCESSED)
+					{
+						Set_CurScene(STATUS::Hall_Status);
+						SetTimer(hWnd, hall_refreash, 3000, NULL);
+						UpdateWindow(hWnd);
+					}
+					else if (result == DialogResult::FAILED)
+					{
+						MessageBox(NULL, L"登录失败，无法连接到服务器或者非合规用户名！", TEXT("联机大厅"), MB_OK);
+					}
+				}
 				break;
 			}
 							  // 设置
@@ -397,23 +433,50 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			// 加入房间
 			case IDB_ENTERROOM:
 			{
-				if (LOBBYMANAGER->TryJoinRoom())
+				if (auto selectRoom = LOBBYMANAGER->GetSelectRoom())
 				{
-					SendMessage(_hwnd, WM_COMMAND, Enterroom, (LPARAM)_hwnd);
-				}
-				else
-				{
-					MessageBox(_hwnd, L"加入房间请求异常！", NULL, MB_OK);
+					BusyLoaderDialog dialog;
+					if (dialog.Create(_hwnd, hInst))
+					{
+						auto task = CoroTask::Run([selectRoom]()->bool {
+							return LOBBYMANAGER->TryJoinRoom(selectRoom);
+							});
+
+						dialog.Show(std::move(task), nullptr, "加入房间中......");
+
+						auto result = dialog.WaitResultAndClose();
+						if (result == DialogResult::SUCCESSED)
+						{
+							SendMessage(_hwnd, WM_COMMAND, Enterroom, (LPARAM)_hwnd);
+						}
+						else if (result == DialogResult::FAILED)
+						{
+							MessageBox(_hwnd, L"状态异常！", NULL, MB_OK);
+						}
+					}
 				}
 				break;
 			}
 			// 离开大厅
 			case IDB_EXITHALL:
-				ConnectManager::Instance()->Logout();
-				KillTimer(hWnd, hall_refreash);
-				Set_CurScene(STATUS::Main);
-				UpdateWindow(_hwnd);
+			{
+				BusyLoaderDialog dialog;
+				if (dialog.Create(_hwnd, hInst))
+				{
+					auto task = CoroTask::Run([]()->bool {
+						ConnectManager::Instance()->Logout();
+						return true;
+						});
+
+					dialog.Show(std::move(task), nullptr, "离开大厅......");
+
+					auto result = dialog.WaitResultAndClose();
+					KillTimer(hWnd, hall_refreash);
+					Set_CurScene(STATUS::Main);
+					UpdateWindow(_hwnd);
+				}
 				break;
+			}
 			case IDB_HALL_SEND:
 			{
 				wchar_t temp[1024] = { '\0' };
@@ -429,17 +492,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			// 创建房间
 			case IDB_CREATEROOM:
 			{
-				if (LOBBYMANAGER->TryCreateRoom())
+				BusyLoaderDialog dialog;
+				if (dialog.Create(_hwnd, hInst))
 				{
-					REQUESTMANAGER->RequestRoomInfo();
-					Set_CurScene(STATUS::Room_Status);
-					KillTimer(hWnd, hall_refreash);
-					SetTimer(hWnd, room_refreash, 1000, NULL);
-					UpdateWindow(_hwnd);
-				}
-				else
-				{
-					MessageBox(_hwnd, L"加入房间请求异常！", NULL, MB_OK);
+					auto task = CoroTask::Run([]()->bool {
+						return LOBBYMANAGER->TryCreateRoom();
+						});
+
+					dialog.Show(std::move(task), nullptr, "创建房间......");
+
+					auto result = dialog.WaitResultAndClose();
+					if (result == DialogResult::SUCCESSED)
+					{
+						REQUESTMANAGER->RequestRoomInfo();
+						Set_CurScene(STATUS::Room_Status);
+						KillTimer(hWnd, hall_refreash);
+						SetTimer(hWnd, room_refreash, 1000, NULL);
+						UpdateWindow(_hwnd);
+					}
+					else if (result == DialogResult::FAILED)
+					{
+						MessageBox(_hwnd, L"状态异常！", NULL, MB_OK);
+					}
 				}
 				break;
 			}
@@ -454,26 +528,74 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				if (!LOBBYMANAGER->IsHost())
 					break;
-				LOBBYMANAGER->TryStartGame();
+
+				BusyLoaderDialog dialog;
+				if (dialog.Create(_hwnd, hInst))
+				{
+					auto task = CoroTask::Run([]()->bool {
+						return LOBBYMANAGER->TryStartGame();
+						});
+
+					dialog.Show(std::move(task), nullptr, "开始游戏......");
+
+					auto result = dialog.WaitResultAndClose();
+					if (result == DialogResult::SUCCESSED)
+					{
+					}
+					else if (result == DialogResult::FAILED)
+					{
+						MessageBox(_hwnd, L"存在未准备的玩家！", NULL, MB_OK);
+					}
+				}
 				break;
 			}
 			case IDB_READY:
 			{
-				if (LOBBYMANAGER->TryChangeReadyStatus(true))
+				BusyLoaderDialog dialog;
+				if (dialog.Create(_hwnd, hInst))
 				{
-					REQUESTMANAGER->RequestRoomInfo();
-					_Scene::SRoom->ModifyButton_ID(IDB_READY, IDB_CANCELREADY);
-					_Scene::SRoom->ModifyText_byButton(IDB_CANCELREADY, L"取消准备");
+					auto task = CoroTask::Run([]()->bool {
+						return LOBBYMANAGER->TryChangeReadyStatus(true);
+						});
+
+					dialog.Show(std::move(task), nullptr, "取消准备......");
+
+					auto result = dialog.WaitResultAndClose();
+					if (result == DialogResult::SUCCESSED)
+					{
+						REQUESTMANAGER->RequestRoomInfo();
+						_Scene::SRoom->ModifyButton_ID(IDB_READY, IDB_CANCELREADY);
+						_Scene::SRoom->ModifyText_byButton(IDB_CANCELREADY, L"取消准备");
+					}
+					else if (result == DialogResult::FAILED)
+					{
+						MessageBox(_hwnd, L"状态异常！", NULL, MB_OK);
+					}
 				}
 				break;
 			}
 			case IDB_CANCELREADY:
 			{
-				if (LOBBYMANAGER->TryChangeReadyStatus(false))
+				BusyLoaderDialog dialog;
+				if (dialog.Create(_hwnd, hInst))
 				{
-					REQUESTMANAGER->RequestRoomInfo();
-					_Scene::SRoom->ModifyButton_ID(IDB_CANCELREADY, IDB_READY);
-					_Scene::SRoom->ModifyText_byButton(IDB_READY, L"准备");
+					auto task = CoroTask::Run([]()->bool {
+						return LOBBYMANAGER->TryChangeReadyStatus(false);
+						});
+
+					dialog.Show(std::move(task), nullptr, "取消准备......");
+
+					auto result = dialog.WaitResultAndClose();
+					if (result == DialogResult::SUCCESSED)
+					{
+						REQUESTMANAGER->RequestRoomInfo();
+						_Scene::SRoom->ModifyButton_ID(IDB_CANCELREADY, IDB_READY);
+						_Scene::SRoom->ModifyText_byButton(IDB_READY, L"准备");
+					}
+					else if (result == DialogResult::FAILED)
+					{
+						MessageBox(_hwnd, L"状态异常！", NULL, MB_OK);
+					}
 				}
 				break;
 			}
@@ -488,12 +610,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			case IDB_EXITROOM:
 			{
-				if (LOBBYMANAGER->TryLeaveRoom())
+				BusyLoaderDialog dialog;
+				if (dialog.Create(_hwnd, hInst))
 				{
-					KillTimer(hWnd, room_refreash);
-					Set_CurScene(STATUS::Hall_Status);
-					SetTimer(hWnd, hall_refreash, 4000, NULL);
-					UpdateWindow(hWnd);
+					auto task = CoroTask::Run([]()->bool {
+						return LOBBYMANAGER->TryLeaveRoom();
+						});
+
+					dialog.Show(std::move(task), nullptr, "取消准备......");
+
+					auto result = dialog.WaitResultAndClose();
+					if (result == DialogResult::SUCCESSED)
+					{
+						KillTimer(hWnd, room_refreash);
+						Set_CurScene(STATUS::Hall_Status);
+						SetTimer(hWnd, hall_refreash, 4000, NULL);
+						UpdateWindow(hWnd);
+					}
+					else if (result == DialogResult::FAILED)
+					{
+						MessageBox(_hwnd, L"状态异常！", NULL, MB_OK);
+					}
 				}
 				break;
 			}

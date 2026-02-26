@@ -160,6 +160,9 @@
     <ClCompile Include="source\src\AIInputSystem.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="source\src\BusyLoaderDialog.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\include\header.h">
@@ -443,6 +446,9 @@
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>资源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\BusyLoaderDialog.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

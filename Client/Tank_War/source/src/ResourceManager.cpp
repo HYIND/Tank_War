@@ -92,7 +92,7 @@ bool Need() {
 
 	RECT rect;
 	GetClientRect(_hwnd, &rect);
-	D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &pD2DFactory);
+	D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &pD2DFactory);
 	pD2DFactory->CreateHwndRenderTarget(
 		RenderTargetProperties(),
 		HwndRenderTargetProperties(_hwnd, SizeU(rect.right - rect.left, rect.bottom - rect.top)),

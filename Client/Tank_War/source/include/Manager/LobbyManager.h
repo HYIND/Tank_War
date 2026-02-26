@@ -23,7 +23,8 @@ public:
 	void ProcessStartGameRes(const json& js);
 
 public:
-	bool TryJoinRoom();
+	std::shared_ptr<Room> GetSelectRoom();
+	bool TryJoinRoom(std::shared_ptr<Room> room);
 	bool TryCreateRoom();
 	bool TryLeaveRoom();
 	bool TryChangeReadyStatus(bool isready);

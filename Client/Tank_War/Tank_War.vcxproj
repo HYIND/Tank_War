@@ -43,13 +43,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>false</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -170,6 +170,7 @@
     <ClInclude Include="public\include\ServiceDiscoveryClient.h" />
     <ClInclude Include="public\include\ServiceRegistryData.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="source\include\BusyLoaderDialog.h" />
     <ClInclude Include="source\include\ECS\Components\AIControl.h" />
     <ClInclude Include="source\include\ECS\Components\AllComponent.h" />
     <ClInclude Include="source\include\ECS\Components\BulletProperty.h" />
@@ -304,6 +305,7 @@
     <ClCompile Include="source\src\AIInputSystem.cpp" />
     <ClCompile Include="source\src\BulletFactory.cpp" />
     <ClCompile Include="source\src\BulletSystem.cpp" />
+    <ClCompile Include="source\src\BusyLoaderDialog.cpp" />
     <ClCompile Include="source\src\ClientInputSystem.cpp" />
     <ClCompile Include="source\src\D2DTools.cpp" />
     <ClCompile Include="source\src\D2DWrapper.cpp" />
