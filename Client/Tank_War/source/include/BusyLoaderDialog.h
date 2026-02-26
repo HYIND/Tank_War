@@ -17,16 +17,16 @@ class BusyLoaderDialog {
 private:
 	static constexpr int WIDTH = 300;
 	static constexpr int HEIGHT = 200;
-	static constexpr int DOT_COUNT = 6;            // 点的数量
+	static constexpr int DOT_COUNT = 7;            // 点的数量
 	static constexpr int CENTER_X = WIDTH / 2;
 	static constexpr int CENTER_Y = HEIGHT / 2 - 20;
 	static constexpr int CIRCLE_RADIUS = 40;        // 圆周半径
 	static constexpr int DOT_RADIUS = 5;             // 点的大小
 	static constexpr int ANIMATION_SPEED = 10;       // 动画更新间隔(ms)
-	static constexpr int LOGIC_SPEED = 10;       // 逻辑更新间隔(ms)
+	static constexpr int LOGIC_SPEED = 10;			 // 逻辑更新间隔(ms)
 	static constexpr UINT_PTR ANIMATION_TIMER_ID = 1001;// 动画定时器ID
-	static constexpr UINT_PTR LOGIC_TIMER_ID = 1002;			// 逻辑定时器ID
-	static constexpr BYTE WINDOW_ALPHA = 255;        // 窗口透明度
+	static constexpr UINT_PTR LOGIC_TIMER_ID = 1002;	// 逻辑定时器ID
+	static constexpr BYTE WINDOW_ALPHA = 255;			// 窗口透明度
 
 	struct Dot {
 		float progress;      // 0.0 到 1.0 的进度

@@ -145,11 +145,17 @@ void BusyLoaderDialog::Close() {
 		isRunning = false;
 		KillTimer(hWnd, ANIMATION_TIMER_ID);
 		KillTimer(hWnd, LOGIC_TIMER_ID);
-		EnableWindow(hParentWnd, TRUE);  // 重新启用父窗口
-		SetForegroundWindow(hParentWnd);  // 将焦点返回父窗口
+
+		SafeRelease(m_Text_Format);
+		SafeRelease(m_Dot_Brush);
+		SafeRelease(m_Text_Brush);
+		SafeRelease(m_renderTarget);
 
 		DestroyWindow(hWnd);
 		hWnd = nullptr;
+
+		EnableWindow(hParentWnd, TRUE);   // 重新启用父窗口
+		SetForegroundWindow(hParentWnd);  // 将焦点返回父窗口
 	}
 }
 
