@@ -8,7 +8,7 @@ IDWriteFactory* pIDWriteFactory;
 void Need() {
 	if (NULL == pIWICFactory)
 	{
-		CoInitialize(NULL);
+		CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 		CoCreateInstance(
 			CLSID_WICImagingFactory,
 			NULL,

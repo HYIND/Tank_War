@@ -11,5 +11,5 @@ public:
 
 private:
 	void processPropCollision(Entity prop, Entity picker, Pos2 point);
-	void processHealthPack(Entity prop, Entity picker);
+	bool pickUpHealthPack(Entity prop, Entity picker);
 };

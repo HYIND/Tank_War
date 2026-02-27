@@ -1,4 +1,4 @@
-﻿#include "Scene.h"
+#include "Scene.h"
 
 
 D2D_Bitmap* Scene::AddResourceBitmap(int loc1, int loc2, int loc3, int loc4, ID2D1Bitmap* pBitmap, float opacity)
@@ -11,9 +11,13 @@ D2D_Bitmap* Scene::AddResourceBitmap(int loc1, int loc2, int loc3, int loc4, ID2
 	return Bitmap;
 }
 
-D2D_Text* Scene::AddText(int loc1, int loc2, int loc3, int loc4, const wchar_t* pwch, ID2D1SolidColorBrush* pDefaultBrush, ID2D1SolidColorBrush* pClickBrush, IDWriteTextFormat* pTextFormat)
+D2D_Text* Scene::AddText(int loc1, int loc2, int loc3, int loc4, const wchar_t* pwch,
+	ID2D1SolidColorBrush* pDefaultBrush,
+	ID2D1SolidColorBrush* pClickBrush,
+	IDWriteTextFormat* pTextFormat,
+	int id)
 {
-	D2D_Text* Text = new D2D_Text(loc1, loc2, loc3, loc4, pwch, pDefaultBrush, pClickBrush, pTextFormat);
+	D2D_Text* Text = new D2D_Text(loc1, loc2, loc3, loc4, pwch, pDefaultBrush, pClickBrush, pTextFormat, id);
 	Text_list.emplace_back(Text);
 	return Text;
 }
@@ -217,7 +221,7 @@ bool Scene::ModifyButton_ID(int oldid, int newid)
 	return false;
 }
 //修改文字
-bool Scene::ModifyText_byButton(int id, wstring newstr)
+bool Scene::ModifyButton_Text(int id, const wstring& newstr)
 {
 	for (auto& v : Button_list)
 	{
@@ -234,7 +238,7 @@ bool Scene::ModifyText_byButton(int id, wstring newstr)
 	return false;
 }
 //修改位图信息
-bool Scene::ModifyBitmap_byButton(int id, int loc1, int loc2, int loc3, int loc4, bool offset, float opcaity)
+bool Scene::ModifyButton_Bitmap(int id, int loc1, int loc2, int loc3, int loc4, bool offset, float opcaity)
 {
 	for (auto& v : Button_list)
 	{
@@ -259,6 +263,19 @@ bool Scene::ModifyBitmap_byButton(int id, int loc1, int loc2, int loc3, int loc4
 				return true;
 			}
 			else return false;
+		}
+	}
+	return false;
+}
+
+bool Scene::ModifyText_Context(int id, const wstring& newstr)
+{
+	for (auto& v : Text_list)
+	{
+		if (v->id == id)
+		{
+			v->str = newstr;
+			return true;
 		}
 	}
 	return false;

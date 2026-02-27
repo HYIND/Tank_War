@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "RenderEngine/D2DTools.h"
 #include "Manager/ResourceManager.h"
@@ -54,6 +54,7 @@ public:
 	int Text_location3 = 0;
 	int Text_location4 = 0;
 	std::wstring str;
+	int id = 0;
 
 	ID2D1SolidColorBrush* pDefaultBrush = NULL;
 	ID2D1SolidColorBrush* pClickBrush = NULL;
@@ -61,7 +62,12 @@ public:
 
 	D2D_Button* pButton = NULL;
 
-	D2D_Text(int loc1, int loc2, int loc3, int loc4, const wchar_t* pwch, ID2D1SolidColorBrush* pDefaultBrush, ID2D1SolidColorBrush* pClickBrush, IDWriteTextFormat* pTextFormat);
+	D2D_Text(int loc1, int loc2, int loc3, int loc4, const wchar_t* pwch,
+		ID2D1SolidColorBrush* pDefaultBrush,
+		ID2D1SolidColorBrush* pClickBrush,
+		IDWriteTextFormat* pTextFormat,
+		int id = 0
+	);
 };
 
 // D2D 按钮，绑定文本或贴图

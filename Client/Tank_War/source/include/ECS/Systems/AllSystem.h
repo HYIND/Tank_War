@@ -18,3 +18,4 @@
 #include "ECS/Systems/InterpolationSystem.h"
 #include "ECS/Systems/PredictionSystem.h"
 #include "ECS/Systems/AIInputSystem.h"
+#include "ECS/Systems/AudioSystem.h"

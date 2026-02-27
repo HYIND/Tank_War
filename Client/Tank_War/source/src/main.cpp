@@ -9,6 +9,8 @@
 #include "Manager/RequestManager.h"
 #include "Manager/LobbyManager.h"
 #include "BusyLoaderDialog.h"
+#include "Manager/AudioDeviceManager.h"
+#include <commctrl.h>
 
 #define MAX_LOADSTRING 100
 
@@ -22,6 +24,40 @@ WCHAR szTitle[MAX_LOADSTRING] = L"Tank War";                  // 标题栏文本
 WCHAR szWindowClass[MAX_LOADSTRING];            // 主窗口类名
 HWND _hwnd;
 RECT _rect;
+
+void LoadOption()
+{
+	//FPS
+	{
+		UINT FPS = std::clamp(GetPrivateProfileInt(L"Video", L"FPS", 144, L"./option.ini"), UINT(1), UINT(200));
+		RenderManager::Instance()->getfpsController()->setGameTargetFps(FPS);
+	}
+
+	//音频
+	if (auto& device = AudioDeviceManager::Instance()->GetDevice())
+	{
+		{
+			UINT masterVol = std::clamp(GetPrivateProfileInt(L"Audio", L"MasterVolume", 80, L"./option.ini"), UINT(0), UINT(100));
+			float volume = float(masterVol) / 100.0f;
+			if (auto device = AudioDeviceManager::Instance()->GetDevice())
+				device->SetMasterVolumn(volume);
+		}
+
+		{
+			UINT musicVol = std::clamp(GetPrivateProfileInt(L"Audio", L"MusicVolume", 80, L"./option.ini"), UINT(0), UINT(100));
+			float volume = float(musicVol) / 100.0f;
+			if (auto device = AudioDeviceManager::Instance()->GetDevice())
+				device->SetChannelVolumn((AudioChannelID)AudioChannelDef::BGM_Channel, volume);
+		}
+
+		{
+			UINT SFXVol = std::clamp(GetPrivateProfileInt(L"Audio", L"SFXVolume", 80, L"./option.ini"), UINT(0), UINT(100));
+			float volume = float(SFXVol) / 100.0f;
+			if (auto device = AudioDeviceManager::Instance()->GetDevice())
+				device->SetChannelVolumn((AudioChannelID)AudioChannelDef::SoundEffects_Channel, volume);
+		}
+	}
+}
 
 bool Init_all_Resource()
 {
@@ -246,7 +282,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			MessageBox(hWnd, _T("位图加载失败"), L"Error", MB_OK);
 			DestroyWindow(hWnd);
 		}
-		_Scene::CurScene = _Scene::SMain;
+		Set_CurScene(STATUS::Main);
+		LoadOption();
 		{
 			RenderManager::Instance()->getRenderer()->SetRenderTarget(pRenderTarget);
 			thread T(&Render_Thread,
@@ -394,16 +431,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case IDB_SETFPS_30:
 			{
 				RenderManager::Instance()->getfpsController()->setGameTargetFps(30);
+				WritePrivateProfileString(L"Video", L"FPS", std::to_wstring(30).c_str(), L"./option.ini");
 				break;
 			}
 			case IDB_SETFPS_60:
 			{
 				RenderManager::Instance()->getfpsController()->setGameTargetFps(60);
+				WritePrivateProfileString(L"Video", L"FPS", std::to_wstring(60).c_str(), L"./option.ini");
 				break;
 			}
 			case IDB_SETFPS_144:
 			{
 				RenderManager::Instance()->getfpsController()->setGameTargetFps(144);
+				WritePrivateProfileString(L"Video", L"FPS", std::to_wstring(144).c_str(), L"./option.ini");
 				break;
 			}
 			default:
@@ -565,7 +605,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					{
 						REQUESTMANAGER->RequestRoomInfo();
 						_Scene::SRoom->ModifyButton_ID(IDB_READY, IDB_CANCELREADY);
-						_Scene::SRoom->ModifyText_byButton(IDB_CANCELREADY, L"取消准备");
+						_Scene::SRoom->ModifyButton_Text(IDB_CANCELREADY, L"取消准备");
 					}
 					else if (result == DialogResult::FAILED)
 					{
@@ -590,7 +630,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					{
 						REQUESTMANAGER->RequestRoomInfo();
 						_Scene::SRoom->ModifyButton_ID(IDB_CANCELREADY, IDB_READY);
-						_Scene::SRoom->ModifyText_byButton(IDB_READY, L"准备");
+						_Scene::SRoom->ModifyButton_Text(IDB_READY, L"准备");
 					}
 					else if (result == DialogResult::FAILED)
 					{
@@ -753,6 +793,60 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 		}
+	}
+
+	case WM_HSCROLL:
+	{
+		HWND hScrollBar = (HWND)lParam;
+		int ctrlId = GetDlgCtrlID(hScrollBar);
+
+		switch (ctrlId) {
+		case Scene_Option::ID_SLIDER_MASTERVOL:
+		{
+			UINT pos = (int)SendMessage(hScrollBar, TBM_GETPOS, 0, 0);
+			pos = std::clamp(pos, (UINT)0, (UINT)100);
+			float volume = float(pos) / 100.0f;
+			if (auto device = AudioDeviceManager::Instance()->GetDevice())
+				device->SetMasterVolumn(volume);
+
+			if (_Scene::SOption)
+				_Scene::SOption->UpdateVolumeText(Scene_Option::ID_TEXT_MASTERVOL, pos);
+
+			WritePrivateProfileString(L"Audio", L"MasterVolume", std::to_wstring(pos).c_str(), L"./option.ini");
+			break;
+		}
+
+		case Scene_Option::ID_SLIDER_MUSIC:
+		{
+			UINT pos = (int)SendMessage(hScrollBar, TBM_GETPOS, 0, 0);
+			pos = std::clamp(pos, (UINT)0, (UINT)100);
+			float volume = float(pos) / 100.0f;
+			if (auto device = AudioDeviceManager::Instance()->GetDevice())
+				device->SetChannelVolumn((AudioChannelID)AudioChannelDef::BGM_Channel, volume);
+
+			if (_Scene::SOption)
+				_Scene::SOption->UpdateVolumeText(Scene_Option::ID_TEXT_MUSIC, pos);
+
+			WritePrivateProfileString(L"Audio", L"MusicVolume", std::to_wstring(pos).c_str(), L"./option.ini");
+			break;
+		}
+
+		case Scene_Option::ID_SLIDER_SFX:    // 2002
+		{
+			UINT pos = (int)SendMessage(hScrollBar, TBM_GETPOS, 0, 0);
+			pos = std::clamp(pos, (UINT)0, (UINT)100);
+			float volume = float(pos) / 100.0f;
+			if (auto device = AudioDeviceManager::Instance()->GetDevice())
+				device->SetChannelVolumn((AudioChannelID)AudioChannelDef::SoundEffects_Channel, volume);
+
+			if (_Scene::SOption)
+				_Scene::SOption->UpdateVolumeText(Scene_Option::ID_TEXT_SFX, pos);
+
+			WritePrivateProfileString(L"Audio", L"SFXVolume", std::to_wstring(pos).c_str(), L"./option.ini");
+			break;
+		}
+		}
+		break;
 	}
 
 	case WM_MOUSEMOVE:

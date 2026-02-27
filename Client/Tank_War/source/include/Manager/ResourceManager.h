@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RenderEngine/D2DTools.h"
+#include "AudioProc/AudioTool.h"
 #include <map>
 #include <iostream>
 
@@ -26,6 +27,13 @@ namespace ResName
 	const std::string purpleBullet = "purpleBullet";
 
 	const std::string explosionGIF = "explosionGIF";
+
+	const std::string healAudio = "healAudio";
+	const std::string defaultShootAudio = "defaultShootAudio";
+	const std::string defaultAttackedAudio = "defaultAttackedAudio";
+
+	const std::string MenuBGM = "MenuBGM";
+	const std::string GameBGM = "GameBGM";
 }
 
 class GIFINFO {
@@ -49,12 +57,14 @@ public:
 	bool InitResource();
 	ID2D1Bitmap* GetBitMapRes(const std::string& name);
 	GIFINFO* GetGIFRes(const std::string& name);
+	std::shared_ptr<AudioInfo> GetAudioRes(const std::string& name);
 private:
 	ResourceManager();
 
 private:
 	std::map <std::string, ID2D1Bitmap* > BitMapRes;
 	std::map <std::string, GIFINFO* > GIFRes;
+	std::map <std::string, std::shared_ptr<AudioInfo>> AUDIORes;
 };
 
 #define ResFactory ResourceManager::Instance()

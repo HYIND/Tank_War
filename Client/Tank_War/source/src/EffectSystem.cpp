@@ -27,11 +27,15 @@ void EffectSystem::spawnExplosion(Pos2 position, int width, int height)
 	if (width <= 0 || height <= 0)
 		return;
 
+	auto gifres = ResFactory->GetGIFRes(ResName::explosionGIF);
+	if (!gifres)
+		return;
+
 	Entity explosion = m_world->createEntity();
 
 	explosion.addComponent<Transform>(position);
 	explosion.addComponent<TagEffect>();  // 标记是爆炸
-	auto& gif = explosion.addComponent<GIFAnimator>(width * 1.5, height * 1.5, ResFactory->GetGIFRes(ResName::explosionGIF));
+	auto& gif = explosion.addComponent<GIFAnimator>(width * 1.5, height * 1.5, gifres);
 	gif.internalZOrder = 100;
-	explosion.addComponent<LifeTime>(ResFactory->GetGIFRes(ResName::explosionGIF)->getDefaultMsTime() / 1000.f);
+	explosion.addComponent<LifeTime>(gifres->getDefaultMsTime() / 1000.f);
 }

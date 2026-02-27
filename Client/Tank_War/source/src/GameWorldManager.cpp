@@ -210,6 +210,7 @@ void GameWorldManager::InitGameWorld(GameMode mode, MapID mapid)
 		auto& wallSystem = _world->registerSystem<WallSystem>();
 		auto& propSystem = _world->registerSystem<PropSystem>();
 		auto& tankSystem = _world->registerSystem<TankSystem>();
+		auto& audioSystem = _world->registerSystem<AudioSystem>();
 
 
 		lifetimeSystem.setPriority(10000);

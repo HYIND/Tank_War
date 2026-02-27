@@ -167,7 +167,12 @@ public:
 	//添加位图
 	D2D_Bitmap* AddResourceBitmap(int loc1, int loc2, int loc3, int loc4, ID2D1Bitmap* pBitmap, float opacity = 1.0f);
 	// 添加文本
-	D2D_Text* AddText(int loc1, int loc2, int loc3, int loc4, const wchar_t* pwch, ID2D1SolidColorBrush* pDefaultBrush = Brush::pMain_Brush, ID2D1SolidColorBrush* pClickBrush = Brush::pMain_ClickBrush, IDWriteTextFormat* pTextFormat = TextFormat::pMain_Format);
+	D2D_Text* AddText(int loc1, int loc2, int loc3, int loc4, const wchar_t* pwch,
+		ID2D1SolidColorBrush* pDefaultBrush = Brush::pMain_Brush,
+		ID2D1SolidColorBrush* pClickBrush = Brush::pMain_ClickBrush,
+		IDWriteTextFormat* pTextFormat = TextFormat::pMain_Format,
+		int id = 0
+	);
 	// 添加按钮
 	D2D_Button* AddButton(int loc1, int loc2, int loc3, int loc4, int id);
 	D2D_Button* AddButton(int loc1, int loc2, int loc3, int loc4, int id, D2D_Bitmap* Bitmap);
@@ -175,13 +180,14 @@ public:
 	// 添加GIF
 	D2D_GIF* AddGIF(int loc1, int loc2, int loc3, int loc4, GIFINFO* gifInfo, int loopCount = -1);
 
-	// 修改按钮
+	// 修改按钮信息
 	bool ModifyButton_Location(int id, int loc1, int loc2, int loc3, int loc4, bool offset);
 	bool ModifyButton_ID(int oldid, int newid);
-	//修改文字
-	bool ModifyText_byButton(int id, wstring newstr);
-	//修改位图信息
-	bool ModifyBitmap_byButton(int id, int loc1, int loc2, int loc3, int loc4, bool offset, float opcaity);
+	bool ModifyButton_Text(int id, const wstring& newstr);
+	bool ModifyButton_Bitmap(int id, int loc1, int loc2, int loc3, int loc4, bool offset, float opcaity);
+
+	// 修改文字信息
+	bool ModifyText_Context(int id, const wstring& newstr);
 
 	//删除按钮 
 	bool DeleteButton(int id);
@@ -198,6 +204,9 @@ public:
 	// 周期函数
 	void Tick();
 	virtual void OnTick() {};
+
+	virtual void Show(bool enabled) {};
+
 protected:
 	ID2D1Factory* pD2DFactory = NULL; // Direct2D factory
 	ID2D1HwndRenderTarget* pRenderTarget = NULL;
@@ -224,11 +233,26 @@ public:
 	map<HWND, enum class keybroad> key_map_set1;
 	map<HWND, enum class keybroad> key_map_set2;
 
+	HWND m_hMasterSlider;  // 音乐音量滑块
+	HWND m_hMusicSlider;  // 音乐音量滑块
+	HWND m_hSFXSlider;    // 音效音量滑块
+
+	static constexpr UINT ID_TEXT_MASTERVOL = 2001;
+	static constexpr UINT ID_TEXT_MUSIC = 2002;
+	static constexpr UINT ID_TEXT_SFX = 2003;
+
+	static constexpr UINT ID_SLIDER_MASTERVOL = 3001;
+	static constexpr UINT ID_SLIDER_MUSIC = 3002;
+	static constexpr UINT ID_SLIDER_SFX = 3003;
+
 	using Scene::Scene;
 	virtual void OnDrawScene(double time_diff);
 	void DrawOption();
 	void Get_Key();
 	virtual void Load(RECT& rect);
+	virtual void Show(bool enabled) override;
+
+	void UpdateVolumeText(int id, UINT pos);
 };
 
 class Scene_Hall :public Scene
@@ -244,6 +268,7 @@ public:
 	virtual void Load(RECT& rect);
 	void DrawHall();
 	virtual void OnDrawScene(double time_diff);
+	virtual void Show(bool enabled) override;
 };
 
 class Scene_Room :public Scene
@@ -258,7 +283,7 @@ public:
 	using Scene::Scene;
 	void DrawRoom();
 	virtual void OnDrawScene(double time_diff);
-	void Show(bool flag);
+	virtual void Show(bool enabled) override;
 	virtual void Load(RECT& rect);
 	void SetScene(bool isHost, bool isready);
 };
@@ -312,7 +337,7 @@ public:
 };
 
 void Init_Scene();
-void Set_CurScene(STATUS status_in);
+void Set_CurScene(STATUS status);
 STATUS Get_CurScene();
 
 HWND CreateTooltip(HWND hwndParent, HWND hwndControl, LPCWSTR lpszText);

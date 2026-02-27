@@ -1,4 +1,4 @@
-﻿#include "RenderEngine/D2DWrapper.h"
+#include "RenderEngine/D2DWrapper.h"
 
 D2D_GIF::D2D_GIF(int x1, int y1, int x2, int y2, GIFINFO* gifInfo, int loopCount, float opacity) :
 	locationX1(x1), locationY1(y1), locationX2(x2), locationY2(y2), gifInfo(gifInfo), loopCount(loopCount), opacity(opacity) {
@@ -26,9 +26,14 @@ D2D_Bitmap::D2D_Bitmap(int loc1, int loc2, int loc3, int loc4, ID2D1Bitmap* pBit
 	Bitmap_location1(loc1), Bitmap_location2(loc2), Bitmap_location3(loc3), Bitmap_location4(loc4), pBitmap(pBitmap), opacity(opacity) {
 }
 
-D2D_Text::D2D_Text(int loc1, int loc2, int loc3, int loc4, const wchar_t* pwch, ID2D1SolidColorBrush* pDefaultBrush, ID2D1SolidColorBrush* pClickBrush, IDWriteTextFormat* pTextFormat) :
+D2D_Text::D2D_Text(int loc1, int loc2, int loc3, int loc4, const wchar_t* pwch,
+	ID2D1SolidColorBrush* pDefaultBrush,
+	ID2D1SolidColorBrush* pClickBrush,
+	IDWriteTextFormat* pTextFormat,
+	int id
+) :
 	Text_location1(loc1), Text_location2(loc2), Text_location3(loc3), Text_location4(loc4),
-	str(pwch), pDefaultBrush(pDefaultBrush), pClickBrush(pClickBrush), pTextFormat(pTextFormat) {
+	str(pwch), pDefaultBrush(pDefaultBrush), pClickBrush(pClickBrush), pTextFormat(pTextFormat), id(id) {
 }
 
 D2D_Button::D2D_Button(int loc1, int loc2, int loc3, int loc4, int id) :

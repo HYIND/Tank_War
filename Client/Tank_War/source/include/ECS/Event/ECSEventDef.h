@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "ECS/Components/AllComponent.h"
 #include "ECS/Core/Entity.h"
@@ -81,4 +81,14 @@ struct PropPickupEvent
 	Entity prop;
 	Entity picker;
 	PropProperty::PropType propType;
+};
+
+struct PickUpHealEvent
+{
+	Entity picker;
+};
+
+struct WeaponShootEvent
+{
+	Entity source;
 };

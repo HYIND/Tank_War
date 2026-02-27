@@ -6,6 +6,14 @@ extern HWND _hwnd;
 
 using namespace D2D1;
 
+std::shared_ptr<AudioInfo> GetAudioFromResource(HINSTANCE hinstance, LPCWSTR resourceType, LPCWSTR resourceName)
+{
+	auto audio = std::make_shared<AudioInfo>();
+	if (audio->LoadAudioFromResource(hinstance, resourceType, resourceName))
+		return audio;
+	return std::shared_ptr<AudioInfo>(nullptr);
+}
+
 GIFINFO::GIFINFO(float mstime, UINT frameCount, IWICBitmapDecoder* pDecoder, IWICStream* pStream)
 	:defaultTime(mstime), totalFrameCount(frameCount), pDecoder(pDecoder), pStream(pStream)
 {
@@ -145,6 +153,12 @@ bool ResourceManager::InitResource()
 		}
 	}
 
+	auto heal_audio = GetAudioFromResource(hInst, L"AUDIO", MAKEINTRESOURCE(Heal_Audio));
+	auto default_Shoot_Audio = GetAudioFromResource(hInst, L"AUDIO", MAKEINTRESOURCE(Default_Shoot_Audio));
+	auto default_Attacked_Audio = GetAudioFromResource(hInst, L"AUDIO", MAKEINTRESOURCE(Default_Attacked_Audio));
+	auto menu_bgm = GetAudioFromResource(hInst, L"AUDIO", MAKEINTRESOURCE(MENU_BGM_AUDIO));
+	auto game_bgm = GetAudioFromResource(hInst, L"AUDIO", MAKEINTRESOURCE(GAME_BGM_AUDIO));
+
 	BitMapRes[ResName::textBK] = textBK;
 	BitMapRes[ResName::returnBP] = returnBP;
 	BitMapRes[ResName::pauseBP] = pauseBP;
@@ -167,6 +181,17 @@ bool ResourceManager::InitResource()
 	BitMapRes[ResName::greenBullet] = Green_Bullet_pBitmap;
 	BitMapRes[ResName::purpleBullet] = Purple_Bullet_pBitmap;
 
+	if (heal_audio)
+		AUDIORes[ResName::healAudio] = heal_audio;
+	if (default_Shoot_Audio)
+		AUDIORes[ResName::defaultShootAudio] = default_Shoot_Audio;
+	if (default_Attacked_Audio)
+		AUDIORes[ResName::defaultAttackedAudio] = default_Attacked_Audio;
+	if (menu_bgm)
+		AUDIORes[ResName::MenuBGM] = menu_bgm;
+	if (game_bgm)
+		AUDIORes[ResName::GameBGM] = game_bgm;
+
 	return true;
 }
 
@@ -181,5 +206,13 @@ GIFINFO* ResourceManager::GetGIFRes(const std::string& name) {
 	auto it = GIFRes.find(name);
 	if (it == GIFRes.end())
 		return nullptr;
+	return it->second;
+}
+
+std::shared_ptr<AudioInfo> ResourceManager::GetAudioRes(const std::string& name)
+{
+	auto it = AUDIORes.find(name);
+	if (it == AUDIORes.end())
+		return std::shared_ptr<AudioInfo>(nullptr);
 	return it->second;
 }

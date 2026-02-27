@@ -4,9 +4,11 @@
 #include "Manager/RenderManager.h"
 #include "Manager/UserInfoManager.h"
 #include "Manager/LobbyManager.h"
+#include "Manager/BGMManager.h"
 
 #include <commctrl.h>
 #pragma comment(lib, "comctl32.lib")
+
 
 namespace RectBroder
 {
@@ -71,7 +73,7 @@ namespace _Scene
 
 HWND userid_in;
 
-STATUS status = STATUS::Main;
+STATUS g_status = STATUS::Main;
 
 namespace MousePos
 {
@@ -537,20 +539,20 @@ void Scene_Room::SetScene(bool isHost, bool isready)
 		{
 			if (_Scene::SRoom->ModifyButton_ID(IDB_READY, IDB_CANCELREADY)
 				|| _Scene::SRoom->ModifyButton_ID(IDB_STARTGAME, IDB_CANCELREADY))
-				_Scene::SRoom->ModifyText_byButton(IDB_CANCELREADY, L"取消准备");
+				_Scene::SRoom->ModifyButton_Text(IDB_CANCELREADY, L"取消准备");
 		}
 		else
 		{
 			if (_Scene::SRoom->ModifyButton_ID(IDB_CANCELREADY, IDB_READY)
 				|| _Scene::SRoom->ModifyButton_ID(IDB_STARTGAME, IDB_READY))
-				_Scene::SRoom->ModifyText_byButton(IDB_READY, L"准备");
+				_Scene::SRoom->ModifyButton_Text(IDB_READY, L"准备");
 		}
 	}
 	else
 	{
 		if (_Scene::SRoom->ModifyButton_ID(IDB_CANCELREADY, IDB_STARTGAME)
 			|| _Scene::SRoom->ModifyButton_ID(IDB_READY, IDB_STARTGAME))
-			_Scene::SRoom->ModifyText_byButton(IDB_STARTGAME, L"开始游戏");
+			_Scene::SRoom->ModifyButton_Text(IDB_STARTGAME, L"开始游戏");
 	}
 }
 
@@ -563,144 +565,244 @@ void Scene_Option::Load(RECT& rect)
 
 	{		/* 帧率设置 */
 		AddText(broder_left + len_x * 2, broder_top + len_y,
-			broder_left + len_x * 4, broder_top + len_y * 1.5,
+			broder_left + len_x * 4, broder_top + len_y * 0.5,
 			L"设置", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
 
-		AddText(broder_left + len_x * 1, broder_top + len_y * 2,
-			broder_left + len_x * 2, broder_top + len_y * 3,
+		AddText(broder_left + len_x * 1, broder_top + len_y * 1,
+			broder_left + len_x * 2, broder_top + len_y * 2,
 			L"帧率", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
-		AddText(broder_left + len_x * 3 + 10, broder_top + len_y * 2,
-			broder_left + len_x * 4, broder_top + len_y * 3,
+		AddText(broder_left + len_x * 3 + 10, broder_top + len_y * 1,
+			broder_left + len_x * 4, broder_top + len_y * 2,
 			L"30", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
-		AddText(broder_left + len_x * 5 + 10, broder_top + len_y * 2,
-			broder_left + len_x * 6, broder_top + len_y * 3,
+		AddText(broder_left + len_x * 5 + 10, broder_top + len_y * 1,
+			broder_left + len_x * 6, broder_top + len_y * 2,
 			L"60", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
-		AddText(broder_left + len_x * 7 + 10, broder_top + len_y * 2,
-			broder_left + len_x * 8, broder_top + len_y * 3,
+		AddText(broder_left + len_x * 7 + 10, broder_top + len_y * 1,
+			broder_left + len_x * 8, broder_top + len_y * 2,
 			L"144", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
-		AddButton(broder_left + len_x * 3 - 12, broder_top + len_y * 2.5 - 12,
-			broder_left + len_x * 3 + 12, broder_top + len_y * 2.5 + 12,
+		AddButton(broder_left + len_x * 3 - 12, broder_top + len_y * 1.5 - 12,
+			broder_left + len_x * 3 + 12, broder_top + len_y * 1.5 + 12,
 			IDB_SETFPS_30);
-		AddButton(broder_left + len_x * 5 - 12, broder_top + len_y * 2.5 - 12,
-			broder_left + len_x * 5 + 12, broder_top + len_y * 2.5 + 12,
+		AddButton(broder_left + len_x * 5 - 12, broder_top + len_y * 1.5 - 12,
+			broder_left + len_x * 5 + 12, broder_top + len_y * 1.5 + 12,
 			IDB_SETFPS_60);
-		AddButton(broder_left + len_x * 7 - 12, broder_top + len_y * 2.5 - 12,
-			broder_left + len_x * 7 + 12, broder_top + len_y * 2.5 + 12,
+		AddButton(broder_left + len_x * 7 - 12, broder_top + len_y * 1.5 - 12,
+			broder_left + len_x * 7 + 12, broder_top + len_y * 1.5 + 12,
 			IDB_SETFPS_144);
 	}
 
+	{		/* 音量控制 */
+		AddText(broder_left + len_x * 2, broder_top + len_y * 2.25,
+			broder_left + len_x * 4, broder_top + len_y * 2.75,
+			L"音频设置", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pHall_Format);
+
+		// 音乐音量文字
+		AddText(broder_left + len_x * 1, broder_top + len_y * 3,
+			broder_left + len_x * 2, broder_top + len_y * 3.5,
+			L"主音量", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
+
+		// 创建音乐音量滑块
+		m_hMasterSlider = CreateWindow(
+			TRACKBAR_CLASS,    // 滑块控件类名
+			NULL,              // 窗口文本
+			WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS,  // 样式：水平、无刻度
+			broder_left + len_x * 2,     // x
+			broder_top + len_y * 3,       // y
+			len_x * 4,                    // 宽度
+			30,                            // 高度
+			_hwnd,                         // 父窗口
+			(HMENU)ID_SLIDER_MASTERVOL,     // 控件ID
+			GetModuleHandle(NULL),         // 实例句柄
+			NULL
+		);
+
+		// 设置滑块范围 (0-100)
+		SendMessage(m_hMasterSlider, TBM_SETRANGE, TRUE, MAKELPARAM(0, 100));
+
+		UINT masterVol = std::clamp(GetPrivateProfileInt(L"Audio", L"MasterVolume", 80, L"./option.ini"), UINT(0), UINT(100));
+		SendMessage(m_hMasterSlider, TBM_SETPOS, TRUE, masterVol);
+
+		// 显示当前值
+		wstring masterVolumeText = std::format(L"{}%", masterVol);
+		AddText(broder_left + len_x * 6, broder_top + len_y * 3,
+			broder_left + len_x * 7, broder_top + len_y * 3.5,
+			masterVolumeText.c_str(), Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format, Scene_Option::ID_TEXT_MASTERVOL);
+
+		// 音乐音量文字
+		AddText(broder_left + len_x * 1, broder_top + len_y * 4,
+			broder_left + len_x * 2, broder_top + len_y * 4.5,
+			L"音乐", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
+
+		// 创建音乐音量滑块
+		m_hMusicSlider = CreateWindow(
+			TRACKBAR_CLASS,    // 滑块控件类名
+			NULL,              // 窗口文本
+			WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS,  // 样式：水平、无刻度
+			broder_left + len_x * 2,     // x
+			broder_top + len_y * 4,       // y
+			len_x * 4,                    // 宽度
+			30,                            // 高度
+			_hwnd,                         // 父窗口
+			(HMENU)ID_SLIDER_MUSIC,        // 控件ID
+			GetModuleHandle(NULL),         // 实例句柄
+			NULL
+		);
+
+		// 设置滑块范围 (0-100)
+		SendMessage(m_hMusicSlider, TBM_SETRANGE, TRUE, MAKELPARAM(0, 100));
+
+		UINT musicVol = std::clamp(GetPrivateProfileInt(L"Audio", L"MusicVolume", 80, L"./option.ini"), UINT(0), UINT(100));
+		SendMessage(m_hMusicSlider, TBM_SETPOS, TRUE, musicVol);
+
+		// 显示当前值
+		wstring musicVolumeText = std::format(L"{}%", musicVol);
+		AddText(broder_left + len_x * 6, broder_top + len_y * 4,
+			broder_left + len_x * 7, broder_top + len_y * 4.5,
+			musicVolumeText.c_str(), Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format, Scene_Option::ID_TEXT_MUSIC);
+
+		// 音效音量文字
+		AddText(broder_left + len_x * 1, broder_top + len_y * 5,
+			broder_left + len_x * 2, broder_top + len_y * 5.5,
+			L"音效", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
+
+		// 创建音效音量滑块
+		m_hSFXSlider = CreateWindow(
+			TRACKBAR_CLASS,
+			NULL,
+			WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS,
+			broder_left + len_x * 2,
+			broder_top + len_y * 5,
+			len_x * 4,
+			30,
+			_hwnd,
+			(HMENU)ID_SLIDER_SFX,
+			GetModuleHandle(NULL),
+			NULL
+		);
+
+		SendMessage(m_hSFXSlider, TBM_SETRANGE, TRUE, MAKELPARAM(0, 100));
+
+		UINT sfxVol = std::clamp(GetPrivateProfileInt(L"Audio", L"SFXVolume", 40, L"./option.ini"), UINT(0), UINT(100));
+		SendMessage(m_hSFXSlider, TBM_SETPOS, TRUE, sfxVol);
+
+		wstring sfxVolumeText = std::format(L"{}%", sfxVol);
+		AddText(broder_left + len_x * 6, broder_top + len_y * 5,
+			broder_left + len_x * 7, broder_top + len_y * 5.5,
+			sfxVolumeText.c_str(), Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format, Scene_Option::ID_TEXT_SFX);
+	}
+
 	{	/* 键位设置 */
-		AddText(broder_left + len_x * 2, broder_top + len_y * 4,
-			broder_left + len_x * 4, broder_top + len_y * 5,
+		AddText(broder_left + len_x * 2, broder_top + len_y * 6,
+			broder_left + len_x * 4, broder_top + len_y * 7,
 			L"键位设置", Brush::pWhite_Brush, Brush::pHall_Brush, TextFormat::pHall_Format);
 
 		{	/* P1 */
-			AddText(broder_left + len_x * 1, broder_top + len_y * 5,
-				broder_left + len_x * 2, broder_top + len_y * 7.5,
+			AddText(broder_left + len_x * 1, broder_top + len_y * 7,
+				broder_left + len_x * 2, broder_top + len_y * 9.5,
 				L"P1", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 
-			AddText(broder_left + len_x * 2, broder_top + len_y * 5,
-				broder_left + len_x * 2.5, broder_top + len_y * 5.5,
+			AddText(broder_left + len_x * 2, broder_top + len_y * 7,
+				broder_left + len_x * 2.5, broder_top + len_y * 7.5,
 				L"UP", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 			key1_UP = CreateWindowW(L"EDIT", L"",
 				WS_CHILD | ES_CENTER | ES_READONLY,
-				broder_left + len_x * 2.5, broder_top + len_y * 5.25 - 11,
+				broder_left + len_x * 2.5, broder_top + len_y * 7.25 - 11,
 				len_x * 1, 22,
 				_hwnd, (HMENU)EDIT_EKY1_UP, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 			Key_map_PreProc = SetWindowLongPtr(key1_UP, GWLP_WNDPROC, (LONG_PTR)Key_map_Proc1);
 
-			AddText(broder_left + len_x * 2, broder_top + len_y * 5.5,
-				broder_left + len_x * 2.5, broder_top + len_y * 6,
+			AddText(broder_left + len_x * 2, broder_top + len_y * 7.5,
+				broder_left + len_x * 2.5, broder_top + len_y * 8,
 				L"DOWN", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 			key1_DOWN = CreateWindowW(L"EDIT", L"",
 				WS_CHILD | ES_CENTER | ES_READONLY,
-				broder_left + len_x * 2.5, broder_top + len_y * 5.75 - 11,
+				broder_left + len_x * 2.5, broder_top + len_y * 7.75 - 11,
 				len_x * 1, 22,
 				_hwnd, (HMENU)EDIT_EKY1_DOWN, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 			Key_map_PreProc = SetWindowLongPtr(key1_DOWN, GWLP_WNDPROC, (LONG_PTR)Key_map_Proc1);
 
-			AddText(broder_left + len_x * 2, broder_top + len_y * 6,
-				broder_left + len_x * 2.5, broder_top + len_y * 6.5,
+			AddText(broder_left + len_x * 2, broder_top + len_y * 8,
+				broder_left + len_x * 2.5, broder_top + len_y * 8.5,
 				L"LEFT", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 			key1_LEFT = CreateWindowW(L"EDIT", L"",
 				WS_CHILD | ES_CENTER | ES_READONLY,
-				broder_left + len_x * 2.5, broder_top + len_y * 6.25 - 11,
+				broder_left + len_x * 2.5, broder_top + len_y * 8.25 - 11,
 				len_x * 1, 22,
 				_hwnd, (HMENU)EDIT_EKY1_LEFT, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 			Key_map_PreProc = SetWindowLongPtr(key1_LEFT, GWLP_WNDPROC, (LONG_PTR)Key_map_Proc1);
 
-			AddText(broder_left + len_x * 2, broder_top + len_y * 6.5,
-				broder_left + len_x * 2.5, broder_top + len_y * 7,
+			AddText(broder_left + len_x * 2, broder_top + len_y * 8.5,
+				broder_left + len_x * 2.5, broder_top + len_y * 9,
 				L"RIGHT", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 			key1_RIGHT = CreateWindowW(L"EDIT", L"",
 				WS_CHILD | ES_CENTER | ES_READONLY,
-				broder_left + len_x * 2.5, broder_top + len_y * 6.75 - 11,
+				broder_left + len_x * 2.5, broder_top + len_y * 8.75 - 11,
 				len_x * 1, 22,
 				_hwnd, (HMENU)EDIT_EKY1_RIGHT, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 			Key_map_PreProc = SetWindowLongPtr(key1_RIGHT, GWLP_WNDPROC, (LONG_PTR)Key_map_Proc1);
 
-			AddText(broder_left + len_x * 2, broder_top + len_y * 7,
-				broder_left + len_x * 2.5, broder_top + len_y * 7.5,
+			AddText(broder_left + len_x * 2, broder_top + len_y * 9,
+				broder_left + len_x * 2.5, broder_top + len_y * 9.5,
 				L"FIRE", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 			key1_FIRE = CreateWindowW(L"EDIT", L"",
 				WS_CHILD | ES_CENTER | ES_READONLY,
-				broder_left + len_x * 2.5, broder_top + len_y * 7.25 - 11,
+				broder_left + len_x * 2.5, broder_top + len_y * 9.25 - 11,
 				len_x * 1, 22,
 				_hwnd, (HMENU)EDIT_EKY1_RIGHT, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 			Key_map_PreProc = SetWindowLongPtr(key1_FIRE, GWLP_WNDPROC, (LONG_PTR)Key_map_Proc1);
 		}
 
 		{	/* P2 */
-			AddText(broder_left + len_x * 4, broder_top + len_y * 5,
-				broder_left + len_x * 5, broder_top + len_y * 7.5,
+			AddText(broder_left + len_x * 4, broder_top + len_y * 7,
+				broder_left + len_x * 5, broder_top + len_y * 9.5,
 				L"P2", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 
-			AddText(broder_left + len_x * 5, broder_top + len_y * 5,
-				broder_left + len_x * 5.5, broder_top + len_y * 5.5,
+			AddText(broder_left + len_x * 5, broder_top + len_y * 7,
+				broder_left + len_x * 5.5, broder_top + len_y * 7.5,
 				L"UP", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 			key2_UP = CreateWindowW(L"EDIT", L"",
 				WS_CHILD | ES_CENTER | ES_READONLY,
-				broder_left + len_x * 5.5, broder_top + len_y * 5.25 - 11,
+				broder_left + len_x * 5.5, broder_top + len_y * 7.25 - 11,
 				len_x * 1, 22,
 				_hwnd, (HMENU)EDIT_EKY1_UP, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 			Key_map_PreProc = SetWindowLongPtr(key2_UP, GWLP_WNDPROC, (LONG_PTR)Key_map_Proc2);
 
-			AddText(broder_left + len_x * 5, broder_top + len_y * 5.5,
-				broder_left + len_x * 5.5, broder_top + len_y * 6,
+			AddText(broder_left + len_x * 5, broder_top + len_y * 7.5,
+				broder_left + len_x * 5.5, broder_top + len_y * 8,
 				L"DOWN", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 			key2_DOWN = CreateWindowW(L"EDIT", L"",
 				WS_CHILD | ES_CENTER | ES_READONLY,
-				broder_left + len_x * 5.5, broder_top + len_y * 5.75 - 11,
+				broder_left + len_x * 5.5, broder_top + len_y * 7.75 - 11,
 				len_x * 1, 22,
 				_hwnd, (HMENU)EDIT_EKY1_DOWN, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 			Key_map_PreProc = SetWindowLongPtr(key2_DOWN, GWLP_WNDPROC, (LONG_PTR)Key_map_Proc2);
 
-			AddText(broder_left + len_x * 5, broder_top + len_y * 6,
-				broder_left + len_x * 5.5, broder_top + len_y * 6.5,
+			AddText(broder_left + len_x * 5, broder_top + len_y * 8,
+				broder_left + len_x * 5.5, broder_top + len_y * 8.5,
 				L"LEFT", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 			key2_LEFT = CreateWindowW(L"EDIT", L"",
 				WS_CHILD | ES_CENTER | ES_READONLY,
-				broder_left + len_x * 5.5, broder_top + len_y * 6.25 - 11,
+				broder_left + len_x * 5.5, broder_top + len_y * 8.25 - 11,
 				len_x * 1, 22,
 				_hwnd, (HMENU)EDIT_EKY1_LEFT, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 			Key_map_PreProc = SetWindowLongPtr(key2_LEFT, GWLP_WNDPROC, (LONG_PTR)Key_map_Proc2);
 
-			AddText(broder_left + len_x * 5, broder_top + len_y * 6.5,
-				broder_left + len_x * 5.5, broder_top + len_y * 7,
+			AddText(broder_left + len_x * 5, broder_top + len_y * 8.5,
+				broder_left + len_x * 5.5, broder_top + len_y * 9,
 				L"RIGHT", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 			key2_RIGHT = CreateWindowW(L"EDIT", L"",
 				WS_CHILD | ES_CENTER | ES_READONLY,
-				broder_left + len_x * 5.5, broder_top + len_y * 6.75 - 11,
+				broder_left + len_x * 5.5, broder_top + len_y * 8.75 - 11,
 				len_x * 1, 22,
 				_hwnd, (HMENU)EDIT_EKY1_RIGHT, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 			Key_map_PreProc = SetWindowLongPtr(key2_RIGHT, GWLP_WNDPROC, (LONG_PTR)Key_map_Proc2);
 
-			AddText(broder_left + len_x * 5, broder_top + len_y * 7,
-				broder_left + len_x * 5.5, broder_top + len_y * 7.5,
+			AddText(broder_left + len_x * 5, broder_top + len_y * 9,
+				broder_left + len_x * 5.5, broder_top + len_y * 9.5,
 				L"FIRE", Brush::pWhite_Brush, Brush::pWhite_Brush, TextFormat::pPing_Format);
 			key2_FIRE = CreateWindowW(L"EDIT", L"",
 				WS_CHILD | ES_CENTER | ES_READONLY,
-				broder_left + len_x * 5.5, broder_top + len_y * 7.25 - 11,
+				broder_left + len_x * 5.5, broder_top + len_y * 9.25 - 11,
 				len_x * 1, 22,
 				_hwnd, (HMENU)EDIT_EKY1_RIGHT, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);
 			Key_map_PreProc = SetWindowLongPtr(key2_FIRE, GWLP_WNDPROC, (LONG_PTR)Key_map_Proc2);
@@ -743,6 +845,12 @@ void Scene_Option::Load(RECT& rect)
 		);
 	}
 	Get_Key();
+}
+
+void Scene_Option::UpdateVolumeText(int id, UINT pos)
+{
+	wstring volumeText = std::format(L"{}%", pos);
+	ModifyText_Context(id, volumeText);
 }
 
 void Scene_Gaming_local::DrawGame()
@@ -840,21 +948,21 @@ void Scene_Option::DrawOption()
 	//FPS选项
 	pRenderTarget->DrawBitmap(ResFactory->GetBitMapRes(ResName::opBK), D2D1::RectF(0, 0, _rect.right, _rect.bottom));
 
-	pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 3, broder_top + len_y * 2.5), 10, 10), Brush::pWhite_Brush);
-	pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 5, broder_top + len_y * 2.5), 10, 10), Brush::pWhite_Brush);
-	pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 7, broder_top + len_y * 2.5), 10, 10), Brush::pWhite_Brush);
+	pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 3, broder_top + len_y * 1.5), 10, 10), Brush::pWhite_Brush);
+	pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 5, broder_top + len_y * 1.5), 10, 10), Brush::pWhite_Brush);
+	pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 7, broder_top + len_y * 1.5), 10, 10), Brush::pWhite_Brush);
 
 	if (RenderManager::Instance()->getfpsController()->getGameTargetFps() == 30)
 	{
-		pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 3, broder_top + len_y * 2.5), 8, 8), Brush::pBlack_Brush);
+		pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 3, broder_top + len_y * 1.5), 8, 8), Brush::pBlack_Brush);
 	}
 	else if (RenderManager::Instance()->getfpsController()->getGameTargetFps() == 60)
 	{
-		pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 5, broder_top + len_y * 2.5), 8, 8), Brush::pBlack_Brush);
+		pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 5, broder_top + len_y * 1.5), 8, 8), Brush::pBlack_Brush);
 	}
 	else if (RenderManager::Instance()->getfpsController()->getGameTargetFps() == 144)
 	{
-		pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 7, broder_top + len_y * 2.5), 8, 8), Brush::pBlack_Brush);
+		pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(broder_left + len_x * 7, broder_top + len_y * 1.5), 8, 8), Brush::pBlack_Brush);
 	}
 }
 
@@ -986,7 +1094,10 @@ void InitScene(ID2D1Factory*& pD2DFactory, ID2D1HwndRenderTarget*& pRenderTarget
 void Load_D2DUI(RECT& rect)
 {
 	for (auto v : _Scene::Scene_list)
+	{
 		v->Load(rect);
+		v->Show(false);
+	}
 }
 
 void Init_Scene()
@@ -1005,27 +1116,6 @@ void Init_Scene()
 	Load_D2DUI(rect);
 }
 
-void Show_Hall(bool flag)
-{
-	if (flag)
-	{
-		(int)SendMessage(_Scene::SHall->Hall_room_list, LB_RESETCONTENT, 0, 0);
-		(int)SendMessage(_Scene::SHall->Hall_user_list, LB_RESETCONTENT, 0, 0);
-		(int)SendMessage(_Scene::SHall->edit_hall, WM_SETTEXT, 0, (LPARAM)L"");
-		(int)SendMessage(_Scene::SHall->Hall_edit_in, WM_SETTEXT, 0, (LPARAM)L"");
-		ShowWindow(_Scene::SHall->edit_hall, SW_SHOW);
-		ShowWindow(_Scene::SHall->Hall_edit_in, SW_SHOW);
-		ShowWindow(_Scene::SHall->Hall_room_list, SW_SHOW);
-		ShowWindow(_Scene::SHall->Hall_user_list, SW_SHOW);
-	}
-	else
-	{
-		ShowWindow(_Scene::SHall->edit_hall, SW_HIDE);
-		ShowWindow(_Scene::SHall->Hall_edit_in, SW_HIDE);
-		ShowWindow(_Scene::SHall->Hall_room_list, SW_HIDE);
-		ShowWindow(_Scene::SHall->Hall_user_list, SW_HIDE);
-	}
-}
 void Scene_Room::DrawRoom()
 {
 	pRenderTarget->DrawBitmap(ResFactory->GetBitMapRes(ResName::opBK), D2D1::RectF(0, 0, _rect.right, _rect.bottom));
@@ -1044,96 +1134,102 @@ void Scene_Room::OnDrawScene(double time_diff)
 	DrawRoom();
 	Scene::OnDrawScene(time_diff);
 }
-void Scene_Room::Show(bool flag)
+
+void Scene_Hall::Show(bool enabled)
 {
-	if (flag)
+	int cmd = enabled ? SW_SHOW : SW_HIDE;
+
+	if (enabled)
 	{
+		(int)SendMessage(_Scene::SHall->Hall_room_list, LB_RESETCONTENT, 0, 0);
+		(int)SendMessage(_Scene::SHall->Hall_user_list, LB_RESETCONTENT, 0, 0);
+		(int)SendMessage(_Scene::SHall->edit_hall, WM_SETTEXT, 0, (LPARAM)L"");
+		(int)SendMessage(_Scene::SHall->Hall_edit_in, WM_SETTEXT, 0, (LPARAM)L"");
+	}
+	ShowWindow(_Scene::SHall->edit_hall, cmd);
+	ShowWindow(_Scene::SHall->Hall_edit_in, cmd);
+	ShowWindow(_Scene::SHall->Hall_room_list, cmd);
+	ShowWindow(_Scene::SHall->Hall_user_list, cmd);
+}
+
+void Scene_Room::Show(bool enabled)
+{
+	int cmd = enabled ? SW_SHOW : SW_HIDE;
+
+	if (enabled)
+	{
+		SetScene(LOBBYMANAGER->IsHost(), false);
+
 		(int)SendMessage(Room_user_list, LB_RESETCONTENT, 0, 0);
 		(int)SendMessage(edit_room, WM_SETTEXT, 0, (LPARAM)L"");
 		(int)SendMessage(Room_edit_in, WM_SETTEXT, 0, (LPARAM)L"");
-		ShowWindow(edit_room, SW_SHOW);
-		ShowWindow(Room_edit_in, SW_SHOW);
-		ShowWindow(Room_user_list, SW_SHOW);
 	}
-	else
-	{
-		ShowWindow(edit_room, SW_HIDE);
-		ShowWindow(Room_edit_in, SW_HIDE);
-		ShowWindow(Room_user_list, SW_HIDE);
-	}
+	ShowWindow(edit_room, cmd);
+	ShowWindow(Room_edit_in, cmd);
+	ShowWindow(Room_user_list, cmd);
 }
-void Show_Option(bool flag)
+void Scene_Option::Show(bool enabled)
 {
-	if (flag)
-	{
-		for (auto& v : _Scene::SOption->HWND_Messager)
-		{
-			ShowWindow(*v, SW_SHOW);
-		}
-	}
-	else
-	{
-		for (auto& v : _Scene::SOption->HWND_Messager)
-		{
-			ShowWindow(*v, SW_HIDE);
-		}
-	}
+	int cmd = enabled ? SW_SHOW : SW_HIDE;
+
+	for (auto& v : _Scene::SOption->HWND_Messager)
+		ShowWindow(*v, cmd);
+
+	ShowWindow(_Scene::SOption->m_hMasterSlider, cmd);
+	ShowWindow(_Scene::SOption->m_hMusicSlider, cmd);
+	ShowWindow(_Scene::SOption->m_hSFXSlider, cmd);
 }
 
-void Set_CurScene(STATUS status_in)
+void Set_CurScene(STATUS status)
 {
-	Show_Hall(false);
-	_Scene::SRoom->Show(false);
-	Show_Option(false);
-	switch (status_in)
+	if (_Scene::CurScene)
+		_Scene::CurScene->Show(false);
+
+	::g_status = status;
+	switch (status)
 	{
 	case STATUS::Room_Status:
 	{
-		status = STATUS::Room_Status;
-		_Scene::SRoom->SetScene(LOBBYMANAGER->IsHost(), false);
 		_Scene::CurScene = _Scene::SRoom;
-		_Scene::SRoom->Show(true);
 		break;
 	}
 	case STATUS::Main:
 	{
-		status = STATUS::Main;
 		_Scene::CurScene = _Scene::SMain;
 		break;
 	}
 	case STATUS::Option:
 	{
-		status = STATUS::Option;
 		_Scene::CurScene = _Scene::SOption;
-		Show_Option(TRUE);
 		break;
 	}
 	case STATUS::Hall_Status:
 	{
-		status = STATUS::Hall_Status;
 		_Scene::CurScene = _Scene::SHall;
-		Show_Hall(true);
 		break;
 	}
 	case STATUS::LocalGame_Status:
 	{
-		status = STATUS::LocalGame_Status;
 		_Scene::CurScene = _Scene::SGaming_local;
 		break;
 	}
 	case STATUS::OnlineGame_Status:
 	{
-		status = STATUS::OnlineGame_Status;
 		_Scene::CurScene = _Scene::SGaming_online;
 		break;
 	}
 	default:
 		break;
 	}
+
+	if (_Scene::CurScene)
+		_Scene::CurScene->Show(true);
+
+	BGMManager::Instance()->SetScene(status);
 }
 
 STATUS Get_CurScene() {
-	return ::status;
+	return ::g_status;
 }
 
 HWND CreateTooltip(HWND hwndParent, HWND hwndControl, LPCWSTR lpszText)

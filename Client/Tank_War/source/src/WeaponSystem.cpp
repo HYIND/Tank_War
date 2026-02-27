@@ -34,6 +34,8 @@ void WeaponSystem::update(float deltaTime)
 			BulletFactory::CreateLocalBullet(*m_world, entity, weapon.bulletDamage, weapon.bulletSpeed, trans.position.x, trans.position.y, 20, trans.rotation);
 			weapon.cooldown = weapon.fireRate;
 			weapon.currentBullets++;
+
+			m_world->Emit<WeaponShootEvent>(WeaponShootEvent{ .source = entity });
 		}
 	}
 }
