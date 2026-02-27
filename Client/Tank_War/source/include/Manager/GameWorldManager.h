@@ -4,7 +4,7 @@
 #include "ECS/Core/World.h"
 #include <memory>
 #include <thread>
-#include "ECS/Systems/ClientStateSyncStstem.h"
+#include "ECS/Systems/ClientStateSyncSystem.h"
 
 enum class GameMode
 {

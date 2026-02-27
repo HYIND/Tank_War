@@ -118,7 +118,7 @@ void GameWorldManager::SyncFromServerState(const json& js)
 
 	auto& world = _world;
 
-	if (auto sync = world->getSystem<ClientStateSyncStstem>())
+	if (auto sync = world->getSystem<ClientStateSyncSystem>())
 	{
 		if (js.contains("gamestate") && js["gamestate"].is_object())
 		{
@@ -252,7 +252,7 @@ void GameWorldManager::InitOnlineGameWorld()
 	auto& wallSystem = _world->registerSystem<WallSystem>();
 	auto& propSystem = _world->registerSystem<PropSystem>();
 	auto& tankSystem = _world->registerSystem<TankSystem>();
-	auto& syncSystem = _world->registerSystem<ClientStateSyncStstem>();
+	auto& syncSystem = _world->registerSystem<ClientStateSyncSystem>();
 	auto& interpolationSystem = _world->registerSystem<InterpolationSystem>();
 
 

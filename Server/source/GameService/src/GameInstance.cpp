@@ -102,7 +102,7 @@ void GameInstance::BroadCaseGameState()
 
 	auto& sender = _sender;
 
-	if (auto sync = _world->getSystem<ServerStateSyncStstem>())
+	if (auto sync = _world->getSystem<ServerStateSyncSystem>())
 	{
 		auto& gamestate = sync->GetGameState();
 		if (gamestate.hasConsume)
@@ -155,7 +155,7 @@ bool GameInstance::Initialize()
 	auto& wallSystem = _world->registerSystem<WallSystem>();
 	auto& propSystem = _world->registerSystem<PropSystem>();
 	auto& tankSystem = _world->registerSystem<TankSystem>();
-	auto& syncSystem = _world->registerSystem<ServerStateSyncStstem>();
+	auto& syncSystem = _world->registerSystem<ServerStateSyncSystem>();
 	auto& propGenerateSystem = _world->registerSystem<PropGenerateSystem>();
 
 

@@ -148,7 +148,7 @@
     <ClCompile Include="source\src\ClientInputSystem.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="source\src\ClientStateSyncStstem.cpp">
+    <ClCompile Include="source\src\ClientStateSyncSystem.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="source\src\InterpolationSystem.cpp">
@@ -441,7 +441,7 @@
     <ClInclude Include="source\include\Helper\TripleBuffer.h">
       <Filter>头文件\Helper</Filter>
     </ClInclude>
-    <ClInclude Include="source\include\ECS\Systems\ClientStateSyncStstem.h">
+    <ClInclude Include="source\include\ECS\Systems\ClientStateSyncSystem.h">
       <Filter>头文件\ECS\Systems</Filter>
     </ClInclude>
     <ClInclude Include="public\include\GameDataDef.h">

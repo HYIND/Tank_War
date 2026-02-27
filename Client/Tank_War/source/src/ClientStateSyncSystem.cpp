@@ -1,4 +1,4 @@
-#include "ECS/Systems/ClientStateSyncStstem.h"
+#include "ECS/Systems/ClientStateSyncSystem.h"
 #include "ECS/Core/World.h"
 #include "ECS/Components/PlayerInput.h"
 #include "ECS/Components/TankProperty.h"
@@ -11,18 +11,18 @@
 #include "ECS/Systems/InterpolationSystem.h"
 #include <unordered_set>
 
-ClientStateSyncStstem::ClientStateSyncStstem()
+ClientStateSyncSystem::ClientStateSyncSystem()
 {
 	_gamestate_tripbuffer = std::make_shared<TripleBuffer<GameState>>();
 	for (int i = 0; i < 3; i++)
 		_gamestate_tripbuffer->setInitialValue(i, GameState());
 }
 
-ClientStateSyncStstem::~ClientStateSyncStstem()
+ClientStateSyncSystem::~ClientStateSyncSystem()
 {
 }
 
-void ClientStateSyncStstem::preUpdate(float dt)
+void ClientStateSyncSystem::preUpdate(float dt)
 {
 	GameState& allstate = _gamestate_tripbuffer->acquireReadBuffer();
 	if (allstate.hasConsume)
@@ -68,14 +68,14 @@ void ClientStateSyncStstem::preUpdate(float dt)
 	SyncProp(allstate.propState, clientPropMap);
 }
 
-void ClientStateSyncStstem::InputGameState(const GameState& newstate)
+void ClientStateSyncSystem::InputGameState(const GameState& newstate)
 {
 	auto& write = _gamestate_tripbuffer->acquireWriteBuffer();
 	write = newstate;
 	_gamestate_tripbuffer->submitWriteBuffer();
 }
 
-void ClientStateSyncStstem::SyncTanks(uint64_t server_timestamp, std::vector<TankState>& tankStates, std::unordered_map<SyncID, Entity>& clienttankmap)
+void ClientStateSyncSystem::SyncTanks(uint64_t server_timestamp, std::vector<TankState>& tankStates, std::unordered_map<SyncID, Entity>& clienttankmap)
 {
 	auto& world = getWorld();
 
@@ -128,7 +128,7 @@ void ClientStateSyncStstem::SyncTanks(uint64_t server_timestamp, std::vector<Tan
 	}
 }
 
-void ClientStateSyncStstem::SyncBullet(uint64_t server_timestamp, std::vector<BulletState>& bulletState, std::unordered_map<SyncID, Entity>& clientbulletmap)
+void ClientStateSyncSystem::SyncBullet(uint64_t server_timestamp, std::vector<BulletState>& bulletState, std::unordered_map<SyncID, Entity>& clientbulletmap)
 {
 	auto& world = getWorld();
 
@@ -170,7 +170,7 @@ void ClientStateSyncStstem::SyncBullet(uint64_t server_timestamp, std::vector<Bu
 	}
 }
 
-void ClientStateSyncStstem::SyncWall(std::vector<WallState>& wallStates, std::unordered_map<SyncID, Entity>& clientwallmap)
+void ClientStateSyncSystem::SyncWall(std::vector<WallState>& wallStates, std::unordered_map<SyncID, Entity>& clientwallmap)
 {
 	auto& world = getWorld();
 
@@ -212,7 +212,7 @@ void ClientStateSyncStstem::SyncWall(std::vector<WallState>& wallStates, std::un
 	}
 }
 
-void ClientStateSyncStstem::SyncProp(std::vector<PropState>& propStates, std::unordered_map<SyncID, Entity>& clientpropmap)
+void ClientStateSyncSystem::SyncProp(std::vector<PropState>& propStates, std::unordered_map<SyncID, Entity>& clientpropmap)
 {
 	auto& world = getWorld();
 
@@ -254,7 +254,7 @@ void ClientStateSyncStstem::SyncProp(std::vector<PropState>& propStates, std::un
 	}
 }
 
-void ClientStateSyncStstem::handleSyncTankFromServer(uint64_t server_timestamp, TankState& state, Entity entity)
+void ClientStateSyncSystem::handleSyncTankFromServer(uint64_t server_timestamp, TankState& state, Entity entity)
 {
 	auto& world = getWorld();
 
@@ -305,7 +305,7 @@ void ClientStateSyncStstem::handleSyncTankFromServer(uint64_t server_timestamp, 
 	movement.currentRotationSpeed = state.currentRotationSpeed;
 }
 
-void ClientStateSyncStstem::handleCreateClientTank(uint64_t server_timestamp, TankState& state)
+void ClientStateSyncSystem::handleCreateClientTank(uint64_t server_timestamp, TankState& state)
 {
 	auto& world = getWorld();
 
@@ -349,7 +349,7 @@ void ClientStateSyncStstem::handleCreateClientTank(uint64_t server_timestamp, Ta
 	}
 }
 
-void ClientStateSyncStstem::handleSyncBulletFromServer(uint64_t server_timestamp, BulletState& state, Entity entity)
+void ClientStateSyncSystem::handleSyncBulletFromServer(uint64_t server_timestamp, BulletState& state, Entity entity)
 {
 	auto& world = getWorld();
 
@@ -394,7 +394,7 @@ void ClientStateSyncStstem::handleSyncBulletFromServer(uint64_t server_timestamp
 	movement.currentRotationSpeed = state.currentRotationSpeed;
 }
 
-void ClientStateSyncStstem::handleCreateClientBullet(uint64_t server_timestamp, BulletState& state)
+void ClientStateSyncSystem::handleCreateClientBullet(uint64_t server_timestamp, BulletState& state)
 {
 	auto& world = getWorld();
 
@@ -447,7 +447,7 @@ void ClientStateSyncStstem::handleCreateClientBullet(uint64_t server_timestamp, 
 	}
 }
 
-void ClientStateSyncStstem::handleSyncWallFromServer(WallState& state, Entity entity)
+void ClientStateSyncSystem::handleSyncWallFromServer(WallState& state, Entity entity)
 {
 	auto& world = getWorld();
 
@@ -468,7 +468,7 @@ void ClientStateSyncStstem::handleSyncWallFromServer(WallState& state, Entity en
 	health.maxHealth = state.maxhealth;
 }
 
-void ClientStateSyncStstem::handleCreateClientWall(WallState& state)
+void ClientStateSyncSystem::handleCreateClientWall(WallState& state)
 {
 	auto& world = getWorld();
 
@@ -480,7 +480,7 @@ void ClientStateSyncStstem::handleCreateClientWall(WallState& state)
 	);
 }
 
-void ClientStateSyncStstem::handleSyncPropFromServer(PropState& state, Entity entity)
+void ClientStateSyncSystem::handleSyncPropFromServer(PropState& state, Entity entity)
 {
 	auto& world = getWorld();
 
@@ -506,7 +506,7 @@ void ClientStateSyncStstem::handleSyncPropFromServer(PropState& state, Entity en
 	}
 }
 
-void ClientStateSyncStstem::handleCreateClientProp(PropState& state)
+void ClientStateSyncSystem::handleCreateClientProp(PropState& state)
 {
 	auto& world = getWorld();
 

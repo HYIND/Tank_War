@@ -425,11 +425,11 @@ struct GameState
 	}
 };
 
-class ClientStateSyncStstem : public System
+class ClientStateSyncSystem : public System
 {
 public:
-	ClientStateSyncStstem();
-	virtual ~ClientStateSyncStstem();
+	ClientStateSyncSystem();
+	virtual ~ClientStateSyncSystem();
 	virtual void preUpdate(float deltaTime) override;
 
 	void InputGameState(const GameState& newstate);

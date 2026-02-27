@@ -226,7 +226,7 @@
     <ClInclude Include="source\include\ECS\Systems\PropSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\PhysicsSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\RenderSystem.h" />
-    <ClInclude Include="source\include\ECS\Systems\ClientStateSyncStstem.h" />
+    <ClInclude Include="source\include\ECS\Systems\ClientStateSyncSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\TankSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\VelocityControlSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\WallSystem.h" />
@@ -350,7 +350,7 @@
     <ClCompile Include="source\src\Scene_inner.cpp" />
     <ClCompile Include="source\src\Scene_outer.cpp" />
     <ClCompile Include="source\src\RenderSystem.cpp" />
-    <ClCompile Include="source\src\ClientStateSyncStstem.cpp" />
+    <ClCompile Include="source\src\ClientStateSyncSystem.cpp" />
     <ClCompile Include="source\src\Style.cpp" />
     <ClCompile Include="source\src\System.cpp" />
     <ClCompile Include="source\src\SystemManager.cpp" />
