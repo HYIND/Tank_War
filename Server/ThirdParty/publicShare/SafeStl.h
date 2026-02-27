@@ -293,7 +293,7 @@ public:
 		return;
 	}
 
-	void EnsureCall(std::function<void(std::map<K, V> &map)> callback)
+	void EnsureCall(std::function<void(std::unordered_map<K, V> &map)> callback)
 	{
 		if (callback)
 		{

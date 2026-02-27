@@ -224,6 +224,9 @@ MapInfo Init_Map_1()
 	info.wallbirthinfos.emplace_back(Pos2(CENTER_X + WALL_SIZE * 0.5, CENTER_Y + WALL_SIZE), 0.f, BRICK_WIDTH, BRICK_HEIGHT, 60, WallProperty::WallType::BRICK);
 	info.wallbirthinfos.emplace_back(Pos2(CENTER_X + WALL_SIZE * 1.5, CENTER_Y + WALL_SIZE), 0.f, BRICK_WIDTH, BRICK_HEIGHT, 60, WallProperty::WallType::BRICK);
 
+	info.propbirthinfos.emplace_back(Pos2(500, 300), 0.f, 36, 36, PropProperty::PropType::HEALTH_PACK);
+	info.propbirthinfos.emplace_back(Pos2(300, 150), 45.f, 36, 36, PropProperty::PropType::HEALTH_PACK);
+	info.propbirthinfos.emplace_back(Pos2(700, 450), 135.f, 36, 36, PropProperty::PropType::HEALTH_PACK);
 
 	return info;
 }

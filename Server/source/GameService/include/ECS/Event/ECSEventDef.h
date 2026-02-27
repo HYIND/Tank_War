@@ -82,3 +82,13 @@ struct PropPickupEvent
 	Entity picker;
 	PropProperty::PropType propType;
 };
+
+struct PickUpHealEvent
+{
+	Entity picker;
+};
+
+struct WeaponShootEvent
+{
+	Entity source;
+};

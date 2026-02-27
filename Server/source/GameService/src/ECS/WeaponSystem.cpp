@@ -13,7 +13,8 @@ void WeaponSystem::onAttach(World &world)
 			Entity entity = event.shooter;
 			if (auto *weapon = entity.tryGetComponent<Weapon>())
 				weapon->currentBullets = std::max(0, weapon->currentBullets - 1);
-		});
+		}
+	);
 }
 
 void WeaponSystem::update(float deltaTime)
@@ -30,13 +31,15 @@ void WeaponSystem::update(float deltaTime)
 		if (controller.wantToFire && weapon.cooldown <= 0 && weapon.currentBullets < weapon.maxBullets)
 		{
 			PlayerID playerid;
-			if (auto tankproperty = entity.tryGetComponent<TankProperty>())
+			if (auto* tankproperty = entity.tryGetComponent<TankProperty>())
 				playerid = tankproperty->playerId;
 
 			auto &trans = entity.getComponent<Transform>();
 			BulletFactory::CreateServerBullet(*m_world, entity, playerid, weapon.bulletDamage, weapon.bulletSpeed, trans.position.x, trans.position.y, 20, trans.rotation);
 			weapon.cooldown = weapon.fireRate;
 			weapon.currentBullets++;
+
+			m_world->Emit<WeaponShootEvent>(WeaponShootEvent{ .source = entity });
 		}
 	}
 }

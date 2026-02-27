@@ -35,21 +35,42 @@ void PropSystem::processPropCollision(Entity prop, Entity picker, Pos2 point)
 
 	if (auto* propProperty = prop.tryGetComponent<PropProperty>())
 	{
+		bool pickup = false;
 		if (propProperty->type == PropProperty::PropType::HEALTH_PACK)
-			processHealthPack(prop, picker);
+			pickup = pickUpHealthPack(prop, picker);
 
-		m_world->Emit(PropPickupEvent{
-			.prop = prop,
-			.picker = picker,
-			.propType = propProperty->type
-			});
-		m_world->destroyEntityLater(prop);
+		if (pickup)
+		{
+			m_world->Emit(PropPickupEvent{
+				.prop = prop,
+				.picker = picker,
+				.propType = propProperty->type
+				});
+			m_world->destroyEntityLater(prop);
+		}
 	}
 };
 
-void PropSystem::processHealthPack(Entity prop, Entity picker)
+bool PropSystem::pickUpHealthPack(Entity prop, Entity picker)
 {
+	auto* health = picker.tryGetComponent<Health>();
+	if (!health)
+		return false;
+
 	auto& propProperty = prop.getComponent<PropProperty>();
-	if (auto* health = picker.tryGetComponent<Health>())
+
+	if (health->currentHealth < health->maxHealth)
+	{
 		health->heal(float(health->maxHealth) / 2.f);
+
+		m_world->Emit(PickUpHealEvent{
+			.picker = picker,
+			});
+
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
