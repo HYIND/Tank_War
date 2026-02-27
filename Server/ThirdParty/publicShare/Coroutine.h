@@ -421,6 +421,13 @@ public:
 
 public:
 	CoTimer(std::chrono::milliseconds timeout);
+
+	CoTimer(CoTimer&& other) noexcept;
+	CoTimer& operator=(CoTimer&& other) noexcept;
+
+	CoTimer(const CoTimer&) = delete;
+	CoTimer& operator=(const CoTimer&) = delete;
+
 	~CoTimer();
 	Awaiter operator co_await(); // 协程等待操作
 	void wake();                 // 立即唤醒
@@ -476,6 +483,13 @@ public:
 
 public:
 	CoConnection(const std::string& ip, const int port);
+
+	CoConnection(CoConnection&& other) noexcept;
+	CoConnection& operator=(CoConnection&& other) noexcept;
+
+	CoConnection(const CoConnection&) = delete;
+	CoConnection& operator=(const CoConnection&) = delete;
+
 	~CoConnection();
 	Awaiter operator co_await();
 

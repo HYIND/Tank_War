@@ -28,8 +28,6 @@ private:
 
 DelayTask::DelayTask(std::chrono::milliseconds timeout)
 {
-	//auto timer = CoTimer(timeout);
-	//_timer = std::make_shared<CoTimer>(std::move(timer));
 	_timer = std::make_shared<CoTimer>(timeout);
 
 	auto task = CoroTask::Run([timer = _timer]()->Task<void> {
