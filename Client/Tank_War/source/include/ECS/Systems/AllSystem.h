@@ -19,3 +19,4 @@
 #include "ECS/Systems/PredictionSystem.h"
 #include "ECS/Systems/AIInputSystem.h"
 #include "ECS/Systems/AudioSystem.h"
+#include "ECS/Systems/PropGenerateSystem.h"

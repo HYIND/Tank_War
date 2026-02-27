@@ -2,7 +2,27 @@
 #include "ECS/Core/World.h"
 #include "ECS/Components/AllComponent.h"
 #include "Helper/Tools.h"
-#include "Helper/math2d.h"
+
+class QueryAABBCallback : public b2QueryCallback {
+public:
+	std::vector<b2Fixture*> fixtures;
+
+	bool ReportFixture(b2Fixture* fixture) override {
+		fixtures.push_back(fixture);
+		return true;  // true 继续查询，false 停止
+	}
+};
+
+class RayCastCallback : public b2RayCastCallback {
+public:
+	std::vector<b2Fixture*> hitFixtures;
+
+	float ReportFixture(b2Fixture* fixture, const b2Vec2& point,
+		const b2Vec2& normal, float fraction) override {
+		hitFixtures.push_back(fixture);
+		return fraction;  // 返回 fraction 继续检测更远的物体
+	}
+};
 
 // 获取碰撞点（世界坐标）
 Pos2 getContactPoint(b2Contact* contact, const float PPM)
@@ -295,4 +315,55 @@ void PhysicsSystem::createBoundary(Entity entity, BoundaryPhysisc& boundaryphysi
 
 	boundaryphysics.boundaryBody->GetUserData().pointer = reinterpret_cast<uintptr_t>(new Entity(entity));
 
+}
+
+std::vector<Entity> PhysicsSystem::QueryAABB(const Pos2& pos1, const Pos2& pos2)
+{
+	std::vector<Entity> results;
+
+	b2AABB aabb;
+	aabb.lowerBound.Set(pos1.x / PPM, pos1.y / PPM);
+	aabb.upperBound.Set(pos2.x / PPM, pos2.y / PPM);
+
+	QueryAABBCallback callback;
+	phyWorld.QueryAABB(&callback, aabb);
+
+	// 处理查询到的物体
+	for (auto fixture : callback.fixtures) {
+		b2Body* body = fixture->GetBody();
+		void* userData = reinterpret_cast<void*>(body->GetUserData().pointer);
+		if (!userData)
+			continue;
+
+		Entity* entity = static_cast<Entity*>(userData);
+
+		results.push_back(Entity(*entity));
+	}
+
+	return results;
+}
+
+std::vector<Entity> PhysicsSystem::RayCast(const Line2& line)
+{
+	std::vector<Entity> results;
+
+	b2Vec2 start(line.pos1().x / PPM, line.pos1().y / PPM);
+	b2Vec2 end(line.pos2().x / PPM, line.pos2().y / PPM);
+
+	RayCastCallback callback;
+	phyWorld.RayCast(&callback, start, end);
+
+	// 处理击中的物体
+	for (auto fixture : callback.hitFixtures) {
+		b2Body* body = fixture->GetBody();
+		void* userData = reinterpret_cast<void*>(body->GetUserData().pointer);
+		if (!userData)
+			continue;
+
+		Entity* entity = static_cast<Entity*>(userData);
+
+		results.push_back(Entity(*entity));
+	}
+
+	return results;
 }

@@ -6,8 +6,10 @@
 
 class PropFactory {
 public:
-	static Entity CreateProp(World& world, PropProperty::PropType type, float duration,
-		float x, float y, int width, int height);
+	static Entity CreateProp(World& world,
+		PropProperty::PropType type, float duration,
+		float x, float y, float rotation,
+		int width, int height, float lifetime = 0.f);
 
 	static Entity CreateClientProp(World& world,
 		SyncID syncid, PropProperty::PropType type, float duration,

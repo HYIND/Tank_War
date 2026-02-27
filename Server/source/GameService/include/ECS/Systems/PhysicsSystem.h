@@ -6,6 +6,7 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/BoundaryPhysisc.h"
 #include "box2d/box2d.h"
+#include "Helper/math2d.h"
 
 class PhysicsSystem :public System
 {
@@ -14,6 +15,8 @@ public:
 	PhysicsSystem();
 	virtual void fixedUpdate(float dt) override;
 
+	std::vector<Entity> QueryAABB(const Pos2& pos1, const Pos2& pos2);	//左上，右下
+	std::vector<Entity> RayCast(const Line2& line);
 private:
 	void checkNewEntity();
 	void collisionCheck(float dt);

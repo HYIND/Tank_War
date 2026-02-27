@@ -156,12 +156,15 @@ bool GameInstance::Initialize()
 	auto& propSystem = _world->registerSystem<PropSystem>();
 	auto& tankSystem = _world->registerSystem<TankSystem>();
 	auto& syncSystem = _world->registerSystem<ServerStateSyncStstem>();
+	auto& propGenerateSystem = _world->registerSystem<PropGenerateSystem>();
+
 
 	lifetimeSystem.setPriority(10000);
 	inputSystem.setPriority(1000);
 	aiinputSystem.setPriority(800);
 	velocityControlSystem.setPriority(500);
 	movementSystem.setPriority(500);
+	propGenerateSystem.setPriority(400);
 	physicsSystem.setPriority(300);
 	destroySystem.setPriority(-9000);
 	syncSystem.setPriority(-20000);

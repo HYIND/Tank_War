@@ -77,12 +77,10 @@ void LoadLocalGameMapInfoToWorld(std::shared_ptr<World> world, const MapInfo& ma
 			propInfo.duration,
 			propInfo.position.x,
 			propInfo.position.y,
+			propInfo.rotation,
 			propInfo.width,
 			propInfo.height
 		);
-
-		if (auto* trans = prop.tryGetComponent<Transform>())
-			trans->rotation = propInfo.rotation;
 	}
 
 	for (auto& wallInfo : mapinfo.wallbirthinfos)
@@ -211,6 +209,7 @@ void GameWorldManager::InitGameWorld(GameMode mode, MapID mapid)
 		auto& propSystem = _world->registerSystem<PropSystem>();
 		auto& tankSystem = _world->registerSystem<TankSystem>();
 		auto& audioSystem = _world->registerSystem<AudioSystem>();
+		auto& propGenerateSystem = _world->registerSystem<PropGenerateSystem>();
 
 
 		lifetimeSystem.setPriority(10000);
@@ -218,6 +217,7 @@ void GameWorldManager::InitGameWorld(GameMode mode, MapID mapid)
 		aiinputSystem.setPriority(800);
 		velocityControlSystem.setPriority(500);
 		movementSystem.setPriority(500);
+		propGenerateSystem.setPriority(400);
 		physicsSystem.setPriority(300);
 		destroySystem.setPriority(-9000);
 		renderSystem.setPriority(-10000);

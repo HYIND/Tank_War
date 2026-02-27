@@ -222,6 +222,7 @@
     <ClInclude Include="source\include\ECS\Systems\LocalInputSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\LifeTimeSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\MovementSystem.h" />
+    <ClInclude Include="source\include\ECS\Systems\PropGenerateSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\PropSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\PhysicsSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\RenderSystem.h" />
@@ -338,6 +339,7 @@
     <ClCompile Include="source\src\PhysicsSystem.cpp" />
     <ClCompile Include="source\src\PredictionSystem.cpp" />
     <ClCompile Include="source\src\PropFactory.cpp" />
+    <ClCompile Include="source\src\PropGenerateSystem.cpp" />
     <ClCompile Include="source\src\PropSystem.cpp" />
     <ClCompile Include="source\src\Render.cpp" />
     <ClCompile Include="source\src\Renderer.cpp" />

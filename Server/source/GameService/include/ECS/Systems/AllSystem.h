@@ -15,3 +15,4 @@
 #include "ECS/Systems/ServerStateSyncStstem.h"
 #include "ECS/Systems/CheckGameOverSystem.h"
 #include "ECS/Systems/AIInputSystem.h"
+#include "ECS/Systems/PropGenerateSystem.h"

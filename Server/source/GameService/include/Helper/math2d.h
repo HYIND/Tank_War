@@ -83,7 +83,7 @@ struct Line2
 	Line2() {};
 	Line2& operator=(const Line2& other)
 	{
-		if(this == &other)
+		if (this == &other)
 			return *this;
 
 		pos[0] = other.pos[0];
@@ -95,6 +95,6 @@ struct Line2
 		pos[0] = pos1;
 		pos[1] = pos2;
 	};
-	Pos2 pos1() { return pos[0]; }
-	Pos2 pos2() { return pos[1]; }
+	Pos2 pos1() const { return pos[0]; }
+	Pos2 pos2() const { return pos[1]; }
 };

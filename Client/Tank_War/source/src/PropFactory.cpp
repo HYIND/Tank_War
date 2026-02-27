@@ -1,13 +1,17 @@
 #include "ECS/Factory/PropFactory.h"
 #include "ECS/Components/AllComponent.h"
 
-Entity PropFactory::CreateProp(World& world, PropProperty::PropType type, float duration, float x, float y, int width, int height)
+Entity PropFactory::CreateProp(World& world,
+	PropProperty::PropType type, float duration,
+	float x, float y, float rotation,
+	int width, int height, float lifetime)
 {
 	auto entity = world.createEntityWithTag<TagProp>();
 
 	auto& trans = entity.addComponent<Transform>();
 	trans.position.x = x;
 	trans.position.y = y;
+	trans.rotation = rotation;
 
 	auto& prop = entity.addComponent<PropProperty>(type, width, height, duration);
 
@@ -24,6 +28,9 @@ Entity PropFactory::CreateProp(World& world, PropProperty::PropType type, float 
 		bitmap = ResFactory->GetBitMapRes(ResName::aidKit);
 
 	entity.addComponent<Sprite>(width, height, bitmap);
+
+	if (lifetime > 0.f)
+		entity.addComponent<LifeTime>(lifetime);
 
 	return entity;
 }
