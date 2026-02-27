@@ -170,6 +170,7 @@
     <ClInclude Include="public\include\ServiceDiscoveryClient.h" />
     <ClInclude Include="public\include\ServiceRegistryData.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="source\include\AudioProc\AudioTool.h" />
     <ClInclude Include="source\include\BusyLoaderDialog.h" />
     <ClInclude Include="source\include\ECS\Components\AIControl.h" />
     <ClInclude Include="source\include\ECS\Components\AllComponent.h" />
@@ -212,6 +213,7 @@
     <ClInclude Include="source\include\ECS\Factory\WallFactory.h" />
     <ClInclude Include="source\include\ECS\Systems\AIInputSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\AllSystem.h" />
+    <ClInclude Include="source\include\ECS\Systems\AudioSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\BulletSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\ClientInputSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\DestroySystem.h" />
@@ -239,6 +241,8 @@
     <ClInclude Include="source\include\Helper\Style.h" />
     <ClInclude Include="source\include\Helper\Tools.h" />
     <ClInclude Include="source\include\Helper\TripleBuffer.h" />
+    <ClInclude Include="source\include\Manager\AudioDeviceManager.h" />
+    <ClInclude Include="source\include\Manager\BGMManager.h" />
     <ClInclude Include="source\include\Manager\GameWorldManager.h" />
     <ClInclude Include="source\include\Manager\LobbyManager.h" />
     <ClInclude Include="source\include\Manager\MapManager.h" />
@@ -303,6 +307,10 @@
     <ClCompile Include="public\src\ServiceDiscoveryClient.cpp" />
     <ClCompile Include="public\src\ServiceRegistryData.cpp" />
     <ClCompile Include="source\src\AIInputSystem.cpp" />
+    <ClCompile Include="source\src\AudioDeviceManager.cpp" />
+    <ClCompile Include="source\src\AudioSystem.cpp" />
+    <ClCompile Include="source\src\AudioTool.cpp" />
+    <ClCompile Include="source\src\BGMManager.cpp" />
     <ClCompile Include="source\src\BulletFactory.cpp" />
     <ClCompile Include="source\src\BulletSystem.cpp" />
     <ClCompile Include="source\src\BusyLoaderDialog.cpp" />
@@ -353,6 +361,14 @@
     <ClCompile Include="source\src\WallSystem.cpp" />
     <ClCompile Include="source\src\WeaponSystem.cpp" />
     <ClCompile Include="source\src\World.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="..\Resource\Default_Attacked.wav" />
+    <Media Include="..\Resource\Default_Shoot.wav" />
+    <Media Include="..\Resource\Game_BGM.wav" />
+    <Media Include="..\Resource\Heal.wav" />
+    <Media Include="..\Resource\Menu_BGM.wav" />
+    <Media Include="..\Resource\Menu_BGM_Audio.wav" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -163,6 +163,18 @@
     <ClCompile Include="source\src\BusyLoaderDialog.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="source\src\AudioTool.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\AudioDeviceManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\AudioSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\BGMManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\include\header.h">
@@ -208,19 +220,19 @@
       <Filter>头文件\ECS\Components</Filter>
     </ClInclude>
     <ClInclude Include="source\include\RenderEngine\D2DWrapper.h">
-      <Filter>头文件\RenderEegine</Filter>
+      <Filter>头文件\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="source\include\RenderEngine\D2DTools.h">
-      <Filter>头文件\RenderEegine</Filter>
+      <Filter>头文件\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="source\include\RenderEngine\RenderContext.h">
-      <Filter>头文件\RenderEegine</Filter>
+      <Filter>头文件\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="source\include\RenderEngine\Renderer.h">
-      <Filter>头文件\RenderEegine</Filter>
+      <Filter>头文件\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="source\include\RenderEngine\RenderFrameManager.h">
-      <Filter>头文件\RenderEegine</Filter>
+      <Filter>头文件\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="source\include\ECS\Core\Entity.h">
       <Filter>头文件\ECS\Core</Filter>
@@ -450,6 +462,18 @@
     <ClInclude Include="source\include\BusyLoaderDialog.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="source\include\AudioProc\AudioTool.h">
+      <Filter>头文件\AudioProc</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\Manager\AudioDeviceManager.h">
+      <Filter>头文件\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Systems\AudioSystem.h">
+      <Filter>头文件\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\Manager\BGMManager.h">
+      <Filter>头文件\Manager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\resource\bitmap3.bmp">
@@ -582,9 +606,6 @@
     <Filter Include="头文件\Helper">
       <UniqueIdentifier>{ab76f02b-1fea-41d2-b589-db9cbb0a90b2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\RenderEegine">
-      <UniqueIdentifier>{3c0c4152-065f-486e-a793-fff6882b20dd}</UniqueIdentifier>
-    </Filter>
     <Filter Include="头文件\Manager">
       <UniqueIdentifier>{b7ac37c2-c829-4302-9db9-ea166d49fd3b}</UniqueIdentifier>
     </Filter>
@@ -600,8 +621,34 @@
     <Filter Include="源文件\public">
       <UniqueIdentifier>{f4696f62-1d92-4931-ac64-5fa4b8d01405}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\RenderEngine">
+      <UniqueIdentifier>{3c0c4152-065f-486e-a793-fff6882b20dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\AudioProc">
+      <UniqueIdentifier>{357397b4-348e-407b-867d-cf6095fa25be}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Tank_War.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="..\Resource\Heal.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="..\Resource\Default_Shoot.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="..\Resource\Default_Attacked.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="..\Resource\Menu_BGM_Audio.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="..\Resource\Game_BGM.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="..\Resource\Menu_BGM.wav">
+      <Filter>资源文件</Filter>
+    </Media>
   </ItemGroup>
 </Project>
