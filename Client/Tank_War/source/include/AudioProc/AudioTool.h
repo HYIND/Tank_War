@@ -38,12 +38,6 @@ enum class DeviceState {
 };
 
 struct SourceVoiceHandle;
-class AudioChannel
-{
-private:
-	IXAudio2SubmixVoice* _submitVoice;
-};
-
 class AudioDevice :public IXAudio2VoiceCallback
 {
 public:
