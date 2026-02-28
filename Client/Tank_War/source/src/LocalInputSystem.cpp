@@ -5,6 +5,7 @@
 #include "ECS/Components/TankProperty.h"
 #include "ECS/Components/Controller.h"
 #include "Helper/keymap.h"
+#include "Manager/FocusManager.h"
 
 bool Get_keymap(TankProperty::TankOwner owner, int key[5])
 {
@@ -36,6 +37,16 @@ bool Get_keymap(TankProperty::TankOwner owner, int key[5])
 // 处理键盘输入
 static void handlePlayerInputToTank(PlayerInput& input, TankProperty& tank, Controller& controller)
 {
+	if (!FocusManager::Instance()->ShouldProcessInput())
+	{
+		input.setInput(PlayerInput::FORWARD, false);
+		input.setInput(PlayerInput::BACKWARD, false);
+		input.setInput(PlayerInput::LEFT, false);
+		input.setInput(PlayerInput::RIGHT, false);
+		input.setInput(PlayerInput::FIRE, false);
+		return;
+	}
+
 	int key[5];
 	if (!Get_keymap(tank.owner, key))
 		return;

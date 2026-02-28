@@ -15,6 +15,3 @@ Entity::operator bool() const { return isValid(); }
 bool Entity::operator==(const Entity& other) const { return id == other.id && world == other.world; }
 
 bool Entity::operator!=(const Entity& other) const { return !(*this == other); }
-
-// 哈希支持
-inline size_t Entity::hash() const { return std::hash<EntityID>{}(id); }

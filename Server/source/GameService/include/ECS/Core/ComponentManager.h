@@ -9,7 +9,7 @@
 
 using ComponentMask = std::bitset<MAX_COMPONENTS>;
 
-class ComponentManager 
+class ComponentManager
 {
 private:
 	// 存储所有组件数组的映射
@@ -29,7 +29,7 @@ public:
 	}
 
 	template<typename T, typename... Args>
-	T& addComponent(Entity& entity, Args&&... args) {
+	T& addComponent(const Entity& entity, Args&&... args) {
 		ComponentTypeID typeId = ComponentType<T>::getId();
 		if (componentArrays.find(typeId) == componentArrays.end())
 			registerComponent<T>();
@@ -38,7 +38,7 @@ public:
 	}
 
 	template<typename T>
-	void removeComponent(Entity& entity)
+	void removeComponent(const Entity& entity)
 	{
 		ComponentTypeID typeId = ComponentType<T>::getId();
 		assert(componentArrays.find(typeId) != componentArrays.end() &&
@@ -48,7 +48,7 @@ public:
 	}
 
 	template<typename T>
-	T& getComponent(EntityID entityId)
+	T& getComponent(const EntityID& entityId)
 	{
 		ComponentTypeID typeId = ComponentType<T>::getId();
 		assert(componentArrays.find(typeId) != componentArrays.end() &&
@@ -57,18 +57,8 @@ public:
 		return array->getComponent(entityId);
 	}
 
-	//template<typename T>
-	//const T& getComponent(EntityID entityId)
-	//{
-	//	ComponentTypeID typeId = ComponentType<T>::getId();
-	//	assert(componentArrays.find(typeId) != componentArrays.end() &&
-	//		"ComponentArray do not exist!");
-	//	auto array = std::static_pointer_cast<ComponentArray<T>>(componentArrays[typeId]);
-	//	return array->getComponent(entityId);
-	//}
-
 	template<typename T>
-	T* tryGetComponent(EntityID entityId)
+	T* tryGetComponent(const EntityID& entityId)
 	{
 		ComponentTypeID typeId = ComponentType<T>::getId();
 		if (componentArrays.find(typeId) == componentArrays.end())
@@ -79,7 +69,7 @@ public:
 	}
 
 	template<typename T>
-	bool hasComponent(EntityID entityId) const
+	bool hasComponent(const EntityID& entityId) const
 	{
 		ComponentTypeID typeId = ComponentType<T>::getId();
 		if (componentArrays.find(typeId) == componentArrays.end())
@@ -88,7 +78,7 @@ public:
 		return array->hasComponent(entityId);
 	}
 
-	void entityDestroyed(Entity& entity)
+	void entityDestroyed(const Entity& entity)
 	{
 		for (auto& pair : componentArrays)
 		{

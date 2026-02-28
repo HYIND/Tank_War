@@ -4,7 +4,7 @@
 #include "ECS/Core/World.h"
 #include <memory>
 #include <thread>
-#include "ECS/Systems/ClientStateSyncSystem.h"
+#include "ECS/Systems/ClientSyncSystem.h"
 
 enum class GameMode
 {
@@ -31,6 +31,7 @@ public:
 
 public:
 	void SyncFromServerState(const json& js);
+	void SyncFromServerEvent(const json& js);
 	void ProcessEliminateInfo(const json& js);
 	void ProcessGameOver(const json& js);
 

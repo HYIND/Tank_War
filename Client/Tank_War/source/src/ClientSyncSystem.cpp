@@ -1,4 +1,4 @@
-#include "ECS/Systems/ClientStateSyncSystem.h"
+#include "ECS/Systems/ClientSyncSystem.h"
 #include "ECS/Core/World.h"
 #include "ECS/Components/PlayerInput.h"
 #include "ECS/Components/TankProperty.h"
@@ -11,25 +11,183 @@
 #include "ECS/Systems/InterpolationSystem.h"
 #include <unordered_set>
 
-ClientStateSyncSystem::ClientStateSyncSystem()
+ClientSyncSystem::ClientSyncSystem()
 {
 	_gamestate_tripbuffer = std::make_shared<TripleBuffer<GameState>>();
 	for (int i = 0; i < 3; i++)
 		_gamestate_tripbuffer->setInitialValue(i, GameState());
 }
 
-ClientStateSyncSystem::~ClientStateSyncSystem()
+ClientSyncSystem::~ClientSyncSystem()
 {
 }
 
-void ClientStateSyncSystem::preUpdate(float dt)
+void ClientSyncSystem::preUpdate(float dt)
 {
 	GameState& allstate = _gamestate_tripbuffer->acquireReadBuffer();
+
+	std::vector<SyncEvent> events;
+	_syncEvents.EnsureCall(
+		[&events, &allstate](std::vector<SyncEvent>& array)->void {
+
+			if (array.empty())
+				return;
+
+			std::sort(array.begin(), array.end(), [](const SyncEvent& a, const SyncEvent& b)->bool
+				{
+					return a.timestamp < b.timestamp;
+				});
+
+			int fetchSize = 0;
+			for (int i = 0; i < array.size(); i++)
+			{
+				bool shouldfetch =
+					array[i].timestamp <= allstate.updateTime &&
+					array[i].framecount <= allstate.framecount;
+				if (!shouldfetch)
+					break;
+				fetchSize++;
+			}
+
+			if (fetchSize > 0)
+			{
+				events.insert(events.begin(), array.begin(), array.begin() + fetchSize);
+				array.erase(array.begin(), array.begin() + fetchSize);
+			}
+		}
+	);
+
+	if (!events.empty())
+		ProcessSyncEvents(events);
+
 	if (allstate.hasConsume)
 		return;
-
 	allstate.hasConsume = true;
+	SyncGameState(allstate);
+}
 
+void ClientSyncSystem::InputGameState(const GameState& newstate)
+{
+	auto& write = _gamestate_tripbuffer->acquireWriteBuffer();
+	write = newstate;
+	_gamestate_tripbuffer->submitWriteBuffer();
+}
+
+void ClientSyncSystem::InputEvent(const SyncEvent& e)
+{
+	_syncEvents.emplace(e);
+}
+
+void ClientSyncSystem::ProcessSyncEvents(std::vector<SyncEvent>& syncevents)
+{
+	auto& world = getWorld();
+
+	for (const auto& event : syncevents)
+	{
+		if (!event.data)
+			continue;
+
+		switch (event.type)
+		{
+		case SyncEventType::TANK_DESTROYED:
+		{
+			if (auto data = dynamic_cast<const TankDestroyedEventData*>(event.data.get()))
+			{
+				if (Entity tank = findEntityBySyncId(data->tankId))
+				{
+					Entity killer = data->killerId.has_value() ?
+						findEntityBySyncId(data->killerId.value()) : Entity();
+
+					TankDestroyedEvent localEvent;
+					localEvent.tank = tank;
+					if (killer) localEvent.killer = killer;
+					localEvent.position = data->position;
+					world.Emit(localEvent);
+				}
+			}
+			break;
+		}
+		case SyncEventType::DAMAGE:
+		{
+			if (auto data = dynamic_cast<const DamageEventData*>(event.data.get()))
+			{
+				if (Entity target = findEntityBySyncId(data->targetId))
+				{
+					if (Entity source = findEntityBySyncId(data->sourceId))
+					{
+						DamageEvent localEvent{
+							.target = target,
+							.source = source,
+							.damage = data->damage
+						};
+						world.Emit(localEvent);
+					}
+				}
+			}
+			break;
+		}
+		case SyncEventType::PROP_PICKUP:
+		{
+			if (auto data = dynamic_cast<const PropPickupEventData*>(event.data.get()))
+			{
+				if (Entity prop = findEntityBySyncId(data->propId))
+				{
+					if (Entity picker = findEntityBySyncId(data->pickerId))
+					{
+						PropPickupEvent localEvent{
+							.prop = prop,
+							.picker = picker,
+							.propType = data->propType
+						};
+						world.Emit(localEvent);
+					}
+				}
+			}
+			break;
+		}
+		case SyncEventType::PICKUP_HEAL:
+		{
+			if (auto data = dynamic_cast<const PickUpHealEventData*>(event.data.get()))
+			{
+				if (Entity picker = findEntityBySyncId(data->pickerId))
+				{
+					PickUpHealEvent localEvent{ .picker = picker };
+					world.Emit(localEvent);
+				}
+			}
+			break;
+		}
+		case SyncEventType::WEAPON_SHOOT:
+		{
+			if (auto data = dynamic_cast<const WeaponShootEventData*>(event.data.get()))
+			{
+				if (Entity source = findEntityBySyncId(data->sourceId))
+				{
+					WeaponShootEvent localEvent{ .source = source };
+					world.Emit(localEvent);
+				}
+			}
+			break;
+		}
+		}
+	}
+}
+
+Entity ClientSyncSystem::findEntityBySyncId(const SyncID& syncId)
+{
+	auto& world = getWorld();
+	auto entities = world.getEntitiesWith<TagSync>();
+	for (auto& entity : entities)
+	{
+		if (entity.getComponent<TagSync>().syncId == syncId)
+			return entity;
+	}
+
+	return Entity();  // 返回无效实体
+}
+
+void ClientSyncSystem::SyncGameState(const GameState& allstate)
+{
 	auto& world = getWorld();
 
 	std::unordered_map<SyncID, Entity> clientTankMap;
@@ -62,20 +220,13 @@ void ClientStateSyncSystem::preUpdate(float dt)
 		}
 	}
 
-	SyncTanks(allstate.updateTime, allstate.tankState, clientTankMap);
-	SyncBullet(allstate.updateTime, allstate.bulletState, clientBulletMap);
+	SyncTanks(allstate.tankState, clientTankMap, allstate.updateTime);
+	SyncBullet(allstate.bulletState, clientBulletMap, allstate.updateTime);
 	SyncWall(allstate.wallState, clientWallMap);
 	SyncProp(allstate.propState, clientPropMap);
 }
 
-void ClientStateSyncSystem::InputGameState(const GameState& newstate)
-{
-	auto& write = _gamestate_tripbuffer->acquireWriteBuffer();
-	write = newstate;
-	_gamestate_tripbuffer->submitWriteBuffer();
-}
-
-void ClientStateSyncSystem::SyncTanks(uint64_t server_timestamp, std::vector<TankState>& tankStates, std::unordered_map<SyncID, Entity>& clienttankmap)
+void ClientSyncSystem::SyncTanks(const std::vector<TankState>& tankStates, std::unordered_map<SyncID, Entity>& clienttankmap, uint64_t server_timestamp)
 {
 	auto& world = getWorld();
 
@@ -92,18 +243,7 @@ void ClientStateSyncSystem::SyncTanks(uint64_t server_timestamp, std::vector<Tan
 		if (serverEntity.find(syncId) == serverEntity.end())
 		{
 			// 服务器没有这个实体，但在客户端存在，需要销毁
-			if (auto trans = entity.tryGetComponent<Transform>())
-			{
-
-				TankDestroyedEvent event;
-				event.tank = entity;
-				event.position = trans->position;
-				world.destroyEntityLaterWithEvent<TankDestroyedEvent>(entity, event);
-			}
-			else
-			{
-				world.destroyEntityLater(entity);
-			}
+			world.destroyEntityLater(entity);
 		}
 	}
 
@@ -119,16 +259,16 @@ void ClientStateSyncSystem::SyncTanks(uint64_t server_timestamp, std::vector<Tan
 				continue;
 			if (!entity.hasComponents<TagSync, TagTank, TankProperty, Transform, Movement, Health>())
 				continue;
-			handleSyncTankFromServer(server_timestamp, tankstate, entity);
+			handleSyncTankFromServer(tankstate, entity, server_timestamp);
 		}
 		else
 		{
-			handleCreateClientTank(server_timestamp, tankstate);
+			handleCreateClientTank(tankstate, server_timestamp);
 		}
 	}
 }
 
-void ClientStateSyncSystem::SyncBullet(uint64_t server_timestamp, std::vector<BulletState>& bulletState, std::unordered_map<SyncID, Entity>& clientbulletmap)
+void ClientSyncSystem::SyncBullet(const std::vector<BulletState>& bulletState, std::unordered_map<SyncID, Entity>& clientbulletmap, uint64_t server_timestamp)
 {
 	auto& world = getWorld();
 
@@ -161,16 +301,16 @@ void ClientStateSyncSystem::SyncBullet(uint64_t server_timestamp, std::vector<Bu
 				continue;
 			if (!entity.hasComponents<TagSync, TagBullet, BulletProperty, Transform, Movement >())
 				continue;
-			handleSyncBulletFromServer(server_timestamp, bulletstate, entity);
+			handleSyncBulletFromServer(bulletstate, entity, server_timestamp);
 		}
 		else
 		{
-			handleCreateClientBullet(server_timestamp, bulletstate);
+			handleCreateClientBullet(bulletstate, server_timestamp);
 		}
 	}
 }
 
-void ClientStateSyncSystem::SyncWall(std::vector<WallState>& wallStates, std::unordered_map<SyncID, Entity>& clientwallmap)
+void ClientSyncSystem::SyncWall(const std::vector<WallState>& wallStates, std::unordered_map<SyncID, Entity>& clientwallmap)
 {
 	auto& world = getWorld();
 
@@ -212,7 +352,7 @@ void ClientStateSyncSystem::SyncWall(std::vector<WallState>& wallStates, std::un
 	}
 }
 
-void ClientStateSyncSystem::SyncProp(std::vector<PropState>& propStates, std::unordered_map<SyncID, Entity>& clientpropmap)
+void ClientSyncSystem::SyncProp(const std::vector<PropState>& propStates, std::unordered_map<SyncID, Entity>& clientpropmap)
 {
 	auto& world = getWorld();
 
@@ -254,7 +394,7 @@ void ClientStateSyncSystem::SyncProp(std::vector<PropState>& propStates, std::un
 	}
 }
 
-void ClientStateSyncSystem::handleSyncTankFromServer(uint64_t server_timestamp, TankState& state, Entity entity)
+void ClientSyncSystem::handleSyncTankFromServer(const TankState& state, Entity entity, uint64_t server_timestamp)
 {
 	auto& world = getWorld();
 
@@ -305,7 +445,7 @@ void ClientStateSyncSystem::handleSyncTankFromServer(uint64_t server_timestamp, 
 	movement.currentRotationSpeed = state.currentRotationSpeed;
 }
 
-void ClientStateSyncSystem::handleCreateClientTank(uint64_t server_timestamp, TankState& state)
+void ClientSyncSystem::handleCreateClientTank(const TankState& state, uint64_t server_timestamp)
 {
 	auto& world = getWorld();
 
@@ -349,7 +489,7 @@ void ClientStateSyncSystem::handleCreateClientTank(uint64_t server_timestamp, Ta
 	}
 }
 
-void ClientStateSyncSystem::handleSyncBulletFromServer(uint64_t server_timestamp, BulletState& state, Entity entity)
+void ClientSyncSystem::handleSyncBulletFromServer(const BulletState& state, Entity entity, uint64_t server_timestamp)
 {
 	auto& world = getWorld();
 
@@ -394,7 +534,7 @@ void ClientStateSyncSystem::handleSyncBulletFromServer(uint64_t server_timestamp
 	movement.currentRotationSpeed = state.currentRotationSpeed;
 }
 
-void ClientStateSyncSystem::handleCreateClientBullet(uint64_t server_timestamp, BulletState& state)
+void ClientSyncSystem::handleCreateClientBullet(const BulletState& state, uint64_t server_timestamp)
 {
 	auto& world = getWorld();
 
@@ -427,7 +567,7 @@ void ClientStateSyncSystem::handleCreateClientBullet(uint64_t server_timestamp, 
 		move->currentRotationSpeed = state.currentRotationSpeed;
 	}
 
-	if (entity.hasComponent<Interpolation>() && world.getSystem<InterpolationSystem>() != nullptr && world.getSystem<InterpolationSystem>() != nullptr)
+	if (entity.hasComponent<Interpolation>() && world.getSystem<InterpolationSystem>() != nullptr)
 	{
 		auto& inter = entity.getComponent<Interpolation>();
 		Interpolation::Snapshot snap;
@@ -447,7 +587,7 @@ void ClientStateSyncSystem::handleCreateClientBullet(uint64_t server_timestamp, 
 	}
 }
 
-void ClientStateSyncSystem::handleSyncWallFromServer(WallState& state, Entity entity)
+void ClientSyncSystem::handleSyncWallFromServer(const WallState& state, Entity entity)
 {
 	auto& world = getWorld();
 
@@ -468,7 +608,7 @@ void ClientStateSyncSystem::handleSyncWallFromServer(WallState& state, Entity en
 	health.maxHealth = state.maxhealth;
 }
 
-void ClientStateSyncSystem::handleCreateClientWall(WallState& state)
+void ClientSyncSystem::handleCreateClientWall(const WallState& state)
 {
 	auto& world = getWorld();
 
@@ -480,7 +620,7 @@ void ClientStateSyncSystem::handleCreateClientWall(WallState& state)
 	);
 }
 
-void ClientStateSyncSystem::handleSyncPropFromServer(PropState& state, Entity entity)
+void ClientSyncSystem::handleSyncPropFromServer(const PropState& state, Entity entity)
 {
 	auto& world = getWorld();
 
@@ -506,7 +646,7 @@ void ClientStateSyncSystem::handleSyncPropFromServer(PropState& state, Entity en
 	}
 }
 
-void ClientStateSyncSystem::handleCreateClientProp(PropState& state)
+void ClientSyncSystem::handleCreateClientProp(const PropState& state)
 {
 	auto& world = getWorld();
 

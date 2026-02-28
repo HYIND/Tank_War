@@ -35,40 +35,40 @@ public:
 	std::vector<Entity> createEntities(uint32_t count);	// 批量创建
 
 	// ==== Entity 销毁 ====
-	void destroyEntity(Entity& entity);
+	void destroyEntity(const Entity& entity);
 
-	void destroyEntityLater(Entity& entity);
+	void destroyEntityLater(const Entity& entity);
 
 	template<typename EventType>
-	void destroyEntityLaterWithEvent(Entity& entity, const EventType& event);
+	void destroyEntityLaterWithEvent(const Entity& entity, const EventType& event);
 
 	// ==== 组件操作 ====
 	template<typename T, typename... Args>
-	T& addComponent(Entity& entity, Args&&... args);
+	T& addComponent(const Entity& entity, Args&&... args);
 
 	template<typename T>
-	void removeComponent(Entity& entity);
+	void removeComponent(const Entity& entity);
 
 	template<typename T>
-	T& getComponent(Entity entity);
+	T& getComponent(const Entity& entity);
 
 	template<typename T>
-	T* tryGetComponent(Entity entity);
+	T* tryGetComponent(const Entity& entity);
 
 	// ==== 查询 ====
-	bool hasComponent(Entity entity, ComponentTypeID componentTypeId) const;
+	bool hasComponent(const Entity& entity, ComponentTypeID componentTypeId) const;
 
 	template<typename T>
-	bool hasComponent(Entity entity) const;
+	bool hasComponent(const Entity& entity) const;
 
 	template<typename... Ts>
-	bool hasComponents(Entity entity) const;
+	bool hasComponents(const Entity& entity) const;
 
 	template<typename... Ts>
-	bool hasComponents(EntityID entityId) const;
+	bool hasComponents(const EntityID& entityId) const;
 
 	template<typename... Ts>
-	bool hasAnyComponent(EntityID entityId) const;
+	bool hasAnyComponent(const EntityID& entityId) const;
 
 	// 获取拥有特定组件组合的所有Entity
 	template<typename... Ts>

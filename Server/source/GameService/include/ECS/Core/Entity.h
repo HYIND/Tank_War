@@ -32,33 +32,30 @@ public:
 	bool operator==(const Entity& other) const;
 	bool operator!=(const Entity& other) const;
 
-	// 哈希支持
-	size_t hash() const;
-
 	template<typename T, typename... Args>
-	T& addComponent(Args&&... args);
+	T& addComponent(Args&&... args) const;
 
 	template<typename T>
-	void removeComponent();
+	void removeComponent() const;
 
 	template<typename T>
-	T& getComponent();
+	T& getComponent() const;
 
 	template<typename T>
-	T* tryGetComponent();
+	T* tryGetComponent() const;
 
 	template<typename T>
 	bool hasComponent() const;
 
 	template<typename... Ts>
-	bool hasComponents();
+	bool hasComponents() const;
 
 private:
 	static constexpr EntityID INVALID_ID = std::numeric_limits<EntityID>::max();
 
 private:
 	EntityID id;
-	World* world;
+	mutable World* world;
 };
 
 #include "ECS/Core/Entity.inl"

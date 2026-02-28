@@ -41,7 +41,7 @@ std::vector<Entity> World::createEntities(uint32_t count) {
 
 // ==== Entity 销毁 ====
 
-void World::destroyEntity(Entity& entity) {
+void World::destroyEntity(const Entity& entity) {
 	if (!IsValidWorldEntity(entity))
 		return;
 
@@ -52,7 +52,7 @@ void World::destroyEntity(Entity& entity) {
 	}
 }
 
-void World::destroyEntityLater(Entity& entity) {
+void World::destroyEntityLater(const Entity& entity) {
 	if (!IsValidWorldEntity(entity))
 		return;
 
@@ -67,7 +67,7 @@ void World::destroyEntityLater(Entity& entity) {
 }
 
 // ==== 查询 ====
-bool World::hasComponent(Entity entity, ComponentTypeID componentTypeId) const {
+bool World::hasComponent(const Entity& entity, ComponentTypeID componentTypeId) const {
 	if (!IsValidWorldEntity(entity))
 		return false;
 
@@ -135,9 +135,9 @@ void World::update(float deltaTime)
 			//m_fixedAccumulator = m_fixedDeltaTime;  // 保留一帧
 
 			// 方案B：执行一次大步长更新（精度降低但能追赶）
-			 float largeStep = std::min(m_fixedAccumulator, m_fixedDeltaTime * 3);
-			 m_systemManager->fixedUpdate(largeStep);
-			 m_fixedAccumulator -= largeStep;
+			float largeStep = std::min(m_fixedAccumulator, m_fixedDeltaTime * 3);
+			m_systemManager->fixedUpdate(largeStep);
+			m_fixedAccumulator -= largeStep;
 		}
 	}
 

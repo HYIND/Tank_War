@@ -11,6 +11,7 @@
 #include "BusyLoaderDialog.h"
 #include "Manager/AudioDeviceManager.h"
 #include <commctrl.h>
+#include "Manager/FocusManager.h"
 
 #define MAX_LOADSTRING 100
 
@@ -69,7 +70,7 @@ bool Init_all_Resource()
 }
 
 
-//#define ShowConsole
+#define ShowConsole
 
 // 创建并重定向控制台
 bool CreateDebugConsole(const wchar_t* title = L"TankWar Debug Console") {
@@ -325,15 +326,30 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_KILLFOCUS:
 	{
-		//if (Get_CurScene() == STATUS::LocalGame_Status)
-		//	GameWorldManager::Instance()->PauseWorld();
+		FocusManager::Instance()->SetFocus(false);
 		break;
 	}
 
 	case WM_SETFOCUS:
 	{
-		//if (Get_CurScene() == STATUS::LocalGame_Status)
-		//	GameWorldManager::Instance()->RunWorld();
+		FocusManager::Instance()->SetFocus(true);
+		break;
+	}
+
+	case WM_ACTIVATE:
+	{
+		// LOWORD(wParam) :
+		// WA_ACTIVE - 通过非鼠标方式激活
+		// WA_CLICKACTIVE - 通过鼠标点击激活  
+		// WA_INACTIVE - 被停用
+		bool active = (LOWORD(wParam) != WA_INACTIVE);
+		break;
+	}
+
+	case WM_ACTIVATEAPP:
+	{
+		bool active = wParam != 0;
+		FocusManager::Instance()->SetActive(active);
 		break;
 	}
 
@@ -367,7 +383,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					}
 					else if (result == DialogResult::FAILED)
 					{
-						MessageBox(NULL, L"游戏初始化失败！", TEXT("开始游戏"), MB_OK);
+						MessageBox(_hwnd, L"游戏初始化失败！", TEXT("开始游戏"), MB_OK);
 					}
 				}
 				break;
@@ -395,7 +411,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					}
 					else if (result == DialogResult::FAILED)
 					{
-						MessageBox(NULL, L"登录失败，无法连接到服务器或者非合规用户名！", TEXT("联机大厅"), MB_OK);
+						MessageBox(_hwnd, L"登录失败，无法连接到服务器或者非合规用户名！", TEXT("联机大厅"), MB_OK);
 					}
 				}
 				break;
@@ -642,7 +658,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case DISBANDINROOM:
 			{
 				KillTimer(hWnd, room_refreash);
-				MessageBox(hWnd, L"房主已将房间解散！", NULL, MB_OK);
+				MessageBox(_hwnd, L"房主已将房间解散！", NULL, MB_OK);
 				Set_CurScene(STATUS::Hall_Status);
 				SetTimer(hWnd, hall_refreash, 4000, NULL);
 				UpdateWindow(hWnd);

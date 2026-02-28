@@ -4,6 +4,7 @@
 #include "Helper/math2d.h"
 #include "ECS/Core/IComponent.h"
 #include "ECS/Components/Transform.h"
+#include "ECS/Core/World.h"
 
 struct AIControl :public IComponent
 {
@@ -20,7 +21,7 @@ struct AIControl :public IComponent
 	float decisionIntervalms = 50.f;  // 做决策的间隔
 
 	AIControl() {};
-	void OnAdd(Entity& e)override
+	void OnAdd(const Entity& e)override
 	{
 		if (auto* trans = e.tryGetComponent<Transform>())
 		{

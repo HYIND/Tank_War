@@ -21,7 +21,7 @@ Entity World::createEntityWithTag(Args&&... args) {
 }
 
 template<typename EventType>
-void World::destroyEntityLaterWithEvent(Entity& entity, const EventType& event)
+void World::destroyEntityLaterWithEvent(const Entity& entity, const EventType& event)
 {
 	if (!IsValidWorldEntity(entity))
 		return;
@@ -38,7 +38,7 @@ void World::destroyEntityLaterWithEvent(Entity& entity, const EventType& event)
 }
 
 template<typename T, typename... Args>
-T& World::addComponent(Entity& entity, Args&&... args) {
+T& World::addComponent(const Entity& entity, Args&&... args) {
 	if (!IsValidWorldEntity(entity))
 		throw("is not a invaild entity in this world");
 
@@ -53,7 +53,7 @@ T& World::addComponent(Entity& entity, Args&&... args) {
 }
 
 template<typename T>
-void World::removeComponent(Entity& entity) {
+void World::removeComponent(const Entity& entity) {
 	if (!IsValidWorldEntity(entity))
 		return;
 
@@ -67,7 +67,7 @@ void World::removeComponent(Entity& entity) {
 
 
 template<typename T>
-T& World::getComponent(Entity entity) {
+T& World::getComponent(const Entity& entity) {
 	if (!IsValidWorldEntity(entity))
 		throw("is not a invaild entity in this world");
 
@@ -75,7 +75,7 @@ T& World::getComponent(Entity entity) {
 }
 
 template<typename T>
-T* World::tryGetComponent(Entity entity) {
+T* World::tryGetComponent(const Entity& entity) {
 	if (!IsValidWorldEntity(entity))
 		return nullptr;
 
@@ -83,7 +83,7 @@ T* World::tryGetComponent(Entity entity) {
 }
 
 template<typename T>
-bool World::hasComponent(Entity entity) const {
+bool World::hasComponent(const Entity& entity) const {
 	if (!IsValidWorldEntity(entity))
 		return false;
 
@@ -91,7 +91,7 @@ bool World::hasComponent(Entity entity) const {
 }
 
 template<typename... Ts>
-bool World::hasComponents(Entity entity) const {
+bool World::hasComponents(const Entity& entity) const {
 	if (!IsValidWorldEntity(entity))
 		return false;
 
@@ -101,14 +101,14 @@ bool World::hasComponents(Entity entity) const {
 }
 
 template<typename... Ts>
-bool World::hasComponents(EntityID entityId) const {
+bool World::hasComponents(const EntityID& entityId) const {
 	ComponentMask required = getComponentMask<Ts...>();
 	ComponentMask actual = m_entityManager->getEntityComponentMask(entityId);
 	return (actual & required) == required;
 }
 
 template<typename... Ts>
-bool World::hasAnyComponent(EntityID entityId) const {
+bool World::hasAnyComponent(const EntityID& entityId) const {
 	ComponentMask required = getComponentMask<Ts...>();
 	ComponentMask actual = m_entityManager->getEntityComponentMask(entityId);
 	return (actual & required) != 0;  // 位与不为0表示至少有一个

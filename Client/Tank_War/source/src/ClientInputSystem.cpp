@@ -8,6 +8,7 @@
 #include "command.h"
 #include "Manager/ConnectManager.h"
 #include "Manager/UserInfoManager.h"
+#include "Manager/FocusManager.h"
 
 void Get_keymap(int key[5])
 {
@@ -22,6 +23,16 @@ void Get_keymap(int key[5])
 // 处理键盘输入
 static void handlePlayerInputToTank(PlayerInput& input, TankProperty& tank, Controller& controller)
 {
+	if (!FocusManager::Instance()->ShouldProcessInput())
+	{
+		input.setInput(PlayerInput::FORWARD, false);
+		input.setInput(PlayerInput::BACKWARD, false);
+		input.setInput(PlayerInput::LEFT, false);
+		input.setInput(PlayerInput::RIGHT, false);
+		input.setInput(PlayerInput::FIRE, false);
+		return;
+	}
+
 	int key[5];
 	Get_keymap(key);
 

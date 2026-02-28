@@ -118,12 +118,29 @@ void GameWorldManager::SyncFromServerState(const json& js)
 
 	auto& world = _world;
 
-	if (auto sync = world->getSystem<ClientStateSyncSystem>())
+	if (auto sync = world->getSystem<ClientSyncSystem>())
 	{
 		if (js.contains("gamestate") && js["gamestate"].is_object())
 		{
 			GameState gamestate = GameState::fromJson(js["gamestate"]);
 			sync->InputGameState(gamestate);
+		}
+	}
+}
+
+void GameWorldManager::SyncFromServerEvent(const json& js)
+{
+	if (!_world)
+		return;
+
+	auto& world = _world;
+
+	if (auto sync = world->getSystem<ClientSyncSystem>())
+	{
+		if (js.contains("event") && js["event"].is_object())
+		{
+			SyncEvent event = SyncEvent::fromJson(js["event"]);
+			sync->InputEvent(event);
 		}
 	}
 }
@@ -252,8 +269,9 @@ void GameWorldManager::InitOnlineGameWorld()
 	auto& wallSystem = _world->registerSystem<WallSystem>();
 	auto& propSystem = _world->registerSystem<PropSystem>();
 	auto& tankSystem = _world->registerSystem<TankSystem>();
-	auto& syncSystem = _world->registerSystem<ClientStateSyncSystem>();
+	auto& syncSystem = _world->registerSystem<ClientSyncSystem>();
 	auto& interpolationSystem = _world->registerSystem<InterpolationSystem>();
+	auto& audioSystem = _world->registerSystem<AudioSystem>();
 
 
 	syncSystem.setPriority(20000);

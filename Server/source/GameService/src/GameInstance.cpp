@@ -95,29 +95,6 @@ void GameInstance::LoadMapInfoToWorld()
 	}
 }
 
-void GameInstance::BroadCaseGameState()
-{
-	if (!_sender)
-		return;
-
-	auto& sender = _sender;
-
-	if (auto sync = _world->getSystem<ServerStateSyncSystem>())
-	{
-		auto& gamestate = sync->GetGameState();
-		if (gamestate.hasConsume)
-			return;
-
-		gamestate.hasConsume = true;
-
-		json js;
-		js["command"] = GameService_BroadCastGameState;
-		js["gamestate"] = gamestate.toJson();
-
-		sender->Broadcast(js);
-	}
-}
-
 GameInstance::GameInstance(const GameID& gameId, MapID mapid)
 	: _gameId(gameId), _mapid(mapid), _state(State::RUNNING)
 {
@@ -155,7 +132,7 @@ bool GameInstance::Initialize()
 	auto& wallSystem = _world->registerSystem<WallSystem>();
 	auto& propSystem = _world->registerSystem<PropSystem>();
 	auto& tankSystem = _world->registerSystem<TankSystem>();
-	auto& syncSystem = _world->registerSystem<ServerStateSyncSystem>();
+	auto& syncSystem = _world->registerSystem<ServerSyncSystem>();
 	auto& propGenerateSystem = _world->registerSystem<PropGenerateSystem>();
 
 
@@ -171,6 +148,7 @@ bool GameInstance::Initialize()
 
 	float syncfps = Config("../config/config.ini").Read(std::string("ServerSyncFps"), 60.0);
 
+	syncSystem.SetNetworkMessageSender(_sender);
 	syncSystem.SetSyncFps(syncfps);
 
 	LoadMapInfoToWorld();
@@ -233,7 +211,6 @@ void GameInstance::GameLoop()
 		_world->update(dt);
 		if (_stop)
 			break;
-		BroadCaseGameState();
 
 		fpscontroller.run();
 	}

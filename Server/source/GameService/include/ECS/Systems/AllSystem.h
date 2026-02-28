@@ -12,7 +12,7 @@
 #include "ECS/Systems/WallSystem.h"
 #include "ECS/Systems/PropSystem.h"
 #include "ECS/Systems/TankSystem.h"
-#include "ECS/Systems/ServerStateSyncSystem.h"
+#include "ECS/Systems/ServerSyncSystem.h"
 #include "ECS/Systems/CheckGameOverSystem.h"
 #include "ECS/Systems/AIInputSystem.h"
 #include "ECS/Systems/PropGenerateSystem.h"

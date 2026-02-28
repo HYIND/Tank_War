@@ -207,6 +207,7 @@
     <ClInclude Include="source\include\ECS\Core\Types.h" />
     <ClInclude Include="source\include\ECS\Core\World.h" />
     <ClInclude Include="source\include\ECS\Event\ECSEventDef.h" />
+    <ClInclude Include="source\include\ECS\Event\SyncEventDef.h" />
     <ClInclude Include="source\include\ECS\Factory\BulletFactory.h" />
     <ClInclude Include="source\include\ECS\Factory\PropFactory.h" />
     <ClInclude Include="source\include\ECS\Factory\TankFactory.h" />
@@ -226,7 +227,7 @@
     <ClInclude Include="source\include\ECS\Systems\PropSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\PhysicsSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\RenderSystem.h" />
-    <ClInclude Include="source\include\ECS\Systems\ClientStateSyncSystem.h" />
+    <ClInclude Include="source\include\ECS\Systems\ClientSyncSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\TankSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\VelocityControlSystem.h" />
     <ClInclude Include="source\include\ECS\Systems\WallSystem.h" />
@@ -244,6 +245,7 @@
     <ClInclude Include="source\include\Helper\TripleBuffer.h" />
     <ClInclude Include="source\include\Manager\AudioDeviceManager.h" />
     <ClInclude Include="source\include\Manager\BGMManager.h" />
+    <ClInclude Include="source\include\Manager\FocusManager.h" />
     <ClInclude Include="source\include\Manager\GameWorldManager.h" />
     <ClInclude Include="source\include\Manager\LobbyManager.h" />
     <ClInclude Include="source\include\Manager\MapManager.h" />
@@ -324,6 +326,7 @@
     <ClCompile Include="source\src\Entity.cpp" />
     <ClCompile Include="source\src\EntityManager.cpp" />
     <ClCompile Include="source\src\FileIO.cpp" />
+    <ClCompile Include="source\src\FocusManager.cpp" />
     <ClCompile Include="source\src\GameWorldManager.cpp" />
     <ClCompile Include="source\src\HealthSystem.cpp" />
     <ClCompile Include="source\src\InterpolationSystem.cpp" />
@@ -350,8 +353,9 @@
     <ClCompile Include="source\src\Scene_inner.cpp" />
     <ClCompile Include="source\src\Scene_outer.cpp" />
     <ClCompile Include="source\src\RenderSystem.cpp" />
-    <ClCompile Include="source\src\ClientStateSyncSystem.cpp" />
+    <ClCompile Include="source\src\ClientSyncSystem.cpp" />
     <ClCompile Include="source\src\Style.cpp" />
+    <ClCompile Include="source\src\SyncEventDef.cpp" />
     <ClCompile Include="source\src\System.cpp" />
     <ClCompile Include="source\src\SystemManager.cpp" />
     <ClCompile Include="source\src\TankFactory.cpp" />

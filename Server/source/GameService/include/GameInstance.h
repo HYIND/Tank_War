@@ -65,8 +65,6 @@ private:
     void GameLoop();
     void LoadMapInfoToWorld();
 
-    void BroadCaseGameState();
-
 private:
     GameID _gameId;
     State _state;

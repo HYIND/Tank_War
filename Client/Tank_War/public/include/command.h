@@ -75,9 +75,11 @@ namespace GameServiceCommand
 	constexpr int GameService_InputToGame = 200003;
 	constexpr int GameService_InputToGameRes = 201003;
 
-	constexpr int GameService_BroadCastGameState = 202000;
+    constexpr int GameService_BroadCastGameState = 202000;
 
-	constexpr int GameService_EliminateInfo = 202001;
+    constexpr int GameService_SyncGameEvent = 202001;
 
-	constexpr int GameService_GameOverInfo = 202002;
+    constexpr int GameService_EliminateInfo = 202002;
+
+    constexpr int GameService_GameOverInfo = 202003;
 }

@@ -10,9 +10,9 @@
 class IComponentArray {
 public:
 	virtual ~IComponentArray() = default;
-	virtual void removeComponent(Entity& entity) = 0;
-	virtual bool hasComponent(EntityID entityId) const = 0;
-	virtual void entityDestroyed(Entity& entity) = 0;
+	virtual void removeComponent(const Entity& entity) = 0;
+	virtual bool hasComponent(const EntityID& entityId) const = 0;
+	virtual void entityDestroyed(const Entity& entity) = 0;
 };
 
 
@@ -21,7 +21,7 @@ class ComponentArray : public IComponentArray {
 
 public:
 	template<typename... Args>
-	T& addComponent(Entity& entity, Args&&... args)
+	T& addComponent(const Entity& entity, Args&&... args)
 	{
 		EntityID entityId = entity.getId();
 		assert(entityToIndex.find(entityId) == entityToIndex.end() &&
@@ -42,7 +42,7 @@ public:
 		return componentData[newIndex];
 	}
 
-	void removeComponent(Entity& entity)
+	void removeComponent(const Entity& entity)
 	{
 		EntityID entityId = entity.getId();
 		if (!hasComponent(entityId))
@@ -80,7 +80,7 @@ public:
 		size--;
 	}
 
-	T& getComponent(EntityID entityId) {
+	T& getComponent(const EntityID& entityId) {
 		assert(hasComponent(entityId) && "Entity does not have this component!");
 		return componentData[entityToIndex[entityId]];
 	}
@@ -91,18 +91,18 @@ public:
 	//	return componentData[it->second];
 	//}
 
-	T* tryGetComponent(EntityID entityId)
+	T* tryGetComponent(const EntityID& entityId)
 	{
 		if (!hasComponent(entityId))
 			return nullptr;
 		return &componentData[entityToIndex[entityId]];
 	}
 
-	bool hasComponent(EntityID entityId) const {
+	bool hasComponent(const EntityID& entityId) const {
 		return entityToIndex.find(entityId) != entityToIndex.end();
 	}
 
-	void entityDestroyed(Entity& entity) override {
+	void entityDestroyed(const Entity& entity) override {
 		EntityID entityId = entity.getId();
 		if (hasComponent(entityId)) {
 			removeComponent(entity);

@@ -148,7 +148,7 @@
     <ClCompile Include="source\src\ClientInputSystem.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="source\src\ClientStateSyncSystem.cpp">
+    <ClCompile Include="source\src\ClientSyncSystem.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="source\src\InterpolationSystem.cpp">
@@ -176,6 +176,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="source\src\PropGenerateSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\SyncEventDef.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\src\FocusManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -441,7 +447,7 @@
     <ClInclude Include="source\include\Helper\TripleBuffer.h">
       <Filter>头文件\Helper</Filter>
     </ClInclude>
-    <ClInclude Include="source\include\ECS\Systems\ClientStateSyncSystem.h">
+    <ClInclude Include="source\include\ECS\Systems\ClientSyncSystem.h">
       <Filter>头文件\ECS\Systems</Filter>
     </ClInclude>
     <ClInclude Include="public\include\GameDataDef.h">
@@ -479,6 +485,12 @@
     </ClInclude>
     <ClInclude Include="source\include\ECS\Systems\PropGenerateSystem.h">
       <Filter>头文件\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\ECS\Event\SyncEventDef.h">
+      <Filter>头文件\ECS\Event</Filter>
+    </ClInclude>
+    <ClInclude Include="source\include\Manager\FocusManager.h">
+      <Filter>头文件\Manager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
