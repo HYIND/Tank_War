@@ -8,8 +8,10 @@ MapInfo Init_Map_1()
 	// info.backGrounp_resname = ResName::sandBK;
 
 	// 玩家出生点
-	info.tankbirthinfos.emplace_back(Pos2(80, 280), 0, 36, 36, TankVisual::VisualState::BASIC);
-	info.tankbirthinfos.emplace_back(Pos2(MapBoundary::right - 80, 280), 180.f, 36, 36, TankVisual::VisualState::BASIC);
+	info.tankbirthinfos.emplace_back(Pos2(80, 120), 0, 36, 36, TankVisual::VisualState::BASIC);
+	info.tankbirthinfos.emplace_back(Pos2(80, 480), 0, 36, 36, TankVisual::VisualState::BASIC);
+	info.tankbirthinfos.emplace_back(Pos2(MapBoundary::right - 80, 120), 180.f, 36, 36, TankVisual::VisualState::BASIC);
+	info.tankbirthinfos.emplace_back(Pos2(MapBoundary::right - 80, 480), 180.f, 36, 36, TankVisual::VisualState::BASIC);
 
 	info.aitankbirthinfos.emplace_back(Pos2(470, 300), -95.f, 36, 36, TankVisual::VisualState::BASIC);
 

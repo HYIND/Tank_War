@@ -14,7 +14,7 @@ JsonProtocolClient::~JsonProtocolClient()
 bool JsonProtocolClient::Connect(const std::string& IP, uint16_t Port)
 {
 	_sessionId = "";
-	bool result = _session->Connect(IP, Port);
+	bool result = _session->Connect(IP, Port).sync_wait();
 	if (result)
 		result = RequestSessionId();
 	if (!result)
@@ -48,11 +48,11 @@ bool JsonProtocolClient::Request(const json& js_request, json& response)
 {
 	std::string str_resp = js_request.dump();
 	Buffer buf_req(str_resp);
-	Buffer buf_resp;
-	if (!_session->AwaitSend(buf_req, buf_resp))
+	auto result = _session->AwaitSend(buf_req).sync_wait();
+	if (result->code != AwaitErrorCode::Success)
 		return false;
 
-	response = Tool::ParseJson(buf_resp);
+	response = Tool::ParseJson(result->response);
 	return true;
 }
 

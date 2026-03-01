@@ -28,8 +28,7 @@ public:
 	~WebSocketClient();
 
 public:
-	virtual bool Connect(const std::string& IP, uint16_t Port);
-	virtual Task<bool> ConnectAsync(const std::string& IP, uint16_t Port);
+	virtual Task<bool> Connect(std::string IP, uint16_t Port);
 
 	virtual bool Release();
 
@@ -39,8 +38,7 @@ public:
 	virtual bool Send(const Buffer& buffer);
 
 public:
-	virtual bool TryHandshake(uint32_t timeOutMs);
-	virtual Task<bool> TryHandshakeAsync(uint32_t timeOutMs);
+	virtual Task<bool> TryHandshake();
 
 	virtual CheckHandshakeStatus CheckHandshakeTryMsg(Buffer& buffer);
 	virtual CheckHandshakeStatus CheckHandshakeConfirmMsg(Buffer& buffer);
@@ -60,8 +58,6 @@ private:
 	Buffer cacheBuffer;         // 握手消息/数据帧解析缓冲
 	WebSocketPackage* cachePak; // 多帧数据组成的完整帧缓冲
 
-	// 主动握手用
+	// 握手用
 	std::string _SecWsKey;
-	std::mutex _tryHandshakeMutex;
-	std::condition_variable _tryHandshakeCV;
 };

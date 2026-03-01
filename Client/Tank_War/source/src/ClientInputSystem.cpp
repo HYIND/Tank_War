@@ -91,7 +91,7 @@ void sendInputStateToService(PlayerInput& input)
 	CONNECTMANAGER->GameSend(js);
 }
 
-void ClientInputSystem::update(float deltaTime)
+void  ClientInputSystem::update(float deltaTime)
 {
 }
 

@@ -16,7 +16,6 @@ public:
 	~TCPTransportListener();
 	bool Listen(const std::string& IP, int Port);
 	bool ReleaseListener();
-	bool ReleaseClients();
 	void BindAcceptCallBack(std::function<void(std::shared_ptr<TCPTransportConnection>)> callback);
 
 protected:

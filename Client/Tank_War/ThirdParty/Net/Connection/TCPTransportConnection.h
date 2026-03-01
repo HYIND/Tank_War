@@ -6,7 +6,6 @@
 #pragma once
 
 #include "BaseTransportConnection.h"
-#include "SpinLock.h"
 
  // TCP传输层客户端(连接对象)
 class NET_API TCPTransportConnection : public BaseTransportConnection
@@ -15,8 +14,7 @@ class NET_API TCPTransportConnection : public BaseTransportConnection
 public:
 	TCPTransportConnection();
 	~TCPTransportConnection();
-	bool Connect(const std::string& IP, uint16_t Port);
-	Task<bool> ConnectAsync(const std::string& IP, uint16_t Port);
+	Task<bool> Connect(std::string IP, uint16_t Port);
 
 	void Apply(const BaseSocket fd, const sockaddr_in& sockaddr, const SocketType type);
 	bool Release();

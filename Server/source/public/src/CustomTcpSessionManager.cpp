@@ -16,7 +16,12 @@ bool CustomTcpSessionConnectManager::AwaitSend(const std::string &conid, const B
     if (!ConIdToBaseNetWork.FindByLeft(conid, session) || !session)
         return false;
 
-    return ((CustomTcpSession *)session)->AwaitSend(buf, response);
+    auto result = ((CustomTcpSession*)session)->AwaitSend(buf).sync_wait();
+    if (result->code != AwaitErrorCode::Success)
+        return false;
+
+    response.QuoteFromBuf(result->response);
+    return true;
 }
 
 void CustomTcpSessionConnectManager::SessionEstablish(BaseNetWorkSession *session)

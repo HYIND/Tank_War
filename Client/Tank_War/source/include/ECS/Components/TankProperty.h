@@ -5,7 +5,7 @@
 
 struct TankProperty :public IComponent
 {
-	enum TankOwner { PLAYER1, PLAYER2, AI };
+	enum TankOwner { PLAYER1, PLAYER2, PLAYER3, PLAYER4, AI };
 
 	TankOwner owner = TankOwner::AI;
 

@@ -27,8 +27,7 @@ public:
 	TCPEndPoint();
 	virtual ~TCPEndPoint();
 
-	virtual bool Connect(const std::string& IP, uint16_t Port);
-	virtual Task<bool> ConnectAsync(const std::string& IP, uint16_t Port);
+	virtual Task<bool> Connect(std::string IP, uint16_t Port);
 
 	virtual bool Release();
 
@@ -39,10 +38,11 @@ public:
 
 	std::shared_ptr<TCPTransportConnection> GetBaseCon();
 
+	void SetHandShakeTimeOut(uint32_t ms);
+	uint32_t GetHandShakeTimeOut();
+
 public:
-	// 2表示协议握手所需的字节流长度不足，0表示握手失败，关闭连接，1表示握手成功，建立连接
-	virtual bool TryHandshake(uint32_t timeOutMs) = 0;                         // 作为发起连接的一方，主动发送握手信息
-	virtual Task<bool> TryHandshakeAsync(uint32_t timeOutMs) = 0;              // 作为发起连接的一方，主动发送握手信息
+	virtual Task<bool> TryHandshake() = 0;   // 作为发起连接的一方，主动发送握手信息
 #
 	virtual CheckHandshakeStatus CheckHandshakeTryMsg(Buffer& buffer) = 0;     // 作为接受连接的一方，检查连接发起者的握手信息，并返回回复信息
 	virtual CheckHandshakeStatus CheckHandshakeConfirmMsg(Buffer& buffer) = 0; // 作为发起连接的一方，检查连接接受者的返回的回复信息，若确认则连接建立
@@ -65,6 +65,7 @@ protected:
 	std::function<void(TCPEndPoint*, Buffer*)> _callbackMessage;
 	std::function<void(TCPEndPoint*)> _callbackClose;
 
-	CoTimer* _handshaketimeout;
-	CriticalSectionLock _Colock;
+	std::shared_ptr<CoTimer> _handshaketimer;
+
+	uint32_t _handshaketimeOutMs = 10 * 1000;
 };

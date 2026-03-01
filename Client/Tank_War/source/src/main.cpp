@@ -70,7 +70,7 @@ bool Init_all_Resource()
 }
 
 
-#define ShowConsole
+//#define ShowConsole
 
 // 创建并重定向控制台
 bool CreateDebugConsole(const wchar_t* title = L"TankWar Debug Console") {

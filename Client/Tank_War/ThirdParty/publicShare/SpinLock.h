@@ -1,8 +1,10 @@
 #pragma once
 
 #include <atomic>
+#include <thread>
 
 #include "PublicShareExportMacro.h"
+
 
 // 自旋锁
 class PUBLICSHARE_API SpinLock
@@ -17,4 +19,24 @@ public:
 
 private:
 	std::atomic_flag _flag;
+};
+
+// 自旋锁
+class PUBLICSHARE_API RecursiveSpinLock
+{
+public:
+	RecursiveSpinLock();
+	RecursiveSpinLock(const RecursiveSpinLock&) = delete;
+	RecursiveSpinLock& operator=(const RecursiveSpinLock) = delete;
+	bool trylock();
+	void lock();
+	void unlock();
+
+	bool is_locked()const;
+	int recursion_count()const;
+
+private:
+	std::atomic_flag _flag;
+	std::thread::id _owner;    // 持有锁的线程ID
+	int _recursion_count = 0;  // 递归计数
 };

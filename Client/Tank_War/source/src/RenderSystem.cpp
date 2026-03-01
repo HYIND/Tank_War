@@ -119,7 +119,11 @@ void RenderSystem::processTankVisual(std::shared_ptr<RenderFrameData> framebuffe
 			if (tankproperty.owner == TankProperty::TankOwner::PLAYER1)
 				renderdata->bitmap = ResFactory->GetBitMapRes(ResName::redTank);			
 			else if (tankproperty.owner == TankProperty::TankOwner::PLAYER2)
-				renderdata->bitmap = ResFactory->GetBitMapRes(ResName::blueTank);			
+				renderdata->bitmap = ResFactory->GetBitMapRes(ResName::blueTank);
+			else if (tankproperty.owner == TankProperty::TankOwner::PLAYER3)
+				renderdata->bitmap = ResFactory->GetBitMapRes(ResName::redTank);
+			else if (tankproperty.owner == TankProperty::TankOwner::PLAYER4)
+				renderdata->bitmap = ResFactory->GetBitMapRes(ResName::blueTank);
 			else if (tankproperty.owner == TankProperty::TankOwner::AI)
 				renderdata->bitmap = ResFactory->GetBitMapRes(ResName::greenTank);
 		}

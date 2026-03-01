@@ -12,8 +12,7 @@ public:
 	~PureTCPClient();
 
 public:
-	virtual bool Connect(const std::string& IP, uint16_t Port);
-	virtual Task<bool> ConnectAsync(const std::string& IP, uint16_t Port);
+	virtual Task<bool> Connect(std::string IP, uint16_t Port);
 	virtual bool Release();
 
 	virtual bool OnRecvBuffer(Buffer* buffer);
@@ -22,8 +21,7 @@ public:
 	virtual bool Send(const Buffer& buffer);
 
 public:
-	virtual bool TryHandshake(uint32_t timeOutMs);
-	virtual Task<bool> TryHandshakeAsync(uint32_t timeOutMs);
+	virtual Task<bool> TryHandshake();
 
 	virtual CheckHandshakeStatus CheckHandshakeTryMsg(Buffer& buffer);
 	virtual CheckHandshakeStatus CheckHandshakeConfirmMsg(Buffer& buffer);

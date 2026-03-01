@@ -15,7 +15,13 @@ void GameInstance::LoadMapInfoToWorld()
 {
 	auto mapinfo = MapManager::Instance()->getMap(_mapid);
 
-	static std::vector<TankProperty::TankOwner> avaliableplayer = { TankProperty::TankOwner::PLAYER1, TankProperty::TankOwner::PLAYER2 };
+	static std::vector<TankProperty::TankOwner> avaliableplayer =
+	{
+		TankProperty::TankOwner::PLAYER1,
+		TankProperty::TankOwner::PLAYER2,
+		TankProperty::TankOwner::PLAYER3,
+		TankProperty::TankOwner::PLAYER4
+	};
 
 	auto playerid_list = _PlayerIdToGamePlayer.GetKeys();
 	// 生成玩家坦克

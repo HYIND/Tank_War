@@ -12,6 +12,20 @@ struct CustomPackage
 	uint8_t msgType = 0; // 0:null, 1:请求, 2:响应
 };
 
+enum class AwaitErrorCode
+{
+	InnerError = -1,
+	Success = 0,
+	InvalidBuffer = 1,
+	TimeOut = 2,
+	NetWorkError = 3
+};
+struct AwaitResult
+{
+	AwaitErrorCode code;
+	Buffer response;
+};
+
 // 基于TCP应用层客户端的自定义通讯协议会话封装
 class NET_API CustomTcpSession : public BaseNetWorkSession
 {
@@ -19,30 +33,25 @@ class NET_API CustomTcpSession : public BaseNetWorkSession
 	struct AwaitTask
 	{
 		int seq = 0;
-		Buffer* respsonse;
-		std::mutex _mtx;
-		std::condition_variable _cv;
-		int status = -1; //-1无效，0等待超时，1等待中
-		bool time_out = false;
+		std::shared_ptr<AwaitResult> res;
+		std::shared_ptr<CoTimer> timer;
 	};
 
 public:
 	CustomTcpSession(PureTCPClient* client = nullptr);
 	~CustomTcpSession();
-	virtual bool Connect(const std::string& IP, uint16_t Port);
-	virtual Task<bool> ConnectAsync(const std::string& IP, uint16_t Port);
+	virtual Task<bool> Connect(std::string IP, uint16_t Port);
 
 	virtual bool Release();
 
 	bool AsyncSend(const Buffer& buffer);                   // 异步发送，不关心返回结果
-	bool AwaitSend(const Buffer& buffer, Buffer& response); // 等待返回结果的发送，关心返回的结果
+	Task<std::shared_ptr<AwaitResult>> AwaitSend(Buffer buffer, std::chrono::milliseconds timeout = std::chrono::milliseconds(5 * 1000)); // 等待返回结果的发送，关心返回的结果
 	PureTCPClient* GetBaseClient();
 
 	void BindRecvRequestCallBack(std::function<void(BaseNetWorkSession*, Buffer* recv, Buffer* resp)> callback);
 
 public:
-	virtual bool TryHandshake(uint32_t timeOutMs);
-	virtual Task<bool> TryHandshakeAsync(uint32_t timeOutMs);
+	virtual Task<bool> TryHandshake();
 
 	virtual CheckHandshakeStatus CheckHandshakeTryMsg(Buffer& buffer);
 	virtual CheckHandshakeStatus CheckHandshakeConfirmMsg(Buffer& buffer);
@@ -66,12 +75,8 @@ private:
 	SafeQueue<CustomPackage*> _SendPaks;
 
 	std::function<void(BaseNetWorkSession*, Buffer* recv, Buffer* response)> _callbackRecvRequest;
-	SafeMap<int, AwaitTask*> _AwaitMap; // seq->AwaitTask
+	SafeUnorderedMap<int, std::shared_ptr<AwaitTask>> _AwaitMap; // seq->AwaitTask
 
 	Buffer cacheBuffer;
 	CustomPackage* cachePak; // 握手/数据包解析缓存
-
-	// 主动握手用
-	std::mutex _tryHandshakeMutex;
-	std::condition_variable _tryHandshakeCV;
 };

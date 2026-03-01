@@ -32,6 +32,8 @@ using BaseSocket = SOCKET;
 #endif
 #endif
 
+PUBLICSHARE_API std::coroutine_handle<> DeleteLater(std::shared_ptr<std::coroutine_handle<>> p);
+
 struct PUBLICSHARE_API RegisterTaskAwaiter
 {
 	bool await_ready();
@@ -49,10 +51,10 @@ struct PUBLICSHARE_API TaskHandle
 
 template <typename T>
 class Task;
-
 template <typename T>
 struct TaskPromiseBase
 {
+
 	std::exception_ptr exception_;
 	std::coroutine_handle<> continuation_;
 
@@ -66,26 +68,32 @@ struct TaskPromiseBase
 
 	auto final_suspend() noexcept
 	{
+
 		struct FinalAwaiter
 		{
 			TaskPromiseBase* promise;
+			std::shared_ptr<std::coroutine_handle<>> delaydeleteptr;
+
 			bool await_ready() noexcept { return false; }
 			std::coroutine_handle<> await_suspend(std::coroutine_handle<> completed_coro) noexcept
 			{
 				LockGuard lock(*(promise->_continuationlock));
 				auto continuation = promise->continuation_;
-				if (continuation)
-				{
-					promise->_syncwaitcv->NotifyAll();
-					return continuation;
-				}
+
 				promise->_syncwaitcv->NotifyAll();
-				return std::noop_coroutine();
+
+				if (continuation)
+					return continuation;
+				else
+					return DeleteLater(std::move(delaydeleteptr));
 			}
 
 			void await_resume() noexcept {}
 		};
-		return FinalAwaiter{ this };
+
+		std::shared_ptr<std::coroutine_handle<>> shared = on_post_final_suspend();
+
+		return FinalAwaiter{ this,shared };
 	}
 
 	void unhandled_exception() noexcept
@@ -97,12 +105,17 @@ struct TaskPromiseBase
 	{
 		continuation_ = continuation;
 	}
+
+	virtual std::shared_ptr<std::coroutine_handle<>> on_post_final_suspend() = 0;
 };
 
 // 非 void 类型的 Promise
 template <typename T>
 struct TaskPromise : TaskPromiseBase<T>
 {
+	using CoroHandleType = std::coroutine_handle<TaskPromise<T>>;
+	std::shared_ptr<CoroHandleType> _shared_handle;
+
 	std::optional<T> value_;
 
 	Task<T> get_return_object() noexcept;
@@ -126,6 +139,17 @@ struct TaskPromise : TaskPromiseBase<T>
 		return value_.value();
 	}
 
+	virtual std::shared_ptr<std::coroutine_handle<>> on_post_final_suspend() override
+	{
+		std::coroutine_handle<>* base_handle = new std::coroutine_handle<>(std::coroutine_handle<>::from_address(_shared_handle->address()));
+		std::shared_ptr<std::coroutine_handle<>> base_shared(
+			_shared_handle,
+			base_handle
+		);
+		_shared_handle.reset();
+		return base_shared;
+	}
+
 	~TaskPromise() = default;
 };
 
@@ -133,6 +157,9 @@ struct TaskPromise : TaskPromiseBase<T>
 template <>
 struct TaskPromise<void> : TaskPromiseBase<void>
 {
+	using CoroHandleType = std::coroutine_handle<TaskPromise<void>>;
+	std::shared_ptr<CoroHandleType> _shared_handle;
+
 	Task<void> get_return_object() noexcept;
 
 	void return_void() noexcept {}
@@ -143,6 +170,17 @@ struct TaskPromise<void> : TaskPromiseBase<void>
 		{
 			std::rethrow_exception(exception_);
 		}
+	}
+
+	virtual std::shared_ptr<std::coroutine_handle<>> on_post_final_suspend() override
+	{
+		std::coroutine_handle<>* base_handle = new std::coroutine_handle<>(std::coroutine_handle<>::from_address(_shared_handle->address()));
+		std::shared_ptr<std::coroutine_handle<>> base_shared(
+			_shared_handle,
+			base_handle
+		);
+		_shared_handle.reset();
+		return base_shared;
 	}
 
 	~TaskPromise() = default;
@@ -219,12 +257,12 @@ public:
 	using value_type = T;
 
 	Task() {};
-	explicit Task(std::coroutine_handle<promise_type> coroutine, std::shared_ptr<CriticalSectionLock> lock, std::shared_ptr<ConditionVariable> cv) noexcept
-		: coroutine_(coroutine), _continuationlock(lock), _syncwaitcv(cv) {
+	explicit Task(std::shared_ptr<std::coroutine_handle<promise_type>> shared_coroutine, std::shared_ptr<CriticalSectionLock> lock, std::shared_ptr<ConditionVariable> cv) noexcept
+		: _shared_coroutine(shared_coroutine), _continuationlock(lock), _syncwaitcv(cv) {
 	}
 
 	Task(Task&& other) noexcept
-		: coroutine_(std::exchange(other.coroutine_, nullptr)), _continuationlock(other._continuationlock), _syncwaitcv(other._syncwaitcv) {
+		: _shared_coroutine(std::move(other._shared_coroutine)), _continuationlock(other._continuationlock), _syncwaitcv(other._syncwaitcv) {
 		other._continuationlock.reset();
 		other._syncwaitcv.reset();
 	}
@@ -233,7 +271,7 @@ public:
 	{
 		if (this != &other)
 		{
-			coroutine_ = std::exchange(other.coroutine_, nullptr);
+			_shared_coroutine = std::move(other._shared_coroutine);
 			_continuationlock = other._continuationlock;
 			_syncwaitcv = other._syncwaitcv;
 
@@ -252,21 +290,21 @@ public:
 
 	TaskAwaiter<T> operator co_await() const noexcept
 	{
-		return TaskAwaiter<T>{coroutine_, _continuationlock};
+		return TaskAwaiter<T>{*_shared_coroutine, _continuationlock};
 	}
 
 	template <typename U = T>
 	std::enable_if_t<!std::is_void_v<U>, U> sync_wait()
 	{
-		if (coroutine_)
+		if (*_shared_coroutine)
 		{
 			LockGuard guard(*_continuationlock);
-			if (coroutine_.done())
+			if ((*_shared_coroutine).done())
 			{
-				return coroutine_.promise().result();
+				return (*_shared_coroutine).promise().result();
 			}
 			_syncwaitcv->Wait(guard);
-			return coroutine_.promise().result();
+			return (*_shared_coroutine).promise().result();
 		}
 		throw std::runtime_error("Invalid task");
 	}
@@ -274,16 +312,19 @@ public:
 	template <typename U = T>
 	std::enable_if_t<std::is_void_v<U>, void> sync_wait()
 	{
-		if (coroutine_)
+		if (!_shared_coroutine || !_continuationlock || !_syncwaitcv)
+			throw std::runtime_error("Invalid Coroutine");
+
+		if (*_shared_coroutine)
 		{
 			LockGuard guard(*_continuationlock);
-			if (coroutine_.done())
+			if ((*_shared_coroutine).done())
 			{
-				coroutine_.promise().result();
+				(*_shared_coroutine).promise().result();
 				return;
 			}
 			_syncwaitcv->Wait(guard);
-			coroutine_.promise().result();
+			(*_shared_coroutine).promise().result();
 			return;
 		}
 		throw std::runtime_error("Invalid task");
@@ -291,21 +332,18 @@ public:
 
 	bool is_done() const noexcept
 	{
-		return !coroutine_ || coroutine_.done();
-	}
-
-	auto get_handle() const noexcept
-	{
-		return coroutine_;
+		if (!_shared_coroutine)
+			throw std::runtime_error("Invalid Coroutine");
+		return !(*_shared_coroutine) || (*_shared_coroutine).done();
 	}
 
 	explicit operator bool() const noexcept
 	{
-		return bool(coroutine_);
+		return bool(_shared_coroutine) && bool(*_shared_coroutine);
 	}
 
 private:
-	std::coroutine_handle<promise_type> coroutine_;
+	std::shared_ptr<std::coroutine_handle<promise_type>> _shared_coroutine;
 	std::shared_ptr<CriticalSectionLock> _continuationlock;
 	std::shared_ptr<ConditionVariable> _syncwaitcv;
 
@@ -316,16 +354,44 @@ private:
 template <typename T>
 inline Task<T> TaskPromise<T>::get_return_object() noexcept
 {
+	auto raw_handle = CoroHandleType::from_promise(*this);
+	_shared_handle = std::shared_ptr<CoroHandleType>(new CoroHandleType(raw_handle),
+		[](CoroHandleType* handle) {
+			if (handle)
+			{
+				if (*handle)
+				{
+					handle->destroy();
+				}
+				delete handle;
+			}
+		}
+	);
+
 	return Task<T>(
-		std::coroutine_handle<TaskPromise<T>>::from_promise(*this),
+		_shared_handle,
 		TaskPromiseBase<T>::_continuationlock,
 		TaskPromiseBase<T>::_syncwaitcv);
 }
 
 inline Task<void> TaskPromise<void>::get_return_object() noexcept
 {
+	auto raw_handle = CoroHandleType::from_promise(*this);
+	_shared_handle = std::shared_ptr<CoroHandleType>(new CoroHandleType(raw_handle),
+		[](CoroHandleType* handle) {
+			if (handle)
+			{
+				if (*handle)
+				{
+					handle->destroy();
+				}
+				delete handle;
+			}
+		}
+	);
+
 	return Task<void>(
-		std::coroutine_handle<TaskPromise<void>>::from_promise(*this),
+		_shared_handle,
 		TaskPromiseBase<void>::_continuationlock,
 		TaskPromiseBase<void>::_syncwaitcv);
 }

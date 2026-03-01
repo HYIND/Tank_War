@@ -21,8 +21,11 @@ public:
 	Buffer& operator=(const Buffer& other);
 	Buffer& operator=(Buffer&& other);
 
-	void* Data() const;
-	char* Byte() const;
+	void* Data();
+	const void* Data() const;
+	char* Byte();
+	const char* Byte() const;
+
 	uint64_t Length() const;
 	uint64_t Position() const;
 	uint64_t Remain() const;

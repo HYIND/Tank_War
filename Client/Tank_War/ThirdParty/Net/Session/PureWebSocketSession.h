@@ -14,8 +14,7 @@ class NET_API PureWebSocketSession : public BaseNetWorkSession
 public:
 	PureWebSocketSession(WebSocketClient* client = nullptr);
 	~PureWebSocketSession();
-	virtual bool Connect(const std::string& IP, uint16_t Port);
-	virtual Task<bool> ConnectAsync(const std::string& IP, uint16_t Port);
+	virtual Task<bool> Connect(std::string IP, uint16_t Port);
 
 	virtual bool Release();
 
@@ -24,8 +23,7 @@ public:
 	WebSocketClient* GetBaseClient();
 
 public:
-	virtual bool TryHandshake(uint32_t timeOutMs);
-	virtual Task<bool> TryHandshakeAsync(uint32_t timeOutMs);
+	virtual Task<bool> TryHandshake();
 
 	virtual CheckHandshakeStatus CheckHandshakeTryMsg(Buffer& buffer);
 	virtual CheckHandshakeStatus CheckHandshakeConfirmMsg(Buffer& buffer);
