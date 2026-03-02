@@ -34,11 +34,19 @@ using BaseSocket = SOCKET;
 
 PUBLICSHARE_API std::coroutine_handle<> DeleteLater(std::shared_ptr<std::coroutine_handle<>> p);
 
-struct PUBLICSHARE_API RegisterTaskAwaiter
+struct PUBLICSHARE_API yieldAwaiter
 {
 	bool await_ready();
 	void await_suspend(std::coroutine_handle<> coro);
 	void await_resume();
+};
+
+// 实现co_await yield()
+// 让出协程
+class PUBLICSHARE_API yield
+{
+public:
+	yieldAwaiter operator co_await();
 };
 
 struct PUBLICSHARE_API TaskHandle
@@ -63,7 +71,7 @@ struct TaskPromiseBase
 
 	auto initial_suspend() noexcept
 	{
-		return RegisterTaskAwaiter{};
+		return yieldAwaiter{};
 	}
 
 	auto final_suspend() noexcept
@@ -141,13 +149,14 @@ struct TaskPromise : TaskPromiseBase<T>
 
 	virtual std::shared_ptr<std::coroutine_handle<>> on_post_final_suspend() override
 	{
-		std::coroutine_handle<>* base_handle = new std::coroutine_handle<>(std::coroutine_handle<>::from_address(_shared_handle->address()));
-		std::shared_ptr<std::coroutine_handle<>> base_shared(
+		// 把带类型的_shared_handle转换成原始类型的shared_ptr
+		// _shared_handle指向的内容保留在控制块的deleter中
+		std::shared_ptr<std::coroutine_handle<>> contorl_block_sharedptr(
 			_shared_handle,
-			base_handle
+			nullptr
 		);
 		_shared_handle.reset();
-		return base_shared;
+		return contorl_block_sharedptr;
 	}
 
 	~TaskPromise() = default;
@@ -174,13 +183,14 @@ struct TaskPromise<void> : TaskPromiseBase<void>
 
 	virtual std::shared_ptr<std::coroutine_handle<>> on_post_final_suspend() override
 	{
-		std::coroutine_handle<>* base_handle = new std::coroutine_handle<>(std::coroutine_handle<>::from_address(_shared_handle->address()));
-		std::shared_ptr<std::coroutine_handle<>> base_shared(
+		// 把带类型的_shared_handle转换成原始类型的shared_ptr
+		// _shared_handle指向的内容保留在控制块的deleter中
+		std::shared_ptr<std::coroutine_handle<>> contorl_block_sharedptr(
 			_shared_handle,
-			base_handle
+			nullptr
 		);
 		_shared_handle.reset();
-		return base_shared;
+		return contorl_block_sharedptr;
 	}
 
 	~TaskPromise() = default;
@@ -330,7 +340,7 @@ public:
 		throw std::runtime_error("Invalid task");
 	}
 
-	bool is_done() const noexcept
+	bool is_done() const
 	{
 		if (!_shared_coroutine)
 			throw std::runtime_error("Invalid Coroutine");
