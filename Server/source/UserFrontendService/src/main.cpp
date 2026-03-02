@@ -56,7 +56,9 @@ bool StartServiceRegistrar(const std::string& IP, int Port)
 
 int main()
 {
+	#ifdef _WIN32
 	system("chcp 65001 > nul"); // 切换到 UTF-8
+#endif
 
 	// LOGGER->SetLoggerPath("server.log");
 	InitNetCore();

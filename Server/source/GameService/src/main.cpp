@@ -9,10 +9,11 @@ void OnInterrupt()
 	exit(0);
 }
 
-
 #ifdef _WIN32
-BOOL WINAPI CtrlHandler(DWORD dwCtrlType) {
-	switch (dwCtrlType) {
+BOOL WINAPI CtrlHandler(DWORD dwCtrlType)
+{
+	switch (dwCtrlType)
+	{
 	case CTRL_C_EVENT:
 	case CTRL_BREAK_EVENT:
 	case CTRL_CLOSE_EVENT:
@@ -37,9 +38,9 @@ auto g_ServiceRegistrar = std::make_shared<ServiceRegistrar>();
 auto g_gameservice = std::make_shared<GameService>();
 
 bool StartGameService(
-	const std::string& IP, int Port,
-	const std::string& stub_IP, int stub_Port,
-	const std::string& gameStateService_IP, int gameStateService_Port)
+	const std::string &IP, int Port,
+	const std::string &stub_IP, int stub_Port,
+	const std::string &gameStateService_IP, int gameStateService_Port)
 {
 	g_gameservice->SetServiceEndPoint(IP, Port);
 	g_gameservice->SetStubEndPoint(stub_IP, stub_Port);
@@ -47,7 +48,7 @@ bool StartGameService(
 	return g_gameservice->Start();
 }
 
-bool StartServiceRegistrar(const std::string& IP, int Port)
+bool StartServiceRegistrar(const std::string &IP, int Port)
 {
 	g_ServiceRegistrar->AddServiceSource(g_gameservice);
 	return g_ServiceRegistrar->Start(IP, Port);
@@ -55,14 +56,17 @@ bool StartServiceRegistrar(const std::string& IP, int Port)
 
 int main()
 {
+#ifdef _WIN32
 	system("chcp 65001 > nul"); // 切换到 UTF-8
+#endif
 
 	// LOGGER->SetLoggerPath("server.log");
 	InitNetCore();
 	RunNetCoreLoop();
 
 #ifdef _WIN32
-	if (!SetConsoleCtrlHandler(CtrlHandler, TRUE)) {
+	if (!SetConsoleCtrlHandler(CtrlHandler, TRUE))
+	{
 		printf("Failed to set control handler\n");
 		return 1;
 	}
@@ -76,8 +80,8 @@ int main()
 
 	{
 		if (!StartGameService(GameServiceIP, GameServicePort,
-			GameServiceStubIP, GameServiceStubPort,
-			GameStatesServiceStubIP, GameStatesServiceStubPort))
+							  GameServiceStubIP, GameServiceStubPort,
+							  GameStatesServiceStubIP, GameStatesServiceStubPort))
 		{
 			std::cout << "StartService Error!\n";
 			return -1;
