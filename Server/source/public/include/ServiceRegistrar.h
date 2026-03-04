@@ -16,13 +16,13 @@ class ServiceRegistrar
 public:
     ServiceRegistrar(uint32_t send_interval = 2000);
     ~ServiceRegistrar();
-    bool Start(const std::string &IP, int Port);
+    Task<bool> Start(const std::string &IP, int Port);
 
     void AddServiceSource(std::shared_ptr<BaseService> source);
     void RemoveServiceSource(std::shared_ptr<BaseService> source);
 
 public:
-    void ConnectClose(JsonProtocolClient *session);
+    Task<void> ConnectClose(JsonProtocolClient *session);
 
 private:
     void SendAllServiceInfo();

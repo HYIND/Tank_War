@@ -32,8 +32,8 @@ public:
 
 	virtual bool Release();
 
-	virtual bool OnRecvBuffer(Buffer* buffer); // 用于绑定网络层(TCP/UDP)触发的Buffer回调
-	virtual bool OnConnectClose();
+	virtual Task<void> OnRecvBuffer(Buffer* buffer); // 用于绑定网络层(TCP/UDP)触发的Buffer回调
+	virtual Task<void> OnConnectClose();
 
 	virtual bool Send(const Buffer& buffer);
 
@@ -48,7 +48,7 @@ protected:
 	virtual void OnBindCloseCallBack();
 
 private:
-	void ProcessPakage(WebSocketPackage* newpak = nullptr);
+	Task<void> ProcessPakage(WebSocketPackage* newpak = nullptr);
 	SpinLock _ProcessLock;
 
 private:

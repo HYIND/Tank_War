@@ -21,41 +21,41 @@ public:
 
     void SetGameStateEndPoint(const std::string &IP, int Port);
 
-    virtual bool Start();
+    virtual Task<bool> Start();
 
 public:
-    void OnSessionEstablish(JsonProtocolSession session);
-    void OnRecvMessage(JsonProtocolSession session, json &src);
-    void OnRecvRequest(JsonProtocolSession session, json &src, json &dest);
-    void OnSessionClose(JsonProtocolSession session);
+    Task<void> OnSessionEstablish(JsonProtocolSession session);
+    Task<void> OnRecvMessage(JsonProtocolSession session, json &src);
+    Task<void> OnRecvRequest(JsonProtocolSession session, json &src, json &dest);
+    Task<void> OnSessionClose(JsonProtocolSession session);
 
 public:
     virtual std::vector<ServiceInfo> GetServiceInfo();
-    virtual void OnStubRequest(json &js_src, json &js_dest);
+    virtual Task<void> OnStubRequest(json &js_src, json &js_dest);
 
 public:
     void SendToPlayers(const GameID &gameId, const std::vector<PlayerID> &playerIds, const json &message);
     void SendToPlayer(const GameID &gameId, const PlayerID &playerId, const json &message);
     void BroadcastToGame(const GameID &gameId, const json &message, const std::vector<PlayerID> &exclude);
-    void GameOver(const GameID &gameId);
+    Task<void> GameOver(const GameID &gameId);
 
 private:
-    void ProcessMsg(JsonProtocolSession &session, json &js_src, json &js_dest);
+    Task<void> ProcessMsg(JsonProtocolSession &session, json &js_src, json &js_dest);
 
     bool Vertify(const JsonProtocolSession &session, PlayerID &playerid);
 
-    void ProcessPlayerJoin(const JsonProtocolSession &session, json &js_src, json &js_dest);
-    void ProcessPlayerInput(const PlayerID &playerId, json &js_src, json &js_dest);
-    void ProcessPlayerLeave(const PlayerID &playerId, json &js_src, json &js_dest);
+    Task<void> ProcessPlayerJoin(const JsonProtocolSession &session, json &js_src, json &js_dest);
+    Task<void> ProcessPlayerInput(const PlayerID &playerId, json &js_src, json &js_dest);
+    Task<void> ProcessPlayerLeave(const PlayerID &playerId, json &js_src, json &js_dest);
 
 private:
-    void OnStub_ProcessNewGame(json &js_src, json &js_dest);
+    Task<void> OnStub_ProcessNewGame(json &js_src, json &js_dest);
 
 private:
-    bool Stub_PlayerLeaveGame(const PlayerID &playerId, const GameID &gameId);
-    bool Stub_GameEnd(const GameID &gameId);
+    Task<bool> Stub_PlayerLeaveGame(const PlayerID &playerId, const GameID &gameId);
+    Task<bool> Stub_GameEnd(const GameID &gameId);
 
-    bool Stub_Request(JsonProtocolClient &client, const json &js_request, json &response);
+    Task<bool> Stub_Request(JsonProtocolClient &client, const json &js_request, json &response);
 
 private:
     std::shared_ptr<GameInstance> CreateNewGame(const GameID &gameId);

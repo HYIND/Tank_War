@@ -48,7 +48,7 @@ public:
 	Task<std::shared_ptr<AwaitResult>> AwaitSend(Buffer buffer, std::chrono::milliseconds timeout = std::chrono::milliseconds(5 * 1000)); // 等待返回结果的发送，关心返回的结果
 	PureTCPClient* GetBaseClient();
 
-	void BindRecvRequestCallBack(std::function<void(BaseNetWorkSession*, Buffer* recv, Buffer* resp)> callback);
+	void BindRecvRequestCallBack(std::function<Task<void>(BaseNetWorkSession*, Buffer* recv, Buffer* resp)> callback);
 
 public:
 	virtual Task<bool> TryHandshake();
@@ -57,8 +57,8 @@ public:
 	virtual CheckHandshakeStatus CheckHandshakeConfirmMsg(Buffer& buffer);
 
 protected:
-	virtual bool OnSessionClose();
-	virtual bool OnRecvData(Buffer* buffer);
+	virtual Task<void> OnSessionClose();
+	virtual Task<void> OnRecvData(Buffer* buffer);
 	virtual void OnBindRecvDataCallBack();
 	virtual void OnBindSessionCloseCallBack();
 
@@ -66,7 +66,7 @@ protected:
 
 private:
 	bool Send(const Buffer& buffer, int ack = -1); // 异步发送，不关心返回结果
-	void ProcessPakage(CustomPackage* newPak = nullptr);
+	Task<void> ProcessPakage(CustomPackage* newPak = nullptr);
 	SpinLock _ProcessLock;
 
 private:
@@ -74,7 +74,7 @@ private:
 	SafeQueue<CustomPackage*> _RecvPaks;
 	SafeQueue<CustomPackage*> _SendPaks;
 
-	std::function<void(BaseNetWorkSession*, Buffer* recv, Buffer* response)> _callbackRecvRequest;
+	std::function<Task<void>(BaseNetWorkSession*, Buffer* recv, Buffer* response)> _callbackRecvRequest;
 	SafeUnorderedMap<int, std::shared_ptr<AwaitTask>> _AwaitMap; // seq->AwaitTask
 
 	Buffer cacheBuffer;

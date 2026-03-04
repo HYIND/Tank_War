@@ -15,8 +15,8 @@ public:
 	virtual Task<bool> Connect(std::string IP, uint16_t Port);
 	virtual bool Release();
 
-	virtual bool OnRecvBuffer(Buffer* buffer);
-	virtual bool OnConnectClose();
+	virtual Task<void> OnRecvBuffer(Buffer* buffer);
+	virtual Task<void> OnConnectClose();
 
 	virtual bool Send(const Buffer& buffer);
 
@@ -31,7 +31,7 @@ protected:
 	virtual void OnBindCloseCallBack();
 
 private:
-	void ProcessCacheBuffer();
+	Task<void> ProcessCacheBuffer();
 
 private:
 	Buffer cacheBuffer;

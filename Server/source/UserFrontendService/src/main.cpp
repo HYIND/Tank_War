@@ -37,7 +37,7 @@ void signal_handler(int sig)
 
 auto g_ServiceRegistrar = std::make_shared<ServiceRegistrar>();
 auto g_userfrontendservice = std::make_shared<UserFrontendService>();
-bool StartUserFrontendService(
+Task<bool> StartUserFrontendService(
 	const std::string& IP, int Port,
 	const std::string& stub_IP, int stub_Port,
 	const std::string& gameStateService_IP, int gameStateService_Port)
@@ -45,13 +45,13 @@ bool StartUserFrontendService(
 	g_userfrontendservice->SetServiceEndPoint(IP, Port);
 	g_userfrontendservice->SetStubEndPoint(stub_IP, stub_Port);
 	g_userfrontendservice->SetGameStateEndPoint(gameStateService_IP, gameStateService_Port);
-	return g_userfrontendservice->Start();
+	co_return co_await g_userfrontendservice->Start();
 }
 
-bool StartServiceRegistrar(const std::string& IP, int Port)
+Task<bool> StartServiceRegistrar(const std::string& IP, int Port)
 {
 	g_ServiceRegistrar->AddServiceSource(g_userfrontendservice);
-	return g_ServiceRegistrar->Start(IP, Port);
+	co_return co_await g_ServiceRegistrar->Start(IP, Port);
 }
 
 int main()
@@ -81,7 +81,8 @@ int main()
 	{
 		if (!StartUserFrontendService(UserFrontendServiceIP, UserFrontendServicePort,
 			UserFrontendServiceStubIP, UserFrontendServiceStubPort,
-			GameStatesServiceStubIP, GameStatesServiceStubPort))
+			GameStatesServiceStubIP, GameStatesServiceStubPort)
+			.sync_wait())
 		{
 			std::cout << "StartService Error!\n";
 			return -1;
@@ -89,7 +90,7 @@ int main()
 	}
 
 	{
-		if (!StartServiceRegistrar(ServiceRegistryIP, ServiceRegistryPort))
+		if (!StartServiceRegistrar(ServiceRegistryIP, ServiceRegistryPort).sync_wait())
 		{
 			std::cout << "StartServiceRegistrar Error!\n";
 			return -1;

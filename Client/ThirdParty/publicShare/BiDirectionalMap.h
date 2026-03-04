@@ -8,7 +8,7 @@
 
 // 双向映射容器
 
-template <typename L, typename R>
+template <typename L, typename R, typename Lockable = CriticalSectionLock>
 class SafeBiDirectionalMap
 {
 
@@ -202,7 +202,7 @@ public:
         mutex.Leave();
     }
 
-    LockGuard MakeLockGuard()
+    auto MakeLockGuard()
     {
         return LockGuard(mutex);
     }
@@ -210,5 +210,5 @@ public:
 private:
     std::unordered_map<L, R> l_to_r; // 左到右映射
     std::unordered_map<R, L> r_to_l; // 右到左映射
-    mutable CriticalSectionLock mutex;
+    mutable Lockable mutex;
 };

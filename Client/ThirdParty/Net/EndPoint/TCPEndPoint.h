@@ -31,8 +31,8 @@ public:
 
 	virtual bool Release();
 
-	virtual bool OnRecvBuffer(Buffer* buffer) = 0;
-	virtual bool OnConnectClose() = 0;
+	virtual Task<void> OnRecvBuffer(Buffer* buffer) = 0;
+	virtual Task<void> OnConnectClose() = 0;
 
 	virtual bool Send(const Buffer& buffer) = 0;
 
@@ -47,11 +47,11 @@ public:
 	virtual CheckHandshakeStatus CheckHandshakeTryMsg(Buffer& buffer) = 0;     // 作为接受连接的一方，检查连接发起者的握手信息，并返回回复信息
 	virtual CheckHandshakeStatus CheckHandshakeConfirmMsg(Buffer& buffer) = 0; // 作为发起连接的一方，检查连接接受者的返回的回复信息，若确认则连接建立
 
-	bool RecvBuffer(TCPTransportConnection* con, Buffer* buffer); // 用于绑定网络层(TCP/UDP)触发的Buffer回调
-	bool ConnectClose(TCPTransportConnection* con);               // 用于绑定网络层(TCP/UDP)触发的RDHUP回调
+	Task<void> RecvBuffer(TCPTransportConnection* con, Buffer* buffer); // 用于绑定网络层(TCP/UDP)触发的Buffer回调
+	Task<void> ConnectClose(TCPTransportConnection* con);               // 用于绑定网络层(TCP/UDP)触发的RDHUP回调
 
-	void BindMessageCallBack(std::function<void(TCPEndPoint*, Buffer*)> callback);
-	void BindCloseCallBack(std::function<void(TCPEndPoint*)> callback);
+	void BindMessageCallBack(std::function<Task<void>(TCPEndPoint*, Buffer*)> callback);
+	void BindCloseCallBack(std::function<Task<void>(TCPEndPoint*)> callback);
 
 protected:
 	virtual void OnBindMessageCallBack() = 0;
@@ -62,8 +62,8 @@ protected:
 	std::shared_ptr<TCPTransportConnection> BaseCon;
 	bool isHandshakeComplete = false;
 
-	std::function<void(TCPEndPoint*, Buffer*)> _callbackMessage;
-	std::function<void(TCPEndPoint*)> _callbackClose;
+	std::function<Task<void>(TCPEndPoint*, Buffer*)> _callbackMessage;
+	std::function<Task<void>(TCPEndPoint*)> _callbackClose;
 
 	std::shared_ptr<CoTimer> _handshaketimer;
 

@@ -15,10 +15,10 @@ public:
     ~LoginSubService();
 
 public:
-    void OnSessionEstablish(JsonProtocolSession session);
-    void OnRecvMessage(JsonProtocolSession session, json &src);
-    void OnRecvRequest(JsonProtocolSession session, json &src, json &dest);
-    void OnSessionClose(JsonProtocolSession session);
+    Task<void> OnSessionEstablish(JsonProtocolSession session);
+    Task<void> OnRecvMessage(JsonProtocolSession session, json &src);
+    Task<void> OnRecvRequest(JsonProtocolSession session, json &src, json &dest);
+    Task<void> OnSessionClose(JsonProtocolSession session);
 
     void SetLobbySubService(std::shared_ptr<LobbySubService> service);
     void SetServer(std::shared_ptr<JsonProtocolServer> m);
@@ -29,8 +29,8 @@ public:
     bool ConnectionEnter(JsonProtocolSession session);
 
 private:
-    void ProcessMsg(JsonProtocolSession session, json &src, std::vector<json> &dest);
-    void ProcessLogin(JsonProtocolSession session, json &js_src, json &js_dest);
+    Task<void> ProcessMsg(JsonProtocolSession session, json& src, json& dest);
+    Task<void> ProcessLogin(JsonProtocolSession session, json &js_src, json &js_dest);
 
 private:
     std::shared_ptr<JsonProtocolClient> _gameStateStub;

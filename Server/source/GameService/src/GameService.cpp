@@ -25,9 +25,9 @@ void GameService::SetGameStateEndPoint(const std::string &IP, int Port)
     _gameStateStubPort = Port;
 }
 
-bool GameService::Start()
+Task<bool> GameService::Start()
 {
-    bool result = _gameStateStub->Connect(_gameStateStubIP, _gameStateStubPort) && BaseService::Start();
+    bool result = co_await _gameStateStub->Connect(_gameStateStubIP, _gameStateStubPort) && BaseService::Start();
     if (result)
     {
         if (ServiceEnable())
@@ -40,31 +40,34 @@ bool GameService::Start()
         _serviceinfo->set_endpoint("", 0);
         _serviceinfo->set_stub_endpoint("", 0);
     }
-    return result;
+    co_return result;
 }
 
-void GameService::OnSessionEstablish(JsonProtocolSession session)
+Task<void> GameService::OnSessionEstablish(JsonProtocolSession session)
 {
     _service_server->SetCallBackRecvJsonMessage(session, std::bind(&GameService::OnRecvMessage, this, std::placeholders::_1, std::placeholders::_2));
     _service_server->SetCallBackRecvJsonRequest(session, std::bind(&GameService::OnRecvRequest, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     _service_server->SetCallBackCloseConnect(session, std::bind(&GameService::OnSessionClose, this, std::placeholders::_1));
+    co_return;
 }
 
-void GameService::OnRecvMessage(JsonProtocolSession session, json &src)
+Task<void> GameService::OnRecvMessage(JsonProtocolSession session, json &src)
 {
     json dest;
-    ProcessMsg(session, src, dest);
+    co_await ProcessMsg(session, src, dest);
     if (!dest.is_null())
         session.AsyncSendJson(dest);
 }
 
-void GameService::OnRecvRequest(JsonProtocolSession session, json &src, json &dest)
+Task<void> GameService::OnRecvRequest(JsonProtocolSession session, json &src, json &dest)
 {
-    ProcessMsg(session, src, dest);
+    co_await ProcessMsg(session, src, dest);
 }
 
-void GameService::OnSessionClose(JsonProtocolSession session)
+Task<void> GameService::OnSessionClose(JsonProtocolSession session)
 {
+    _SessionToplayerId.EraseByLeft(session);
+    co_return;
 }
 
 std::vector<ServiceInfo> GameService::GetServiceInfo()
@@ -72,15 +75,15 @@ std::vector<ServiceInfo> GameService::GetServiceInfo()
     return std::vector<ServiceInfo>{*_serviceinfo};
 }
 
-void GameService::OnStubRequest(json &js_src, json &js_dest)
+Task<void> GameService::OnStubRequest(json &js_src, json &js_dest)
 {
     if (!js_src.contains("command"))
-        return;
+        co_return;
     int command = js_src.at("command");
 
     if (command == GameService_NewGame)
     {
-        OnStub_ProcessNewGame(js_src, js_dest);
+        co_await OnStub_ProcessNewGame(js_src, js_dest);
     }
 }
 
@@ -174,7 +177,7 @@ void GameService::BroadcastToGame(const GameID &gameId, const json &message, con
     }
 }
 
-void GameService::GameOver(const GameID &gameId)
+Task<void> GameService::GameOver(const GameID &gameId)
 {
     std::vector<JsonProtocolSession> release_sessions;
 
@@ -203,7 +206,7 @@ void GameService::GameOver(const GameID &gameId)
                     }
                 }
             }
-            Stub_GameEnd(gameId);
+            co_await Stub_GameEnd(gameId);
         }
     }
 
@@ -213,29 +216,29 @@ void GameService::GameOver(const GameID &gameId)
     // }
 }
 
-void GameService::ProcessMsg(JsonProtocolSession &session, json &js_src, json &js_dest)
+Task<void> GameService::ProcessMsg(JsonProtocolSession &session, json &js_src, json &js_dest)
 {
     if (!js_src.contains("command"))
-        return;
+        co_return;
     int command = js_src.at("command");
 
     if (command == GameService_JoinGame)
     {
-        ProcessPlayerJoin(session, js_src, js_dest);
-        return;
+        co_await ProcessPlayerJoin(session, js_src, js_dest);
+        co_return;
     }
 
     PlayerID playerId;
     if (!Vertify(session, playerId))
-        return;
+        co_return;
 
     if (command == GameService_InputToGame)
     {
-        ProcessPlayerInput(playerId, js_src, js_dest);
+        co_await ProcessPlayerInput(playerId, js_src, js_dest);
     }
     else if (command == GameService_LeaveGame)
     {
-        ProcessPlayerLeave(playerId, js_src, js_dest);
+        co_await ProcessPlayerLeave(playerId, js_src, js_dest);
     }
 }
 
@@ -244,7 +247,7 @@ bool GameService::Vertify(const JsonProtocolSession &session, PlayerID &playerid
     return _SessionToplayerId.FindByLeft(session, playerid) && !playerid.empty();
 }
 
-void GameService::OnStub_ProcessNewGame(json &js_src, json &js_dest)
+Task<void> GameService::OnStub_ProcessNewGame(json &js_src, json &js_dest)
 {
     js_dest["command"] = GameService_NewGameRes;
 
@@ -255,7 +258,7 @@ void GameService::OnStub_ProcessNewGame(json &js_src, json &js_dest)
         {
             js_dest["result"] = -1;
             js_dest["reason"] = "players为空！";
-            return;
+            co_return;
         }
 
         // 解析新游戏请求
@@ -267,7 +270,7 @@ void GameService::OnStub_ProcessNewGame(json &js_src, json &js_dest)
         {
             js_dest["result"] = -1;
             js_dest["reason"] = "gameId为空！";
-            return;
+            co_return;
         }
 
         // 检查游戏是否已存在
@@ -276,7 +279,7 @@ void GameService::OnStub_ProcessNewGame(json &js_src, json &js_dest)
             {
                 js_dest["result"] = -1;
                 js_dest["reason"] = "服务器内部错误！";
-                return;
+                co_return;
             }
         }
 
@@ -303,7 +306,7 @@ void GameService::OnStub_ProcessNewGame(json &js_src, json &js_dest)
         {
             js_dest["result"] = -1;
             js_dest["reason"] = "游戏初始化失败！";
-            return;
+            co_return;
         }
 
         // 保存游戏实例
@@ -330,7 +333,7 @@ void GameService::OnStub_ProcessNewGame(json &js_src, json &js_dest)
     }
 }
 
-void GameService::ProcessPlayerJoin(const JsonProtocolSession &session, json &js_src, json &js_dest)
+Task<void> GameService::ProcessPlayerJoin(const JsonProtocolSession &session, json &js_src, json &js_dest)
 {
     js_dest["command"] = GameService_JoinGameRes;
 
@@ -345,7 +348,7 @@ void GameService::ProcessPlayerJoin(const JsonProtocolSession &session, json &js
 
             js_dest["result"] = -1;
             js_dest["reason"] = "参数缺失！";
-            return;
+            co_return;
         }
 
         GameID gameid = js_src.value("gameid", "");
@@ -355,7 +358,7 @@ void GameService::ProcessPlayerJoin(const JsonProtocolSession &session, json &js
         {
             js_dest["result"] = -1;
             js_dest["reason"] = "参数不能为空！";
-            return;
+            co_return;
         }
 
         auto guard = _GameIdToGameInstance.MakeLockGuard();
@@ -363,7 +366,7 @@ void GameService::ProcessPlayerJoin(const JsonProtocolSession &session, json &js
         {
             js_dest["result"] = -1;
             js_dest["reason"] = "Gameid不存在！";
-            return;
+            co_return;
         }
 
         auto gameinstance = _GameIdToGameInstance[gameid];
@@ -371,14 +374,14 @@ void GameService::ProcessPlayerJoin(const JsonProtocolSession &session, json &js
         {
             js_dest["result"] = -1;
             js_dest["reason"] = "服务器内部错误！";
-            return;
+            co_return;
         }
 
         if (gameinstance->GetState() == GameInstance::State::ENDED)
         {
             js_dest["result"] = -100;
             js_dest["reason"] = "游戏已经结束！";
-            return;
+            co_return;
         }
 
         if (auto gameplayer = gameinstance->GetPlayer(playerid))
@@ -397,7 +400,7 @@ void GameService::ProcessPlayerJoin(const JsonProtocolSession &session, json &js
     }
 }
 
-void GameService::ProcessPlayerInput(const PlayerID &playerId, json &js_src, json &js_dest)
+Task<void> GameService::ProcessPlayerInput(const PlayerID &playerId, json &js_src, json &js_dest)
 {
     js_dest["command"] = GameService_InputToGameRes;
 
@@ -406,7 +409,7 @@ void GameService::ProcessPlayerInput(const PlayerID &playerId, json &js_src, jso
     {
         js_dest["result"] = -1;
         js_dest["reason"] = "非法的playerid";
-        return;
+        co_return;
     }
 
     std::shared_ptr<GameInstance> game_instance;
@@ -414,13 +417,13 @@ void GameService::ProcessPlayerInput(const PlayerID &playerId, json &js_src, jso
     {
         js_dest["result"] = -1;
         js_dest["reason"] = "非法的gameid";
-        return;
+        co_return;
     }
 
     game_instance->ProcessPlayerInput(playerId, js_src);
 }
 
-void GameService::ProcessPlayerLeave(const PlayerID &playerId, json &js_src, json &js_dest)
+Task<void> GameService::ProcessPlayerLeave(const PlayerID &playerId, json &js_src, json &js_dest)
 {
     js_dest["command"] = GameService_LeaveGameRes;
 
@@ -429,14 +432,14 @@ void GameService::ProcessPlayerLeave(const PlayerID &playerId, json &js_src, jso
     {
         js_dest["result"] = -1;
         js_dest["reason"] = "非法的playerid";
-        return;
+        co_return;
     }
 
-    if (!Stub_PlayerLeaveGame(playerId, gameId))
+    if (!co_await Stub_PlayerLeaveGame(playerId, gameId))
     {
         js_dest["result"] = -1;
         js_dest["reason"] = "服务器内部错误";
-        return;
+        co_return;
     }
 
     _PlayerIdToGameId.Erase(playerId);
@@ -445,11 +448,11 @@ void GameService::ProcessPlayerLeave(const PlayerID &playerId, json &js_src, jso
     js_dest["result"] = 1;
 }
 
-bool GameService::Stub_PlayerLeaveGame(const PlayerID &playerId, const GameID &gameId)
+Task<bool> GameService::Stub_PlayerLeaveGame(const PlayerID &playerId, const GameID &gameId)
 {
     std::vector<ServiceInfo> services;
-    if (!_servcieDiscoverClient.GetAvailableServiceInfo(ServiceType::GAMESTATE, services) || services.empty())
-        return false;
+    if (!co_await _servcieDiscoverClient.GetAvailableServiceInfo(ServiceType::GAMESTATE, services) || services.empty())
+        co_return false;
 
     json js_request, js_response;
     js_request["command"] = GameStateServiceCommand::GameStateService_PlayerLeaveGame;
@@ -463,20 +466,20 @@ bool GameService::Stub_PlayerLeaveGame(const PlayerID &playerId, const GameID &g
             service.stub_endpoint.port == 0)
             continue;
 
-        if (!client.Connect(service.stub_endpoint.ip, service.stub_endpoint.port))
+        if (!co_await client.Connect(service.stub_endpoint.ip, service.stub_endpoint.port))
             continue;
 
-        return Stub_Request(client, js_request, js_response);
+        co_return co_await Stub_Request(client, js_request, js_response);
     }
 
-    return false;
+    co_return false;
 }
 
-bool GameService::Stub_GameEnd(const GameID &gameId)
+Task<bool> GameService::Stub_GameEnd(const GameID &gameId)
 {
     std::vector<ServiceInfo> services;
-    if (!_servcieDiscoverClient.GetAvailableServiceInfo(ServiceType::GAMESTATE, services) || services.empty())
-        return false;
+    if (!co_await _servcieDiscoverClient.GetAvailableServiceInfo(ServiceType::GAMESTATE, services) || services.empty())
+        co_return false;
 
     json js_request, js_response;
     js_request["command"] = GameStateServiceCommand::GameStateService_GameEnd;
@@ -489,31 +492,31 @@ bool GameService::Stub_GameEnd(const GameID &gameId)
             service.stub_endpoint.port == 0)
             continue;
 
-        if (!client.Connect(service.stub_endpoint.ip, service.stub_endpoint.port))
+        if (!co_await client.Connect(service.stub_endpoint.ip, service.stub_endpoint.port))
             continue;
 
-        return Stub_Request(client, js_request, js_response);
+        co_return co_await Stub_Request(client, js_request, js_response);
     }
 
-    return false;
+    co_return false;
 }
 
-bool GameService::Stub_Request(JsonProtocolClient &client, const json &js_request, json &response)
+Task<bool> GameService::Stub_Request(JsonProtocolClient &client, const json &js_request, json &response)
 {
-    if (!client.Request(js_request, response))
-        return false;
+    if (!co_await client.Request(js_request, response))
+        co_return false;
 
     if (!response.contains("result") || !response["result"].is_number_integer())
-        return false;
+        co_return false;
 
     int result = response["result"];
     if (result < 0)
     {
         std::string reason = response.value("reason", "");
         std::cout << "Stub Request fail! command =" << js_request.value("command", 0) << " reason:" << reason << '\n';
-        return false;
+        co_return false;
     }
-    return true;
+    co_return true;
 }
 
 std::shared_ptr<GameInstance> GameService::CreateNewGame(const GameID &gameId)

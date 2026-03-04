@@ -396,9 +396,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				BusyLoaderDialog dialog;
 				if (dialog.Create(_hwnd, hInst))
 				{
-					auto task = CoroTask::Run([]()->bool {
-						return ConnectManager::Instance()->Login();
-						});
+					auto task = ConnectManager::Instance()->Login();
 
 					dialog.Show(std::move(task), nullptr, "登录中......");
 
@@ -520,7 +518,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				if (dialog.Create(_hwnd, hInst))
 				{
 					auto task = CoroTask::Run([]()->bool {
-						ConnectManager::Instance()->Logout();
+						ConnectManager::Instance()->Logout().sync_wait();
 						return true;
 						});
 
@@ -775,13 +773,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			case WIN:
 			{
-				CONNECTMANAGER->LogoutGameSeervice();
+				CONNECTMANAGER->LogoutGameSeervice().sync_wait();
 				_Scene::CurScene = _Scene::SWinGame;
 				break;
 			}
 			case FAIL:
 			{
-				CONNECTMANAGER->LogoutGameSeervice();
+				CONNECTMANAGER->LogoutGameSeervice().sync_wait();
 				_Scene::CurScene = _Scene::SFailGame;
 				break;
 			}

@@ -23,29 +23,29 @@ ConnectManager::ConnectManager()
 	_gameSession = std::make_shared<JsonProtocolClient>();
 }
 
-bool ConnectManager::ProcessLoginRequest()
+Task<bool> ConnectManager::ProcessLoginRequest()
 {
 	json login_req, login_res;
 	login_req["command"] = LoginSubServiceCommand::LoginSubService_Login;
 	login_req["name"] = UserInfoManager::Instance()->username();
-	if (!InnerSocialRequest(login_req, login_res))
-		return false;
+	if (!co_await InnerSocialRequest(login_req, login_res))
+		co_return false;
 
 	if (!login_res.contains("result") || !login_res["result"].is_number_integer())
-		return false;
+		co_return false;
 
 	int result = login_res["result"];
 	if (result < 0)
 	{
 		std::string reason = login_res.value("reason", "");
 		std::cout << "LoginSubService_Login Request fail! reason:" << reason << '\n';
-		return false;
+		co_return false;
 	}
 
 	if (!login_res.contains("jwt") || !login_res["jwt"].is_string()
 		|| !login_res.contains("token") || !login_res["token"].is_string()
 		|| !login_res.contains("name") || !login_res["name"].is_string())
-		return false;
+		co_return false;
 
 	std::string token = login_res["token"];
 	std::string jwt = login_res["jwt"];
@@ -54,15 +54,15 @@ bool ConnectManager::ProcessLoginRequest()
 	UserInfoManager::Instance()->setUserJwt(jwt);
 	UserInfoManager::Instance()->setUserToken(token);
 
-	return true;
+	co_return true;
 }
 
-bool ConnectManager::ProcessLogoutRequest()
+Task<bool> ConnectManager::ProcessLogoutRequest()
 {
 	json logout_req, logout_res;
 	logout_req["command"] = LobbySubServiceCommand::LobbySubService_Logout;
 	if (!SocialRequest(logout_req, logout_res))
-		return false;
+		co_return false;
 
 	if (logout_res.contains("result") && logout_res["result"].is_number_integer())
 	{
@@ -71,21 +71,21 @@ bool ConnectManager::ProcessLogoutRequest()
 		{
 			std::string reason = logout_res.value("reason", "");
 			std::cout << "LobbySubService_Logout Request fail! reason:" << reason << '\n';
-			return false;
+			co_return false;
 		}
 	}
 
-	return true;
+	co_return true;
 }
 
-bool ConnectManager::ProcessLoginGameSeerviceRequest()
+Task<bool> ConnectManager::ProcessLoginGameSeerviceRequest()
 {
-	return true;
+	co_return true;
 }
 
-bool ConnectManager::ProcessLogoutGameSeerviceRequest()
+Task<bool> ConnectManager::ProcessLogoutGameSeerviceRequest()
 {
-	return true;
+	co_return true;
 }
 
 ConnectManager::~ConnectManager()
@@ -99,16 +99,17 @@ ConnectStatus ConnectManager::connectStatus()
 	return _status;
 }
 
-void ConnectManager::OnSessionClose(JsonProtocolClient* c)
+Task<void> ConnectManager::OnSessionClose(JsonProtocolClient* c)
 {
 	_status = ConnectStatus::disconnect;
 	//LOGINMODEL->DisConnect();
+	co_return;
 }
 
-void ConnectManager::OnRecvMessage(JsonProtocolClient* c, json& src)
+Task<void> ConnectManager::OnRecvMessage(JsonProtocolClient* c, json& src)
 {
 	try {
-		MSGMANAGER->ProcessMsg(src);
+		co_await MSGMANAGER->ProcessMsg(src);
 	}
 	catch (...)
 	{
@@ -126,17 +127,17 @@ std::shared_ptr<JsonProtocolClient> ConnectManager::GameSession()
 	return _gameSession;
 }
 
-bool ConnectManager::Login()
+Task<bool> ConnectManager::Login()
 {
 	_status = ConnectStatus::connecting;
 
 	std::vector<ServiceInfo> services;
 	ServiceDiscoveryClient client;
 	client.SetEndpoint(ServiceDiscoveryIP, ServiceDiscoveryPort);
-	if (!client.GetAvailableServiceInfo(ServiceType::LOBBY, services) || services.empty())
+	if (!co_await client.GetAvailableServiceInfo(ServiceType::LOBBY, services) || services.empty())
 	{
 		_status = ConnectStatus::disconnect;
-		return false;
+		co_return false;
 	}
 
 	for (auto& service : services)
@@ -144,34 +145,34 @@ bool ConnectManager::Login()
 		const std::string IP = service.endpoint.ip;
 		int port = service.endpoint.port;
 
-		if (_socaialSession->Connect(IP, port))
+		if (co_await _socaialSession->Connect(IP, port))
 		{
 			_status = ConnectStatus::connected;
 
-			if (!ProcessLoginRequest())
+			if (!co_await ProcessLoginRequest())
 			{
 				_socaialSession->Release();
 				_status = ConnectStatus::disconnect;
-				return false;
+				co_return false;
 			}
 
 			_socaialSession->BindCallBackJsonMessage(std::bind(&ConnectManager::OnRecvMessage, this, std::placeholders::_1, std::placeholders::_2));
 			_socaialSession->BindCallBackCloseClient(std::bind(&ConnectManager::OnSessionClose, this, std::placeholders::_1));
 
-			return true;
+			co_return true;
 		}
 
 	}
 	_status = ConnectStatus::disconnect;
-	return false;
+	co_return false;
 }
 
-void ConnectManager::Logout()
+Task<void> ConnectManager::Logout()
 {
 	if (_status != ConnectStatus::connected)
-		return;
+		co_return;
 
-	ProcessLogoutRequest();
+	co_await ProcessLogoutRequest();
 	_socaialSession->Release();
 	_gameSession->Release();
 	UserInfoManager::Instance()->setUserJwt("");
@@ -181,31 +182,31 @@ void ConnectManager::Logout()
 	_status = ConnectStatus::disconnect;
 }
 
-bool ConnectManager::LoginGameSeervice(NetworkEndpoint endpoint)
+Task<bool> ConnectManager::LoginGameSeervice(NetworkEndpoint endpoint)
 {
 	if (endpoint.ip.empty() || endpoint.port == 0)
-		return false;
+		co_return false;
 
-	if (_gameSession->Connect(endpoint.ip, endpoint.port))
+	if (co_await _gameSession->Connect(endpoint.ip, endpoint.port))
 	{
-		if (!ProcessLoginGameSeerviceRequest())
+		if (!co_await ProcessLoginGameSeerviceRequest())
 		{
 			_gameSession->Release();
-			return false;
+			co_return false;
 		}
 
 		_gameSession->BindCallBackJsonMessage(std::bind(&ConnectManager::OnRecvMessage, this, std::placeholders::_1, std::placeholders::_2));
 		//_gameSession->BindCallBackCloseClient(std::bind(&ConnectManager::OnSessionClose, this, std::placeholders::_1));
 
-		return true;
+		co_return true;
 	}
 }
 
-bool ConnectManager::LogoutGameSeervice()
+Task<bool> ConnectManager::LogoutGameSeervice()
 {
 	_gameSession->Release();
 	UserInfoManager::Instance()->setGameId(""); 
-	return true;
+	co_return true;
 }
 
 bool ConnectManager::SocialSend(json& js)
@@ -219,15 +220,15 @@ bool ConnectManager::SocialSend(json& js)
 	return InnerSocialSend(js);
 }
 
-bool ConnectManager::SocialRequest(json& js_req, json& js_resp)
+Task<bool> ConnectManager::SocialRequest(json& js_req, json& js_resp)
 {
 	if (_status != ConnectStatus::connected)
-		return false;
+		co_return false;
 
 	if (!js_req.contains("jwt"))
 		js_req["jwt"] = UserInfoManager::Instance()->userjwt();
 
-	return InnerSocialRequest(js_req, js_resp);
+	co_return co_await InnerSocialRequest(js_req, js_resp);
 }
 
 bool ConnectManager::GameSend(json& js)
@@ -244,15 +245,15 @@ bool ConnectManager::GameSend(json& js)
 	return InnerGameSend(js);
 }
 
-bool ConnectManager::GameRequest(json& js_req, json& js_resp)
+Task<bool> ConnectManager::GameRequest(json& js_req, json& js_resp)
 {
 	if (_status != ConnectStatus::connected)
-		return false;
+		co_return false;
 
 	if (!js_req.contains("jwt"))
 		js_req["jwt"] = UserInfoManager::Instance()->userjwt();
 
-	return InnerGameRequest(js_req, js_resp);
+	co_return co_await InnerGameRequest(js_req, js_resp);
 }
 
 bool ConnectManager::InnerSocialSend(const json& js)
@@ -271,18 +272,18 @@ bool ConnectManager::InnerGameSend(const json& js)
 	return _gameSession->Send(js);
 }
 
-bool ConnectManager::InnerSocialRequest(const json& js_req, json& js_resp)
+Task<bool> ConnectManager::InnerSocialRequest(const json& js_req, json& js_resp)
 {
 	if (_status != ConnectStatus::connected)
-		return false;
+		co_return false;
 
-	return _socaialSession->Request(js_req, js_resp);
+	co_return co_await _socaialSession->Request(js_req, js_resp);
 }
 
-bool ConnectManager::InnerGameRequest(const json& js_req, json& js_resp)
+Task<bool> ConnectManager::InnerGameRequest(const json& js_req, json& js_resp)
 {
 	if (!_gameSession)
-		return false;
+		co_return false;
 
-	return _gameSession->Request(js_req, js_resp);
+	co_return co_await _gameSession->Request(js_req, js_resp);
 }

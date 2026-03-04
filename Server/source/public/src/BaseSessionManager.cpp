@@ -54,7 +54,7 @@ void BaseSessionManager::SetCallBackCloseConnect(CallBackCloseConnect &&callback
     _CallBackCloseConnect = callback;
 }
 
-bool BaseSessionManager::AsyncSend(const std::string &conid, const Buffer &buf)
+bool BaseSessionManager::AsyncSend(const ConID& conid, const Buffer& buf)
 {
     BaseNetWorkSession *session;
     if (!ConIdToBaseNetWork.FindByLeft(conid, session) || !session)
@@ -63,7 +63,7 @@ bool BaseSessionManager::AsyncSend(const std::string &conid, const Buffer &buf)
     return session->AsyncSend(buf);
 }
 
-bool BaseSessionManager::ReleaseSession(const std::string &conid)
+bool BaseSessionManager::ReleaseSession(const ConID &conid)
 {
     BaseNetWorkSession *session;
     if (!ConIdToBaseNetWork.FindByLeft(conid, session) || !session)
@@ -81,41 +81,44 @@ bool BaseSessionManager::ReleaseSession(const std::string &conid)
     return true;
 }
 
-void BaseSessionManager::SessionEstablish(BaseNetWorkSession *session)
+Task<void> BaseSessionManager::SessionEstablish(BaseNetWorkSession *session)
 {
     session->BindRecvDataCallBack(std::bind(&BaseSessionManager::RecvMessage, this, std::placeholders::_1, std::placeholders::_2));
     session->BindSessionCloseCallBack(std::bind(&BaseSessionManager::CloseConnect, this, std::placeholders::_1));
 
-    std::string ConId = Tool::GenerateSimpleUuid();
+    ConID ConId = Tool::GenerateSimpleUuid();
     ConIdToBaseNetWork.InsertOrUpdate(ConId, session);
 
-    if (_CallBackSessionEstablish)
-        _CallBackSessionEstablish(ConId);
+    auto callback = _CallBackSessionEstablish;
+    if (callback)
+        co_await callback(ConId);
 }
 
-void BaseSessionManager::RecvMessage(BaseNetWorkSession *session, Buffer *recv)
+Task<void> BaseSessionManager::RecvMessage(BaseNetWorkSession *session, Buffer *recv)
 {
-    std::string conid;
+    ConID conid;
     if (!ConIdToBaseNetWork.FindByRight(session, conid) || conid.empty())
-        return;
+        co_return;
 
-    if (_CallBackRecvMessage)
-        _CallBackRecvMessage(conid, recv);
+    auto callback = _CallBackRecvMessage;
+    if (callback)
+        co_await callback(conid, recv);
 }
 
-void BaseSessionManager::CloseConnect(BaseNetWorkSession *session)
+Task<void> BaseSessionManager::CloseConnect(BaseNetWorkSession *session)
 {
-    std::string conid;
+    ConID conid;
     if (!ConIdToBaseNetWork.FindByRight(session, conid) || conid.empty())
-        return;
+        co_return;
 
     {
         auto guard = ConIdToBaseNetWork.MakeLockGuard();
         ConIdToBaseNetWork.EraseByLeft(conid);
     }
 
-    if (_CallBackCloseConnect)
-        _CallBackCloseConnect(conid);
+    auto callback = _CallBackCloseConnect;
+    if (callback)
+        co_await callback(conid);
 
     DeleteLater(session);
 }

@@ -17,13 +17,13 @@ public:
 	void SetPort(int Port);
 	void SetEndpoint(const std::string& IP, int Port);
 
-	bool GetAvailableServiceInfo(ServiceType type, std::vector<ServiceInfo>& services);
-	bool GetAllAvailableServiceInfo(std::vector<ServiceInfo>& services);
-	bool GetAvailableServiceInfoByServicesIds(std::vector<std::string>& serviceid_list, std::vector<ServiceInfo>& services);
+	Task<bool> GetAvailableServiceInfo(ServiceType type, std::vector<ServiceInfo>& services);
+	Task<bool> GetAllAvailableServiceInfo(std::vector<ServiceInfo>& services);
+	Task<bool> GetAvailableServiceInfoByServicesIds(std::vector<std::string>& serviceid_list, std::vector<ServiceInfo>& services);
 
 private:
-	bool Connect();
-	bool Request(json& src, json& dest);
+	Task<bool> Connect();
+	Task<bool> Request(json& src, json& dest);
 
 private:
 	std::string _ip;

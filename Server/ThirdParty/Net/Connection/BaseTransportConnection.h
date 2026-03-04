@@ -83,21 +83,21 @@ public:
 
 public:
 #ifdef __linux__
-	void READ(BaseSocket fd);
-	void ACCEPT(BaseSocket fd);
+	Task<void> READ(BaseSocket fd);
+	Task<void> ACCEPT(BaseSocket fd);
 #endif
-	void READ(BaseSocket fd, Buffer& buf);
-	void ACCEPT(BaseSocket fd, BaseSocket newsocket, sockaddr_in addr);
-	void RDHUP();
+	Task<void> READ(BaseSocket fd, Buffer& buf);
+	Task<void> ACCEPT(BaseSocket fd, BaseSocket newsocket, sockaddr_in addr);
+	Task<void> RDHUP();
 
 protected:
 #ifdef __linux__
-	virtual void OnREAD(BaseSocket socket) = 0;												// 可读事件
-	virtual void OnACCEPT(BaseSocket socket) = 0;											// 接受新连接事件
+	virtual Task<void> OnREAD(BaseSocket socket) = 0;											// 可读事件
+	virtual Task<void> OnACCEPT(BaseSocket socket) = 0;											// 接受新连接事件
 #endif
-	virtual void OnREAD(BaseSocket socket, Buffer& buf) = 0;								// 可读事件
-	virtual void OnACCEPT(BaseSocket socket, BaseSocket newsocket, sockaddr_in addr) = 0;	// 接受新连接事件
-	virtual void OnRDHUP() = 0;																// 对端关闭事件，即断开连接
+	virtual Task<void> OnREAD(BaseSocket socket, Buffer& buf) = 0;								// 可读事件
+	virtual Task<void> OnACCEPT(BaseSocket socket, BaseSocket newsocket, sockaddr_in addr) = 0;	// 接受新连接事件
+	virtual Task<void> OnRDHUP() = 0;															// 对端关闭事件，即断开连接
 
 protected:
 	sockaddr_in _addr;

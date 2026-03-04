@@ -11,12 +11,12 @@ JsonProtocolClient::~JsonProtocolClient()
 	Release();
 }
 
-bool JsonProtocolClient::Connect(const std::string& IP, uint16_t Port)
+Task<bool> JsonProtocolClient::Connect(const std::string& IP, uint16_t Port)
 {
 	_sessionId = "";
-	bool result = _session->Connect(IP, Port).sync_wait();
+	bool result = co_await _session->Connect(IP, Port);
 	if (result)
-		result = RequestSessionId();
+		result = co_await RequestSessionId();
 	if (!result)
 		_session->Release();
 
@@ -26,7 +26,7 @@ bool JsonProtocolClient::Connect(const std::string& IP, uint16_t Port)
 		_session->BindRecvRequestCallBack(std::bind(&JsonProtocolClient::RecvRequest, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 		_session->BindSessionCloseCallBack(std::bind(&JsonProtocolClient::SessionClose, this, std::placeholders::_1));
 	}
-	return result;
+	co_return result;
 }
 
 bool JsonProtocolClient::Release()
@@ -44,16 +44,16 @@ bool JsonProtocolClient::Send(const json& js)
 	return _session->AsyncSend(buf);
 }
 
-bool JsonProtocolClient::Request(const json& js_request, json& response)
+Task<bool> JsonProtocolClient::Request(const json& js_request, json& response)
 {
 	std::string str_resp = js_request.dump();
 	Buffer buf_req(str_resp);
-	auto result = _session->AwaitSend(buf_req).sync_wait();
+	auto result = co_await _session->AwaitSend(buf_req);
 	if (result->code != AwaitErrorCode::Success)
-		return false;
+		co_return false;
 
 	response = Tool::ParseJson(result->response);
-	return true;
+	co_return true;
 }
 
 void JsonProtocolClient::BindCallBackJsonMessage(CallBackJsonMessage&& callback)
@@ -71,52 +71,52 @@ void JsonProtocolClient::BindCallBackCloseClient(CallBackCloseClient&& callback)
 	_callbackcloseclient = callback;
 }
 
-void JsonProtocolClient::RecvData(BaseNetWorkSession* session, Buffer* recv)
+Task<void> JsonProtocolClient::RecvData(BaseNetWorkSession* session, Buffer* recv)
 {
 	json js = Tool::ParseJson(*recv);
 	auto callback = _callbackjsonmessage;
 	if (!js.is_null() && callback)
-		std::invoke(callback, this, js);
+		co_await callback(this, js);
 }
 
-void JsonProtocolClient::RecvRequest(BaseNetWorkSession* session, Buffer* recv, Buffer* resp)
+Task<void> JsonProtocolClient::RecvRequest(BaseNetWorkSession* session, Buffer* recv, Buffer* resp)
 {
 	json js = Tool::ParseJson(*recv);
 	auto callback = _callbackjsonrequest;
 	if (!js.is_null() && callback)
 	{
 		json js_resp;
-		std::invoke(callback, this, js, js_resp);
+		co_await callback(this, js, js_resp);
 		std::string str_resp = js_resp.dump();
 		resp->Write(str_resp.c_str(), str_resp.length());
 	}
 }
 
-void JsonProtocolClient::SessionClose(BaseNetWorkSession* session)
+Task<void> JsonProtocolClient::SessionClose(BaseNetWorkSession* session)
 {
 	auto callback = _callbackcloseclient;
 	if (callback)
-		std::invoke(callback, this);
+		co_await callback(this);
 }
 
-bool JsonProtocolClient::RequestSessionId()
+Task<bool> JsonProtocolClient::RequestSessionId()
 {
 	json req, resp;
 	req["command"] = 999888;
 
-	if (!Request(req, resp))
-		return false;
+	if (!co_await Request(req, resp))
+		co_return false;
 
 	if (!resp.contains("result") || !resp["result"].is_number_integer())
-		return false;
+		co_return false;
 
 	int result = resp.value("result", 0);
 	if (result < 0)
-		return false;
+		co_return false;
 
 	if (!resp.contains("sessionid") || !resp["sessionid"].is_string())
-		return false;
+		co_return false;
 
 	_sessionId = resp.value("sessionid", "");
-	return true;
+	co_return true;
 }

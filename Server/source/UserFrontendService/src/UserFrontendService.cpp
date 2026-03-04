@@ -48,9 +48,9 @@ void UserFrontendService::SetGameStateEndPoint(const std::string &IP, int Port)
     _gameStateStubPort = Port;
 }
 
-bool UserFrontendService::Start()
+Task<bool> UserFrontendService::Start()
 {
-    bool result = _gameStateStub->Connect(_gameStateStubIP, _gameStateStubPort) && BaseService::Start();
+    bool result = co_await _gameStateStub->Connect(_gameStateStubIP, _gameStateStubPort) && BaseService::Start();
     if (result)
     {
         _delegator->AddLocalService(shared_from_this(), _serviceinfo->service_id, _serviceinfo->service_type);
@@ -64,14 +64,14 @@ bool UserFrontendService::Start()
         _serviceinfo->set_endpoint("", 0);
         _serviceinfo->set_stub_endpoint("", 0);
     }
-    return result;
+    co_return result;
 }
 
-void UserFrontendService::OnStubRequest(json &js_src, json &js_dest)
+Task<void> UserFrontendService::OnStubRequest(json &js_src, json &js_dest)
 {
     if (!js_src.contains("command"))
-        return;
-    _lobbysubservice->OnStubRequest(js_src, js_dest);
+        co_return;
+    co_await _lobbysubservice->OnStubRequest(js_src, js_dest);
 }
 
 std::vector<ServiceRegistryDataDef::ServiceInfo> UserFrontendService::GetServiceInfo()

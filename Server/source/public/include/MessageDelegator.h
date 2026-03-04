@@ -26,17 +26,17 @@ public:
     bool SkipLocalService();
 
 public:
-    bool DelegateMessage(const std::string &goaltoken, const json &js);
-    bool DelegateMessage(const std::string &goaltoken, ServiceType type, const json &js);
+    Task<bool> DelegateMessage(const std::string &goaltoken, const json &js);
+    Task<bool> DelegateMessage(const std::string &goaltoken, ServiceType type, const json &js);
 
 private:
-    bool ConnectGameStateService();
-    bool RequestGameStateService(json &src, json &dest);
-    bool GetAvailableServiceInfoForUser(const std::string &goaltoken, std::vector<ServiceInfo> &services);
+    Task<bool> ConnectGameStateService();
+    Task<bool> RequestGameStateService(json &src, json &dest);
+    Task<bool> GetAvailableServiceInfoForUser(const std::string &goaltoken, std::vector<ServiceInfo> &services);
 
-    bool GetServiceIdsUserConnected(const std::string &goaltoken, std::vector<GameStateDef::UserConnectedServiceInfo> &infos);
+    Task<bool> GetServiceIdsUserConnected(const std::string &goaltoken, std::vector<GameStateDef::UserConnectedServiceInfo> &infos);
 
-    bool RequestDelegateToServices(std::vector<ServiceInfo> &services, const std::string &goaltoken, const json &js);
+    Task<bool> RequestDelegateToServices(std::vector<ServiceInfo> &services, const std::string &goaltoken, const json &js);
 
 private:
     std::string _gameStateServiceIP;

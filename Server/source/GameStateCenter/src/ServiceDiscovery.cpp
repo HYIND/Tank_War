@@ -19,58 +19,58 @@ bool ServiceDiscovery::Start(const std::string &IP, int Port)
     return _connectmanager->Start(IP, Port);
 }
 
-void ServiceDiscovery::OnSessionEstablish(JsonProtocolSession session)
-{
-    _connectmanager->SetCallBackRecvJsonMessage(session, std::bind(&ServiceDiscovery::OnRecvMessage, this, std::placeholders::_1, std::placeholders::_2));
-    _connectmanager->SetCallBackRecvJsonRequest(session, std::bind(&ServiceDiscovery::OnRecvRequest, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-    _connectmanager->SetCallBackCloseConnect(session, std::bind(&ServiceDiscovery::OnSessionClose, this, std::placeholders::_1));
-}
-
-void ServiceDiscovery::OnRecvMessage(JsonProtocolSession session, json &src)
-{
-    json dest;
-    ProcessMsg(src, dest);
-    if (!dest.is_null())
-    {
-        session.AsyncSendJson(dest);
-    }
-}
-
-void ServiceDiscovery::OnRecvRequest(JsonProtocolSession session, json &src, json &dest)
-{
-    ProcessMsg(src, dest);
-}
-
-void ServiceDiscovery::OnSessionClose(JsonProtocolSession session)
-{
-}
-
 void ServiceDiscovery::SetServiceRegistryManager(std::shared_ptr<ServiceRegistryManager> service)
 {
     _weakserviceregistrymanager = std::weak_ptr<ServiceRegistryManager>(service);
 }
 
-void ServiceDiscovery::ProcessMsg(json &js_src, json &js_dest)
+Task<void> ServiceDiscovery::OnSessionEstablish(JsonProtocolSession session)
+{
+    _connectmanager->SetCallBackRecvJsonMessage(session, std::bind(&ServiceDiscovery::OnRecvMessage, this, std::placeholders::_1, std::placeholders::_2));
+    _connectmanager->SetCallBackRecvJsonRequest(session, std::bind(&ServiceDiscovery::OnRecvRequest, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    _connectmanager->SetCallBackCloseConnect(session, std::bind(&ServiceDiscovery::OnSessionClose, this, std::placeholders::_1));
+    co_return;
+}
+
+Task<void>  ServiceDiscovery::OnRecvMessage(JsonProtocolSession session, json &src)
+{
+    json dest;
+    co_await ProcessMsg(src, dest);
+    if (!dest.is_null())
+        session.AsyncSendJson(dest);
+}
+
+Task<void> ServiceDiscovery::OnRecvRequest(JsonProtocolSession session, json &src, json &dest)
+{
+    co_await ProcessMsg(src, dest);
+}
+
+Task<void> ServiceDiscovery::OnSessionClose(JsonProtocolSession session)
+{
+    co_return;
+}
+
+Task<void> ServiceDiscovery::ProcessMsg(json &js_src, json &js_dest)
 {
     if (!js_src.contains("command"))
-        return;
+        co_return;
     int command = js_src.at("command");
 
     if (command == ServiceDiscovery_GetServiceInfo)
     {
-        ProcessGetServiceInfo(js_src, js_dest);
+        co_await ProcessGetServiceInfo(js_src, js_dest);
     }
     else if (command == ServiceDiscovery_GetAllServiceInfo)
     {
-        ProcessGetAllServiceInfo(js_src, js_dest);
+        co_await ProcessGetAllServiceInfo(js_src, js_dest);
     }
     else if (command == ServiceDiscovery_GetServiceInfoByServiceIds)
     {
-        ProcessGetServiceInfoByServiceIds(js_src, js_dest);
+        co_await ProcessGetServiceInfoByServiceIds(js_src, js_dest);
     }
 }
 
-void ServiceDiscovery::ProcessGetServiceInfo(json &js_src, json &js_dest)
+Task<void> ServiceDiscovery::ProcessGetServiceInfo(json &js_src, json &js_dest)
 {
     js_dest["command"] = ServiceDiscovery_GetServiceInfoRes;
     json js_services = json::array();
@@ -81,7 +81,7 @@ void ServiceDiscovery::ProcessGetServiceInfo(json &js_src, json &js_dest)
         js_dest["result"] = -1;
         js_dest["reason"] = "Error ServiceType";
         js_dest["services"] = js_services;
-        return;
+        co_return;
     }
 
     ServiceType servicetype = (ServiceType)type;
@@ -96,18 +96,18 @@ void ServiceDiscovery::ProcessGetServiceInfo(json &js_src, json &js_dest)
         }
         js_dest["result"] = 1;
         js_dest["services"] = js_services;
-        return;
+        co_return;
     }
     else
     {
         js_dest["result"] = -1;
         js_dest["reason"] = "服务器内部错误";
         js_dest["services"] = js_services;
-        return;
+        co_return;
     }
 }
 
-void ServiceDiscovery::ProcessGetAllServiceInfo(json &js_src, json &js_dest)
+Task<void> ServiceDiscovery::ProcessGetAllServiceInfo(json &js_src, json &js_dest)
 {
     js_dest["command"] = ServiceDiscovery_GetServiceInfoRes;
 
@@ -123,18 +123,18 @@ void ServiceDiscovery::ProcessGetAllServiceInfo(json &js_src, json &js_dest)
         }
         js_dest["result"] = 1;
         js_dest["services"] = js_services;
-        return;
+        co_return;
     }
     else
     {
         js_dest["result"] = -1;
         js_dest["reason"] = "服务器内部错误";
         js_dest["services"] = js_services;
-        return;
+        co_return;
     }
 }
 
-void ServiceDiscovery::ProcessGetServiceInfoByServiceIds(json &js_src, json &js_dest)
+Task<void> ServiceDiscovery::ProcessGetServiceInfoByServiceIds(json& js_src, json& js_dest)
 {
     js_dest["command"] = ServiceDiscovery_GetServiceInfoByServiceIdsRes;
 
@@ -147,7 +147,7 @@ void ServiceDiscovery::ProcessGetServiceInfoByServiceIds(json &js_src, json &js_
         if (!js_src["serviceids"].is_array())
         {
             success = false;
-            errno_reason = "服务器内部错误";
+            errno_reason = "请求格式错误";
         }
     }
 
@@ -178,7 +178,7 @@ void ServiceDiscovery::ProcessGetServiceInfoByServiceIds(json &js_src, json &js_
     if (success)
     {
         std::vector<ServiceInfo> servicestates = manager->QueryServiceInfoByServiceIds(serviceid_list);
-        for (auto &info : servicestates)
+        for (auto& info : servicestates)
         {
             js_services.push_back(info.to_json());
         }
@@ -195,4 +195,5 @@ void ServiceDiscovery::ProcessGetServiceInfoByServiceIds(json &js_src, json &js_
         js_dest["result"] = -1;
         js_dest["reason"] = errno_reason;
     }
+    co_return;
 }

@@ -10,21 +10,21 @@ void CustomTcpSessionConnectManager::SetCallBackRequestMessage(CallBackRequestMe
     _CallBackRequestMessage = callback;
 }
 
-bool CustomTcpSessionConnectManager::AwaitSend(const std::string &conid, const Buffer &buf, Buffer &response)
+Task<bool> CustomTcpSessionConnectManager::AwaitSend(const ConID& conid, const Buffer& buf, Buffer& response)
 {
     BaseNetWorkSession *session;
     if (!ConIdToBaseNetWork.FindByLeft(conid, session) || !session)
-        return false;
+        co_return false;
 
-    auto result = ((CustomTcpSession*)session)->AwaitSend(buf).sync_wait();
+    auto result = co_await ((CustomTcpSession*)session)->AwaitSend(buf);
     if (result->code != AwaitErrorCode::Success)
-        return false;
+        co_return false;
 
     response.QuoteFromBuf(result->response);
-    return true;
+    co_return true;
 }
 
-void CustomTcpSessionConnectManager::SessionEstablish(BaseNetWorkSession *session)
+Task<void> CustomTcpSessionConnectManager::SessionEstablish(BaseNetWorkSession *session)
 {
     CustomTcpSession *customtcpsession = (CustomTcpSession *)session;
 
@@ -32,19 +32,21 @@ void CustomTcpSessionConnectManager::SessionEstablish(BaseNetWorkSession *sessio
     customtcpsession->BindSessionCloseCallBack(std::bind(&BaseSessionManager::CloseConnect, this, std::placeholders::_1));
     customtcpsession->BindRecvRequestCallBack(std::bind(&CustomTcpSessionConnectManager::RequestMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
-    std::string ConId = Tool::GenerateSimpleUuid();
+    ConID ConId = Tool::GenerateSimpleUuid();
     ConIdToBaseNetWork.InsertOrUpdate(ConId, session);
 
-    if (_CallBackSessionEstablish)
-        _CallBackSessionEstablish(ConId);
+    auto callback = _CallBackSessionEstablish;
+    if (callback)
+        co_await callback(ConId);
 }
 
-void CustomTcpSessionConnectManager::RequestMessage(BaseNetWorkSession *session, Buffer *recv, Buffer *resp)
+Task<void> CustomTcpSessionConnectManager::RequestMessage(BaseNetWorkSession *session, Buffer *recv, Buffer *resp)
 {
-    std::string conid;
+    ConID conid;
     if (!ConIdToBaseNetWork.FindByRight(session, conid) || conid.empty())
-        return;
+        co_return;
 
-    if (_CallBackRequestMessage)
-        _CallBackRequestMessage(conid, recv, resp);
+    auto callback = _CallBackRequestMessage;
+    if (callback)
+        co_await _CallBackRequestMessage(conid, recv, resp);
 }

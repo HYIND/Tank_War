@@ -304,7 +304,7 @@ void GameInstance::GameOver()
 	if (_sender)
 		_sender->Broadcast(js_GameOver);
 	if (_service)
-		_service->GameOver(_gameId);
+		_service->GameOver(_gameId).sync_wait();
 }
 
 void GameInstance::GameOverWithWinner(const PlayerID& winner)
@@ -320,7 +320,7 @@ void GameInstance::GameOverWithWinner(const PlayerID& winner)
 	if (_sender)
 		_sender->Broadcast(js_GameOver);
 	if (_service)
-		_service->GameOver(_gameId);
+		_service->GameOver(_gameId).sync_wait();
 }
 
 void GameInstance::PlayerEliminated(const PlayerID& playerId, const PlayerID& killer)

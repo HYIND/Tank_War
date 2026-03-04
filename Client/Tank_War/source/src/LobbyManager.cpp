@@ -300,14 +300,14 @@ void LobbyManager::ProcessStartGameRes(const json& js)
 	std::string gameid = js.value("gameid", "");
 	UserInfoManager::Instance()->setGameId(gameid);
 
-	if (!CONNECTMANAGER->LoginGameSeervice(endpoint))
+	if (!CONNECTMANAGER->LoginGameSeervice(endpoint).sync_wait())
 		return;
 
 	json req, resp;
 	req["command"] = GameServiceCommand::GameService_JoinGame;
 	req["playerid"] = UserInfoManager::Instance()->usertoken();
 	req["gameid"] = gameid;
-	if (!CONNECTMANAGER->GameRequest(req, resp))
+	if (!CONNECTMANAGER->GameRequest(req, resp).sync_wait())
 		return;
 
 	if (resp.contains("result") && resp["result"].is_number_integer())

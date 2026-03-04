@@ -23,23 +23,23 @@ public:
 	static ConnectManager* Instance();
 	~ConnectManager();
 
-	bool Login();
-	void Logout();
+	Task<bool> Login();
+	Task<void> Logout();
 
-	bool LoginGameSeervice(NetworkEndpoint endpoint);
-	bool LogoutGameSeervice();
+	Task<bool> LoginGameSeervice(NetworkEndpoint endpoint);
+	Task<bool> LogoutGameSeervice();
 
 	bool SocialSend(json& js);
-	bool SocialRequest(json& js_req, json& js_resp);
+	Task<bool> SocialRequest(json& js_req, json& js_resp);
 
 	bool GameSend(json& js_);
-	bool GameRequest(json& js_req, json& js_resp);
+	Task<bool> GameRequest(json& js_req, json& js_resp);
 
 	ConnectStatus connectStatus();
 
 public:
-	void OnSessionClose(JsonProtocolClient* _socaialSession);
-	void OnRecvMessage(JsonProtocolClient* session, json& src);
+	Task<void> OnSessionClose(JsonProtocolClient* _socaialSession);
+	Task<void> OnRecvMessage(JsonProtocolClient* session, json& src);
 
 	std::shared_ptr<JsonProtocolClient> SocialSession();
 	std::shared_ptr<JsonProtocolClient> GameSession();
@@ -50,14 +50,14 @@ private:
 	bool InnerSocialSend(const json& js);
 	bool InnerGameSend(const json& buf);
 
-	bool InnerSocialRequest(const json& js_req, json& js_resp);
-	bool InnerGameRequest(const json& js_req, json& js_resp);
+	Task<bool> InnerSocialRequest(const json& js_req, json& js_resp);
+	Task<bool> InnerGameRequest(const json& js_req, json& js_resp);
 
-	bool ProcessLoginRequest();
-	bool ProcessLogoutRequest();
+	Task<bool> ProcessLoginRequest();
+	Task<bool> ProcessLogoutRequest();
 
-	bool ProcessLoginGameSeerviceRequest();
-	bool ProcessLogoutGameSeerviceRequest();
+	Task<bool> ProcessLoginGameSeerviceRequest();
+	Task<bool> ProcessLogoutGameSeerviceRequest();
 
 private:
 	ConnectStatus _status = ConnectStatus::disconnect;

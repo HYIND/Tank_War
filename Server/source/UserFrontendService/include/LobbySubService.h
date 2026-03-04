@@ -17,9 +17,9 @@ public:
     ~LobbySubService();
 
 public:
-    void OnRecvMessage(JsonProtocolSession session, json &src);
-    void OnRecvRequest(JsonProtocolSession session, json &src, json &dest);
-    void OnSessionClose(JsonProtocolSession session);
+    Task<void> OnRecvMessage(JsonProtocolSession session, json &src);
+    Task<void> OnRecvRequest(JsonProtocolSession session, json &src, json &dest);
+    Task<void> OnSessionClose(JsonProtocolSession session);
 
     void SetLoginSubService(std::shared_ptr<LoginSubService> service);
     void SetServer(std::shared_ptr<JsonProtocolServer> m);
@@ -28,44 +28,44 @@ public:
     void SetMessageDelegator(std::shared_ptr<MessageDelegator> delegator);
 
 public:
-    bool UserEnter(std::shared_ptr<LobbyUser> u);
-    void OnStubRequest(json &js_src, json &js_dest);
+    Task<bool> UserEnter(std::shared_ptr<LobbyUser> u);
+    Task<void> OnStubRequest(json &js_src, json &js_dest);
 
 private:
-    void ProcessMsg(JsonProtocolSession session, json &src, std::vector<json> &dest);
-    void ProcessLogout(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
+    Task<void> ProcessMsg(JsonProtocolSession session, json &src, json &dest);
+    Task<void> ProcessLogout(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
 
-    void ProcessHallMsg(std::shared_ptr<LobbyUser> sender, json &js_src, json &js_dest);
-    void ProcessRoomMsg(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
-    void ProcessPrivateMsg(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
+    Task<void> ProcessHallMsg(std::shared_ptr<LobbyUser> sender, json &js_src, json &js_dest);
+    Task<void> ProcessRoomMsg(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
+    Task<void> ProcessPrivateMsg(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
 
-    void ProcessRequestLobbyUser(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
-    void ProcessRequestLobbyRoom(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
+    Task<void> ProcessRequestLobbyUser(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
+    Task<void> ProcessRequestLobbyRoom(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
 
-    void ProcessRequestRoomInfo(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
-    void ProcessRequestCreateRoom(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
-    void ProcessRequestJoinRoom(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
-    void ProcessRequestLeaveRoom(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
-    void ProcessRequestChangeReadyStatus(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
-    void ProcessRequestStartGame(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
-
-private:
-    bool Stub_Login(std::shared_ptr<LobbyUser> user);
-    bool Stub_Logout(std::shared_ptr<LobbyUser> user);
-
-    bool Stub_GetOnlineLobbyUser(std::vector<LobbyUser> &users);
-    bool Stub_GetAllLobbyRoom(json &js_rooms);
-
-    bool Stub_RoomInfo(std::shared_ptr<LobbyUser> user, json &js_roominfo);
-    bool Stub_CreateRoom(std::shared_ptr<LobbyUser> user);
-    bool Stub_JoinRoom(std::shared_ptr<LobbyUser> user, const std::string &roomid);
-    bool Stub_LeaveRoom(std::shared_ptr<LobbyUser> user);
-    bool Stub_ChangeReadyStatus(std::shared_ptr<LobbyUser> user, int status);
-    bool Stub_StartGame(std::shared_ptr<LobbyUser> user, NetworkEndpoint &endpoint, std::string &gameid);
+    Task<void> ProcessRequestRoomInfo(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
+    Task<void> ProcessRequestCreateRoom(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
+    Task<void> ProcessRequestJoinRoom(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
+    Task<void> ProcessRequestLeaveRoom(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
+    Task<void> ProcessRequestChangeReadyStatus(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
+    Task<void> ProcessRequestStartGame(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest);
 
 private:
-    bool Stub_Request(const json &js_request, json &response);
-    bool DelegateDispatch(const std::string &user_token, const json &js);
+    Task<bool> Stub_Login(std::shared_ptr<LobbyUser> user);
+    Task<bool> Stub_Logout(std::shared_ptr<LobbyUser> user);
+
+    Task<bool> Stub_GetOnlineLobbyUser(std::vector<LobbyUser> &users);
+    Task<bool> Stub_GetAllLobbyRoom(json &js_rooms);
+
+    Task<bool> Stub_RoomInfo(std::shared_ptr<LobbyUser> user, json &js_roominfo);
+    Task<bool> Stub_CreateRoom(std::shared_ptr<LobbyUser> user);
+    Task<bool> Stub_JoinRoom(std::shared_ptr<LobbyUser> user, const std::string &roomid);
+    Task<bool> Stub_LeaveRoom(std::shared_ptr<LobbyUser> user);
+    Task<bool> Stub_ChangeReadyStatus(std::shared_ptr<LobbyUser> user, int status);
+    Task<bool> Stub_StartGame(std::shared_ptr<LobbyUser> user, NetworkEndpoint &endpoint, std::string &gameid);
+
+private:
+    Task<bool> Stub_Request(const json &js_request, json &response);
+    Task<bool> DelegateDispatch(const std::string &user_token, const json &js);
 
 private:
     std::shared_ptr<JsonProtocolClient> _gameStateStub;

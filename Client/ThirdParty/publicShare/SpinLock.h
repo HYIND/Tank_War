@@ -13,7 +13,7 @@ public:
 	SpinLock();
 	SpinLock(const SpinLock&) = delete;
 	SpinLock& operator=(const SpinLock) = delete;
-	bool trylock();
+	bool try_lock();
 	void lock();
 	void unlock();
 
@@ -28,7 +28,7 @@ public:
 	RecursiveSpinLock();
 	RecursiveSpinLock(const RecursiveSpinLock&) = delete;
 	RecursiveSpinLock& operator=(const RecursiveSpinLock) = delete;
-	bool trylock();
+	bool try_lock();
 	void lock();
 	void unlock();
 

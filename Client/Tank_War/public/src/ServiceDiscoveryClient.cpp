@@ -54,75 +54,75 @@ void ServiceDiscoveryClient::SetEndpoint(const std::string& IP, int Port)
 	_client.Release();
 }
 
-bool ServiceDiscoveryClient::GetAvailableServiceInfo(ServiceType type, std::vector<ServiceInfo>& services)
+Task<bool> ServiceDiscoveryClient::GetAvailableServiceInfo(ServiceType type, std::vector<ServiceInfo>& services)
 {
-	if (!Connect())
-		return false;
+	if (!co_await Connect())
+		co_return false;
 
 	json js_request;
 	js_request["command"] = ServiceDiscovery_GetServiceInfo;
 	js_request["type"] = (int)type;
 
 	json js_response;
-	if (!Request(js_request, js_response) || js_response.is_null())
-		return false;
+	if (!co_await Request(js_request, js_response) || js_response.is_null())
+		co_return false;
 
 	int result = js_response.value("result", -1);
 	if (result != 1)
-		return false;
+		co_return false;
 
 	if (!js_response.contains("services") || !js_response["services"].is_array())
-		return false;
+		co_return false;
 
 	json js_services = js_response["services"];
 	for (int i = 0; i < js_services.size(); i++)
 	{
 		ServiceInfo info = ServiceInfo::create_from_json(js_services.at(i));
 		if (info.service_id.empty())
-			return false;
+			co_return false;
 
 		services.emplace_back(std::move(info));
 	}
 
-	return true;
+	co_return true;
 }
 
-bool ServiceDiscoveryClient::GetAllAvailableServiceInfo(std::vector<ServiceInfo>& services)
+Task<bool> ServiceDiscoveryClient::GetAllAvailableServiceInfo(std::vector<ServiceInfo>& services)
 {
-	if (!Connect())
-		return false;
+	if (!co_await Connect())
+		co_return false;
 
 	json js_request;
 	js_request["command"] = ServiceDiscovery_GetAllServiceInfo;
 
 	json js_response;
-	if (!Request(js_request, js_response) || js_response.is_null())
-		return false;
+	if (!co_await Request(js_request, js_response) || js_response.is_null())
+		co_return false;
 
 	int result = js_response.value("result", -1);
 	if (result != 1)
-		return false;
+		co_return false;
 
 	if (!js_response.contains("services") || !js_response["services"].is_array())
-		return false;
+		co_return false;
 
 	json js_services = js_response["services"];
 	for (int i = 0; i < js_services.size(); i++)
 	{
 		auto info = ServiceInfo::create_from_json(js_services.at(i));
 		if (info.service_id.empty())
-			return false;
+			co_return false;
 
 		services.emplace_back(std::move(info));
 	}
 
-	return true;
+	co_return true;
 }
 
-bool ServiceDiscoveryClient::GetAvailableServiceInfoByServicesIds(std::vector<std::string>& serviceid_list, std::vector<ServiceInfo>& services)
+Task<bool> ServiceDiscoveryClient::GetAvailableServiceInfoByServicesIds(std::vector<std::string>& serviceid_list, std::vector<ServiceInfo>& services)
 {
-	if (!Connect())
-		return false;
+	if (!co_await Connect())
+		co_return false;
 
 	json js_request;
 	js_request["command"] = ServiceDiscovery_GetServiceInfoByServiceIds;
@@ -134,30 +134,30 @@ bool ServiceDiscoveryClient::GetAvailableServiceInfoByServicesIds(std::vector<st
 	js_request["serviceids"] = js_ids;
 
 	json js_response;
-	if (!Request(js_request, js_response) || js_response.is_null())
-		return false;
+	if (!co_await Request(js_request, js_response) || js_response.is_null())
+		co_return false;
 
 	int result = js_response.value("result", -1);
 	if (result != 1)
-		return false;
+		co_return false;
 
 	if (!js_response.contains("services") || !js_response["services"].is_array())
-		return false;
+		co_return false;
 
 	json js_services = js_response["services"];
 	for (int i = 0; i < js_services.size(); i++)
 	{
 		auto info = ServiceInfo::create_from_json(js_services.at(i));
 		if (info.service_id.empty())
-			return false;
+			co_return false;
 
 		services.emplace_back(std::move(info));
 	}
 
-	return true;
+	co_return true;
 }
 
-bool ServiceDiscoveryClient::Connect()
+Task<bool> ServiceDiscoveryClient::Connect()
 {
 	if (!isConnected.load())
 	{
@@ -165,13 +165,13 @@ bool ServiceDiscoveryClient::Connect()
 		if (!isConnected.load())
 		{
 			_client.Release();
-			isConnected.store(_client.Connect(_ip, _port));
+			isConnected.store(co_await _client.Connect(_ip, _port));
 		}
 	}
-	return isConnected;
+	co_return isConnected;
 }
 
-bool ServiceDiscoveryClient::Request(json& src, json& dest)
+Task<bool> ServiceDiscoveryClient::Request(json& src, json& dest)
 {
-	return _client.Request(src, dest);
+	co_return co_await _client.Request(src, dest);
 }

@@ -13,34 +13,29 @@ LoginSubService::~LoginSubService()
 {
 }
 
-void LoginSubService::OnSessionEstablish(JsonProtocolSession session)
+Task<void> LoginSubService::OnSessionEstablish(JsonProtocolSession session)
 {
     ConnectionEnter(session);
+    co_return;
 }
 
-void LoginSubService::OnRecvMessage(JsonProtocolSession session, json &src)
+Task<void> LoginSubService::OnRecvMessage(JsonProtocolSession session, json &src)
 {
-    std::vector<json> dests;
-    ProcessMsg(session, src, dests);
-    if (!dests.empty())
-    {
-        for (auto &js : dests)
-        {
-            session.AsyncSendJson(js);
-        }
-    }
+    json dest;
+    co_await ProcessMsg(session, src, dest);
+    if (!dest.is_null())
+        session.AsyncSendJson(dest);
+    co_return;
 }
 
-void LoginSubService::OnRecvRequest(JsonProtocolSession session, json &src, json &dest)
+Task<void> LoginSubService::OnRecvRequest(JsonProtocolSession session, json &src, json &dest)
 {
-    std::vector<json> dests;
-    ProcessMsg(session, src, dests);
-    if (!dests.empty())
-        dest = dests[0];
+    co_await ProcessMsg(session, src, dest);
 }
 
-void LoginSubService::OnSessionClose(JsonProtocolSession session)
+Task<void> LoginSubService::OnSessionClose(JsonProtocolSession session)
 {
+    co_return;
 }
 
 void LoginSubService::SetLobbySubService(std::shared_ptr<LobbySubService> service)
@@ -73,21 +68,19 @@ bool LoginSubService::ConnectionEnter(JsonProtocolSession session)
     return true;
 }
 
-void LoginSubService::ProcessMsg(JsonProtocolSession session, json &js_src, std::vector<json> &js_dests)
+Task<void> LoginSubService::ProcessMsg(JsonProtocolSession session, json& js_src, json& js_dest)
 {
     if (!js_src.contains("command"))
-        return;
+        co_return;
     int command = js_src.at("command");
 
     if (command == LoginSubService_Login)
     {
-        json js_dest;
-        ProcessLogin(session, js_src, js_dest);
-        js_dests.emplace_back(js_dest);
+        co_await ProcessLogin(session, js_src, js_dest);
     }
 }
 
-void LoginSubService::ProcessLogin(JsonProtocolSession session, json &js_src, json &js_dest)
+Task<void> LoginSubService::ProcessLogin(JsonProtocolSession session, json &js_src, json &js_dest)
 {
 
     js_dest["command"] = LoginSubService_LoginRes;
@@ -96,7 +89,7 @@ void LoginSubService::ProcessLogin(JsonProtocolSession session, json &js_src, js
     {
         js_dest["result"] = -1;
         js_dest["reason"] = "用户名不能为空";
-        return;
+        co_return;
     }
 
     std::string uuid = Tool::GenerateSimpleUuid();
@@ -117,6 +110,6 @@ void LoginSubService::ProcessLogin(JsonProtocolSession session, json &js_src, js
     {
         js_dest["result"] = -1;
         js_dest["reason"] = "服务器内部错误";
-        return;
+        co_return;
     }
 }

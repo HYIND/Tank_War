@@ -8,49 +8,62 @@
 #include <unordered_map>
 #include <set>
 
-template <typename K, typename V>
+template <typename K, typename V, Lockable Mutex = CriticalSectionLock>
 class SafeMap
 {
 public:
 	SafeMap() {}
-
-	~SafeMap() {}
-
-	SafeMap(const SafeMap &rhs)
+	SafeMap(const SafeMap& other)
 	{
-		_map = rhs._map;
+		LockGuard lock(other._lock);
+		_map = other._map;
 	}
-
-	SafeMap &operator=(const SafeMap &rhs)
+	SafeMap(SafeMap&& other)
 	{
-		if (this == &rhs)
+		LockGuard lock(other._lock);
+		_map = std::move(other._map);
+	}
+	SafeMap& operator=(const SafeMap& other)
+	{
+		if (this == &other)
 			return *this;
-		std::lock_guard<CriticalSectionLock> lock(_lock);
-		_map = rhs._map;
+		LockGuard guard1(_lock);
+		LockGuard guard2(other._lock);
+		_map = other._map;
 		return *this;
 	}
+	SafeMap& operator=(SafeMap&& other)
+	{
+		if (this == &other)
+			return *this;
+		LockGuard guard1(_lock);
+		LockGuard guard2(other._lock);
+		_map = std::move(other._map);
+		return *this;
+	}
+	~SafeMap() {}
 
 	V &operator[](const K &key)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		return _map[key];
 	}
 
-	int Size()
+	int Size() const
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		return _map.size();
 	}
 
-	bool IsEmpty()
+	bool IsEmpty() const
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		return _map.empty();
 	}
 
 	bool Insert(const K &key, const V &value)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		if (_map.find(key) != _map.end())
 		{
 			return false;
@@ -61,7 +74,7 @@ public:
 
 	void EnsureInsert(const K &key, const V &value)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		auto ret = _map.insert(std::pair<K, V>(key, value));
 		// find key and cannot insert
 		if (!ret.second)
@@ -73,16 +86,16 @@ public:
 		return;
 	}
 
-	bool Exist(const K &key)
+	bool Exist(const K &key) const
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		auto iter = _map.find(key);
 		return iter != _map.end();
 	}
 
 	bool Find(const K &key, V &value)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 
 		auto iter = _map.find(key);
 		if (iter != _map.end())
@@ -96,7 +109,7 @@ public:
 
 	bool FindOldAndSetNew(const K &key, V &oldValue, const V &newValue)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 
 		if (_map.size() > 0)
 		{
@@ -115,13 +128,13 @@ public:
 
 	void Erase(const K &key)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		_map.erase(key);
 	}
 
 	void Clear()
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		_map.clear();
 		return;
 	}
@@ -130,7 +143,7 @@ public:
 	{
 		if (callback)
 		{
-			std::lock_guard<CriticalSectionLock> lock(_lock);
+			LockGuard guard(_lock);
 			callback(this->_map);
 		}
 	}
@@ -138,7 +151,7 @@ public:
 	std::vector<K> GetKeys() const
 	{
 		std::vector<K> keys;
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		keys.reserve(_map.size());
 		for (const auto &[key, value] : _map)
 			keys.push_back(key);
@@ -148,76 +161,79 @@ public:
 	std::vector<V> GetValues() const
 	{
 		std::vector<V> values;
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		values.reserve(_map.size());
 		for (const auto& [key, value] : _map)
 			values.push_back(value);
 		return values;
 	}
 
-	void Lock()
-	{
-		_lock.Enter();
-	}
-
-	void UnLock()
-	{
-		_lock.Leave();
-	}
-
-	LockGuard MakeLockGuard()
+	auto MakeLockGuard() const
 	{
 		return LockGuard(_lock);
 	}
 
 private:
 	std::map<K, V> _map;
-	mutable CriticalSectionLock _lock;
+	mutable Mutex _lock;
 };
 
-template <typename K, typename V>
+template <typename K, typename V, Lockable Mutex = CriticalSectionLock>
 class SafeUnorderedMap
 {
 public:
 	SafeUnorderedMap() {}
-
-	~SafeUnorderedMap() {}
-
-	SafeUnorderedMap(const SafeUnorderedMap &rhs)
+	SafeUnorderedMap(const SafeUnorderedMap& other)
 	{
-		_map = rhs._map;
+		LockGuard lock(other._lock);
+		_map = other._map;
 	}
-
-	SafeUnorderedMap &operator=(const SafeUnorderedMap &rhs)
+	SafeUnorderedMap(SafeUnorderedMap&& other)
 	{
-		if (this == &rhs)
+		LockGuard lock(other._lock);
+		_map = std::move(other._map);
+	}
+	SafeUnorderedMap& operator=(const SafeUnorderedMap& other)
+	{
+		if (this == &other)
 			return *this;
-		std::lock_guard<CriticalSectionLock> lock(_lock);
-		_map = rhs._map;
+		LockGuard guard1(_lock);
+		LockGuard guard2(other._lock);
+		_map = other._map;
 		return *this;
 	}
+	SafeUnorderedMap& operator=(SafeUnorderedMap&& other)
+	{
+		if (this == &other)
+			return *this;
+		LockGuard guard1(_lock);
+		LockGuard guard2(other._lock);
+		_map = std::move(other._map);
+		return *this;
+	}
+	~SafeUnorderedMap() {}
 
 	V &operator[](const K &key)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		return _map[key];
 	}
 
 	int Size() const
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		return _map.size();
 	}
 
-	bool IsEmpty()
+	bool IsEmpty() const
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		return _map.empty();
 	}
 
 	bool Insert(const K &key, const V &value)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		if (_map.find(key) != _map.end())
 		{
 			return false;
@@ -228,7 +244,7 @@ public:
 
 	void EnsureInsert(const K &key, const V &value)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		auto ret = _map.insert(std::pair<K, V>(key, value));
 		// find key and cannot insert
 		if (!ret.second)
@@ -240,16 +256,16 @@ public:
 		return;
 	}
 
-	bool Exist(const K &key)
+	bool Exist(const K &key) const
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		auto iter = _map.find(key);
 		return iter != _map.end();
 	}
 
 	bool Find(const K &key, V &value)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 
 		auto iter = _map.find(key);
 		if (iter != _map.end())
@@ -263,7 +279,7 @@ public:
 
 	bool FindOldAndSetNew(const K &key, V &oldValue, const V &newValue)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 
 		if (_map.size() > 0)
 		{
@@ -282,13 +298,13 @@ public:
 
 	void Erase(const K &key)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		_map.erase(key);
 	}
 
 	void Clear()
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		_map.clear();
 		return;
 	}
@@ -297,7 +313,7 @@ public:
 	{
 		if (callback)
 		{
-			std::lock_guard<CriticalSectionLock> lock(_lock);
+			LockGuard guard(_lock);
 			callback(this->_map);
 		}
 	}
@@ -305,7 +321,7 @@ public:
 	std::vector<K> GetKeys() const
 	{
 		std::vector<K> keys;
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		keys.reserve(_map.size());
 		for (const auto &[key, value] : _map)
 			keys.push_back(key);
@@ -315,71 +331,88 @@ public:
 	std::vector<V> GetValues() const
 	{
 		std::vector<V> values;
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		values.reserve(_map.size());
 		for (const auto& [key, value] : _map)
 			values.push_back(value);
 		return values;
 	}
 
-	void Lock()
-	{
-		_lock.Enter();
-	}
-
-	void UnLock()
-	{
-		_lock.Leave();
-	}
-
-	LockGuard MakeLockGuard()
+	auto MakeLockGuard() const
 	{
 		return LockGuard(_lock);
 	}
 
 private:
 	std::unordered_map<K, V> _map;
-	mutable CriticalSectionLock _lock;
+	mutable Mutex _lock;
 };
 
-template <typename T>
+template <typename T, Lockable Mutex = CriticalSectionLock>
 class SafeQueue
 {
 private:
 	std::queue<T> _queue;
-	mutable CriticalSectionLock _lock;
+	mutable Mutex _lock;
 
 public:
 	SafeQueue() {}
-	SafeQueue(SafeQueue &&other) { _queue = other._queue; }
-	~SafeQueue() {}
-	bool empty()
+	SafeQueue(const SafeQueue& other)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard lock(other._lock);
+		_queue = other._queue;
+	}
+	SafeQueue(SafeQueue&& other)
+	{
+		LockGuard lock(other._lock);
+		_queue = std::move(other._queue);
+	}
+	SafeQueue& operator=(const SafeQueue& other)
+	{
+		if (this == &other)
+			return *this;
+		LockGuard guard1(_lock);
+		LockGuard guard2(other._lock);
+		_queue = other._queue;
+		return *this;
+	}
+	SafeQueue& operator=(SafeQueue&& other)
+	{
+		if (this == &other)
+			return *this;
+		LockGuard guard1(_lock);
+		LockGuard guard2(other._lock);
+		_queue = std::move(other._queue);
+		return *this;
+	}
+	~SafeQueue() {}
+	bool empty() const
+	{
+		LockGuard guard(_lock);
 		bool result = _queue.empty();
 		return result;
 	}
-	int size()
+	int size() const
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		int result = _queue.size();
 		return result;
 	}
 	// 队列添加元素
 	void enqueue(T &t)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		_queue.emplace(t);
 	}
 	void enqueue(T &&t)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		_queue.push(std::forward<T>(t));
 	}
 	// 队列取出元素
 	bool dequeue(T &t)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		if (_queue.empty())
 		{
 			return false;
@@ -391,7 +424,7 @@ public:
 	// 查看队列首元素
 	bool front(T &t)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		if (_queue.empty())
 		{
 			return false;
@@ -402,7 +435,7 @@ public:
 	// 查看队列尾元素
 	bool back(T &t)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		if (_queue.empty())
 		{
 			return false;
@@ -412,69 +445,69 @@ public:
 	}
 	void clear()
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		while (!_queue.empty())
 			_queue.pop();
 	}
 
-	void Lock()
-	{
-		_lock.Enter();
-	}
-
-	void UnLock()
-	{
-		_lock.Leave();
-	}
-
-	LockGuard MakeLockGuard()
+	auto MakeLockGuard() const
 	{
 		return LockGuard(_lock);
 	}
 };
 
-template <typename T>
+template <typename T, Lockable Mutex = CriticalSectionLock>
 class SafeArray
 {
 private:
 	std::vector<T> _array;
-	mutable CriticalSectionLock _lock;
+	mutable Mutex _lock;
 
 public:
 	SafeArray() {}
-	SafeArray(SafeArray &&other)
-	{
-		std::lock_guard<CriticalSectionLock> lock(other._lock);
-		_array = std::move(other._array);
-	}
 	SafeArray(const SafeArray &other)
 	{
-		std::lock_guard<CriticalSectionLock> lock(other._lock);
+		LockGuard guard(other._lock);
 		_array = other._array;
+	}
+	SafeArray(SafeArray &&other)
+	{
+		LockGuard guard(other._lock);
+		_array = std::move(other._array);
 	}
 	SafeArray &operator=(const SafeArray &other)
 	{
 		if (this == &other)
 			return *this;
-		std::lock_guard<CriticalSectionLock> lock(other._lock);
+		LockGuard guard1(_lock);
+		LockGuard guard2(other._lock);
 		_array = other._array;
+		return *this;
+	}
+	SafeArray& operator=(SafeArray&& other)
+	{
+		if (this == &other)
+			return *this;
+		LockGuard guard1(_lock);
+		LockGuard guard2(other._lock);
+		_array = std::move(other._array);
 		return *this;
 	}
 	~SafeArray() {}
 	void clear()
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		_array.clear();
 	}
-	bool empty()
+	bool empty() const
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		bool result = _array.empty();
 		return result;
 	}
-	int size()
+	int size() const
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		int result = _array.size();
 		return result;
 	}
@@ -482,14 +515,14 @@ public:
 	template <typename... Args>
 	void emplace(Args &&...args)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		_array.emplace_back(std::forward<Args>(args)...);
 	}
 
 	// 数组访问元素
 	bool getIndexElement(size_t index, T &t)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		if (_array.empty() || index >= _array.size())
 		{
 			return false;
@@ -500,7 +533,7 @@ public:
 	// 数组删除元素
 	bool deleteIndexElement(size_t index)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		if (_array.empty() || index >= _array.size())
 		{
 			return false;
@@ -511,7 +544,7 @@ public:
 
 	T &operator[](size_t index)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		if (index >= _array.size())
 		{
 			throw std::out_of_range("SafeArray index out of range");
@@ -521,7 +554,7 @@ public:
 
 	const T &operator[](size_t index) const
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		if (index >= _array.size())
 		{
 			throw std::out_of_range("SafeArray index out of range");
@@ -533,66 +566,84 @@ public:
 	{
 		if (callback)
 		{
-			std::lock_guard<CriticalSectionLock> lock(_lock);
+			LockGuard guard(_lock);
 			callback(this->_array);
 		}
 	}
 
-	void Lock()
-	{
-		_lock.Enter();
-	}
-
-	void UnLock()
-	{
-		_lock.Leave();
-	}
-
-	LockGuard MakeLockGuard()
+	auto MakeLockGuard() const
 	{
 		return LockGuard(_lock);
 	}
 };
 
-template <typename T>
+template <typename T, Lockable Mutex = CriticalSectionLock>
 class SafeDeQue
 {
 private:
 	std::deque<T> _deque;
-	mutable CriticalSectionLock _lock;
+	mutable Mutex _lock;
 
 public:
 	SafeDeQue() {}
-	SafeDeQue(SafeDeQue &&other) { _deque = other._deque; }
-	~SafeDeQue() {}
-	bool empty()
+	SafeDeQue(const SafeDeQue& other)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(other._lock);
+		_deque = other._deque;
+	}
+	SafeDeQue(SafeDeQue&& other)
+	{
+		LockGuard guard(other._lock);
+		_deque = std::move(other._deque);
+	}
+	SafeDeQue& operator=(const SafeDeQue& other)
+	{
+		if (this == &other)
+			return *this;
+		LockGuard guard1(_lock);
+		LockGuard guard2(other._lock);
+		_deque = other._deque;
+		return *this;
+	}
+	SafeDeQue& operator=(SafeDeQue&& other)
+	{
+		if (this == &other)
+			return *this;
+		LockGuard guard1(_lock);
+		LockGuard guard2(other._lock);
+		_deque = std::move(other._deque);
+		return *this;
+	}
+	~SafeDeQue(){}
+
+	bool empty() const
+	{
+		LockGuard guard(_lock);
 		bool result = _deque.empty();
 		return result;
 	}
-	int size()
+	int size() const
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		int result = _deque.size();
 		return result;
 	}
 	// 队尾添加元素
 	void enqueue_back(T &t)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		_deque.emplace_back(t);
 	}
 	// 队首添加元素
 	void enqueue_front(T &t)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		_deque.emplace_front(t);
 	}
 	// 队首取出元素
 	bool dequeue_front(T &t)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		if (_deque.empty())
 		{
 			return false;
@@ -604,7 +655,7 @@ public:
 	// 查看队列首元素
 	bool front(T &t)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		if (_deque.empty())
 		{
 			return false;
@@ -615,7 +666,7 @@ public:
 	// 查看队列尾元素
 	bool back(T &t)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		if (_deque.empty())
 		{
 			return false;
@@ -625,62 +676,66 @@ public:
 	}
 	void clear()
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		_deque.clear();
 	}
 
-	void Lock()
-	{
-		_lock.Enter();
-	}
-
-	void UnLock()
-	{
-		_lock.Leave();
-	}
-
-	LockGuard MakeLockGuard()
+	auto MakeLockGuard() const
 	{
 		return LockGuard(_lock);
 	}
 };
 
-template <typename T>
+template <typename T, Lockable Mutex = CriticalSectionLock>
 class SafeSet
 {
 public:
 	SafeSet() {}
-	~SafeSet() {}
-	SafeSet(const SafeSet &rhs)
+	SafeSet(const SafeSet& other)
 	{
-		std::lock_guard<CriticalSectionLock> lock(rhs._lock);
-		_set = rhs._set;
+		LockGuard guard(other._lock);
+		_set = other._set;
 	}
-
-	SafeSet &operator=(const SafeSet &rhs)
+	SafeSet(SafeSet&& other)
 	{
-		if (this == &rhs)
+		LockGuard guard(other._lock);
+		_set = std::move(other._set);
+	}
+	SafeSet& operator=(const SafeSet& other)
+	{
+		if (this == &other)
 			return *this;
-		std::lock_guard<CriticalSectionLock> lock(_lock);
-		_set = rhs._set;
+		LockGuard guard1(_lock);
+		LockGuard guard2(other._lock);
+		_set = other._set;
 		return *this;
 	}
+	SafeSet& operator=(SafeSet&& other)
+	{
+		if (this == &other)
+			return *this;
+		LockGuard guard1(_lock);
+		LockGuard guard2(other._lock);
+		_set = std::move(other._set);
+		return *this;
+	}
+	~SafeSet() {}
 
 	int Size() const
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		return _set.size();
 	}
 
-	bool IsEmpty()
+	bool IsEmpty() const
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		return _set.empty();
 	}
 
 	bool Insert(const T &value)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		if (_set.find(value) != _set.end())
 			return false;
 
@@ -688,21 +743,21 @@ public:
 		return true;
 	}
 
-	bool Exist(const T &value)
+	bool Exist(const T &value) const
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		return _set.find(value) != _set.end();
 	}
 
 	void Erase(const T &value)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		_set.erase(value);
 	}
 
 	void Clear()
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard guard(_lock);
 		_set.clear();
 	}
 
@@ -710,27 +765,17 @@ public:
 	{
 		if (callback)
 		{
-			std::lock_guard<CriticalSectionLock> lock(_lock);
+			LockGuard guard(_lock);
 			callback(this->_set);
 		}
 	}
 
-	void Lock()
-	{
-		_lock.Enter();
-	}
-
-	void UnLock()
-	{
-		_lock.Leave();
-	}
-
-	LockGuard MakeLockGuard()
+	auto MakeLockGuard() const
 	{
 		return LockGuard(_lock);
 	}
 
 private:
 	std::set<T> _set;
-	mutable CriticalSectionLock _lock;
+	mutable Mutex _lock;
 };

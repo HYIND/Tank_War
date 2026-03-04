@@ -14,35 +14,29 @@ LobbySubService::~LobbySubService()
 {
 }
 
-void LobbySubService::OnRecvMessage(JsonProtocolSession session, json &src)
+Task<void> LobbySubService::OnRecvMessage(JsonProtocolSession session, json &src)
 {
-    std::vector<json> dests;
-    ProcessMsg(session, src, dests);
-    if (!dests.empty())
-    {
-        for (auto &js : dests)
-        {
-            session.AsyncSendJson(js);
-        }
-    }
+    json dest;
+    co_await ProcessMsg(session, src, dest);
+    if (!dest.is_null())
+        session.AsyncSendJson(dest);
+    co_return;
 }
 
-void LobbySubService::OnRecvRequest(JsonProtocolSession session, json &src, json &dest)
+Task<void> LobbySubService::OnRecvRequest(JsonProtocolSession session, json &src, json &dest)
 {
-    std::vector<json> dests;
-    ProcessMsg(session, src, dests);
-    if (!dests.empty())
-        dest = dests[0];
+    co_await ProcessMsg(session, src, dest);
 }
 
-void LobbySubService::OnSessionClose(JsonProtocolSession session)
+Task<void> LobbySubService::OnSessionClose(JsonProtocolSession session)
 {
     std::shared_ptr<LobbyUser> user;
     if (_sessionToUser.Find(session, user) && user)
     {
-        json t1, t2;
-        ProcessLogout(user, t1, t2);
+        json src, dest;
+        co_await ProcessLogout(user, src, dest);
     }
+    co_return;
 }
 
 void LobbySubService::SetLoginSubService(std::shared_ptr<LoginSubService> service)
@@ -70,23 +64,23 @@ void LobbySubService::SetMessageDelegator(std::shared_ptr<MessageDelegator> dele
     _delegator = delegator;
 }
 
-bool LobbySubService::UserEnter(std::shared_ptr<LobbyUser> u)
+Task<bool> LobbySubService::UserEnter(std::shared_ptr<LobbyUser> u)
 {
-    if (!Stub_Login(u))
-        return false;
+    if (!co_await Stub_Login(u))
+        co_return false;
 
     _tokenToUser.Insert(u->token, u);
     _sessionToUser.Insert(u->session, u);
     _server->SetCallBackRecvJsonMessage(u->session, std::bind(&LobbySubService::OnRecvMessage, this, std::placeholders::_1, std::placeholders::_2));
     _server->SetCallBackRecvJsonRequest(u->session, std::bind(&LobbySubService::OnRecvRequest, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     _server->SetCallBackCloseConnect(u->session, std::bind(&LobbySubService::OnSessionClose, this, std::placeholders::_1));
-    return true;
+    co_return true;
 }
 
-void LobbySubService::OnStubRequest(json &js_src, json &js_dest)
+Task<void> LobbySubService::OnStubRequest(json &js_src, json &js_dest)
 {
     if (!js_src.contains("command"))
-        return;
+        co_return;
 
     int command = js_src.at("command");
     if (command == MessageDelegateCommand::MessageDelegate_UserMessageDelegate)
@@ -109,87 +103,84 @@ void LobbySubService::OnStubRequest(json &js_src, json &js_dest)
     }
 }
 
-void LobbySubService::ProcessMsg(JsonProtocolSession session, json &js_src, std::vector<json> &js_dests)
+Task<void> LobbySubService::ProcessMsg(JsonProtocolSession session, json &js_src, json &js_dest)
 {
     if (!js_src.contains("command"))
-        return;
+        co_return;
 
     if (!js_src.contains("jwt"))
-        return;
+        co_return;
 
     std::string token;
     std::shared_ptr<LobbyUser> user;
     {
         std::string jwtstr = js_src["jwt"];
         if (!VerfiyJwtToken(jwtstr, token))
-            return;
+            co_return;
         if (!_tokenToUser.Find(token, user) || !user)
-            return;
+            co_return;
         if (user->session != session)
-            return;
+            co_return;
     }
-
-    json js_dest;
 
     int command = js_src.at("command");
     switch (command)
     {
     case LobbySubService_Logout:
-        ProcessLogout(user, js_src, js_dest);
+        co_await ProcessLogout(user, js_src, js_dest);
         break;
 
     case LobbySubService_SendHallMsg:
-        ProcessHallMsg(user, js_src, js_dest);
+        co_await ProcessHallMsg(user, js_src, js_dest);
         break;
 
     case LobbySubService_SendRoomMsg:
-        ProcessRoomMsg(user, js_src, js_dest);
+        co_await ProcessRoomMsg(user, js_src, js_dest);
         break;
 
     case LobbySubService_SendPrivateMsg:
-        ProcessPrivateMsg(user, js_src, js_dest);
+        co_await ProcessPrivateMsg(user, js_src, js_dest);
         break;
 
     case LobbySubService_RequestLobbyUser:
-        ProcessRequestLobbyUser(user, js_src, js_dest);
+        co_await ProcessRequestLobbyUser(user, js_src, js_dest);
         break;
 
     case LobbySubService_RequestLobbyRoom:
-        ProcessRequestLobbyRoom(user, js_src, js_dest);
+        co_await ProcessRequestLobbyRoom(user, js_src, js_dest);
         break;
 
     case LobbySubService_RequestRoomInfo:
-        ProcessRequestRoomInfo(user, js_src, js_dest);
+        co_await ProcessRequestRoomInfo(user, js_src, js_dest);
         break;
 
     case LobbySubService_RequestCreateRoom:
-        ProcessRequestCreateRoom(user, js_src, js_dest);
+        co_await ProcessRequestCreateRoom(user, js_src, js_dest);
         break;
 
     case LobbySubService_RequestJoinRoom:
-        ProcessRequestJoinRoom(user, js_src, js_dest);
+        co_await ProcessRequestJoinRoom(user, js_src, js_dest);
         break;
 
     case LobbySubService_RequestLeaveRoom:
-        ProcessRequestLeaveRoom(user, js_src, js_dest);
+        co_await ProcessRequestLeaveRoom(user, js_src, js_dest);
         break;
 
     case LobbySubService_RequestChangeReadyStatus:
-        ProcessRequestChangeReadyStatus(user, js_src, js_dest);
+        co_await ProcessRequestChangeReadyStatus(user, js_src, js_dest);
         break;
 
     case LobbySubService_RequestStartGame:
-        ProcessRequestStartGame(user, js_src, js_dest);
+        co_await ProcessRequestStartGame(user, js_src, js_dest);
         break;
 
     default:
         // ProcessUnknownCommand(user, js_src, js_dest);
         break;
     }
-    js_dests.emplace_back(js_dest);
 }
 
-void LobbySubService::ProcessLogout(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
+Task<void> LobbySubService::ProcessLogout(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
 {
     js_dest["command"] = LobbySubService_LogoutRes;
 
@@ -198,7 +189,7 @@ void LobbySubService::ProcessLogout(std::shared_ptr<LobbyUser> user, json &js_sr
 
     if (success)
     {
-        success = Stub_Logout(user);
+        success = co_await Stub_Logout(user);
         if (!success)
             error_reason = "服务器内部错误!";
     }
@@ -227,7 +218,7 @@ void LobbySubService::ProcessLogout(std::shared_ptr<LobbyUser> user, json &js_sr
     _sessionToUser.Erase(user->session);
 }
 
-void LobbySubService::ProcessHallMsg(std::shared_ptr<LobbyUser> sender, json &js_src, json &js_dest)
+Task<void> LobbySubService::ProcessHallMsg(std::shared_ptr<LobbyUser> sender, json &js_src, json &js_dest)
 {
     js_dest["command"] = LobbySubService_SendHallMsgRes;
 
@@ -248,7 +239,7 @@ void LobbySubService::ProcessHallMsg(std::shared_ptr<LobbyUser> sender, json &js
     std::vector<LobbyUser> users;
     if (success)
     {
-        success = Stub_GetOnlineLobbyUser(users);
+        success = co_await Stub_GetOnlineLobbyUser(users);
         if (!success)
             error_reason = "服务器内部错误!";
     }
@@ -262,7 +253,7 @@ void LobbySubService::ProcessHallMsg(std::shared_ptr<LobbyUser> sender, json &js
         js_broadcast["msg"] = msg;
         for (auto &user : users)
         {
-            DelegateDispatch(user.token, js_broadcast);
+            co_await DelegateDispatch(user.token, js_broadcast);
         }
     }
 
@@ -275,9 +266,10 @@ void LobbySubService::ProcessHallMsg(std::shared_ptr<LobbyUser> sender, json &js
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-void LobbySubService::ProcessRoomMsg(std::shared_ptr<LobbyUser> sender, json &js_src, json &js_dest)
+Task<void> LobbySubService::ProcessRoomMsg(std::shared_ptr<LobbyUser> sender, json &js_src, json &js_dest)
 {
     js_dest["command"] = LobbySubService_SendRoomMsgRes;
 
@@ -298,7 +290,7 @@ void LobbySubService::ProcessRoomMsg(std::shared_ptr<LobbyUser> sender, json &js
     json js_roominfo;
     if (success)
     {
-        success = Stub_RoomInfo(sender, js_roominfo);
+        success = co_await Stub_RoomInfo(sender, js_roominfo);
         if (!success)
             error_reason = "服务器内部错误!";
     }
@@ -328,7 +320,7 @@ void LobbySubService::ProcessRoomMsg(std::shared_ptr<LobbyUser> sender, json &js
             {
                 for (auto &[token, memberinfo] : map)
                 {
-                    DelegateDispatch(token, js_broadcast);
+                    DelegateDispatch(token, js_broadcast).sync_wait();
                 }
             });
     }
@@ -342,13 +334,15 @@ void LobbySubService::ProcessRoomMsg(std::shared_ptr<LobbyUser> sender, json &js
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-void LobbySubService::ProcessPrivateMsg(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
+Task<void> LobbySubService::ProcessPrivateMsg(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
 {
+    co_return;
 }
 
-void LobbySubService::ProcessRequestLobbyUser(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
+Task<void> LobbySubService::ProcessRequestLobbyUser(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
 {
 
     js_dest["command"] = LobbySubService_RequestLobbyUserRes;
@@ -359,7 +353,7 @@ void LobbySubService::ProcessRequestLobbyUser(std::shared_ptr<LobbyUser> user, j
     std::vector<LobbyUser> users;
     if (success)
     {
-        success = Stub_GetOnlineLobbyUser(users);
+        success = co_await Stub_GetOnlineLobbyUser(users);
         if (!success)
             error_reason = "服务器内部错误!";
     }
@@ -385,9 +379,10 @@ void LobbySubService::ProcessRequestLobbyUser(std::shared_ptr<LobbyUser> user, j
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-void LobbySubService::ProcessRequestLobbyRoom(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
+Task<void> LobbySubService::ProcessRequestLobbyRoom(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
 {
 
     js_dest["command"] = LobbySubService_RequestLobbyRoomRes;
@@ -398,7 +393,7 @@ void LobbySubService::ProcessRequestLobbyRoom(std::shared_ptr<LobbyUser> user, j
     json js_rooms;
     if (success)
     {
-        success = Stub_GetAllLobbyRoom(js_rooms);
+        success = co_await Stub_GetAllLobbyRoom(js_rooms);
         if (!success)
             error_reason = "服务器内部错误!";
     }
@@ -415,9 +410,10 @@ void LobbySubService::ProcessRequestLobbyRoom(std::shared_ptr<LobbyUser> user, j
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-void LobbySubService::ProcessRequestRoomInfo(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
+Task<void> LobbySubService::ProcessRequestRoomInfo(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
 {
     js_dest["command"] = LobbySubService_RequestRoomInfoRes;
 
@@ -427,7 +423,7 @@ void LobbySubService::ProcessRequestRoomInfo(std::shared_ptr<LobbyUser> user, js
     json roominfo;
     if (success)
     {
-        success = Stub_RoomInfo(user, roominfo);
+        success = co_await Stub_RoomInfo(user, roominfo);
         if (!success)
             error_reason = "服务器内部错误!";
     }
@@ -446,9 +442,10 @@ void LobbySubService::ProcessRequestRoomInfo(std::shared_ptr<LobbyUser> user, js
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-void LobbySubService::ProcessRequestCreateRoom(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
+Task<void> LobbySubService::ProcessRequestCreateRoom(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
 {
 
     js_dest["command"] = LobbySubService_RequestCreateRoomRes;
@@ -458,7 +455,7 @@ void LobbySubService::ProcessRequestCreateRoom(std::shared_ptr<LobbyUser> user, 
 
     if (success)
     {
-        success = Stub_CreateRoom(user);
+        success = co_await Stub_CreateRoom(user);
         if (!success)
             error_reason = "服务器内部错误!";
     }
@@ -472,9 +469,10 @@ void LobbySubService::ProcessRequestCreateRoom(std::shared_ptr<LobbyUser> user, 
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-void LobbySubService::ProcessRequestJoinRoom(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
+Task<void> LobbySubService::ProcessRequestJoinRoom(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
 {
     js_dest["command"] = LobbySubService_RequestJoinRoomRes;
 
@@ -502,7 +500,7 @@ void LobbySubService::ProcessRequestJoinRoom(std::shared_ptr<LobbyUser> user, js
 
     if (success)
     {
-        success = Stub_JoinRoom(user, roomid);
+        success = co_await Stub_JoinRoom(user, roomid);
         if (!success)
             error_reason = "服务器内部错误!";
     }
@@ -516,9 +514,10 @@ void LobbySubService::ProcessRequestJoinRoom(std::shared_ptr<LobbyUser> user, js
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-void LobbySubService::ProcessRequestLeaveRoom(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
+Task<void> LobbySubService::ProcessRequestLeaveRoom(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
 {
     js_dest["command"] = LobbySubService_RequestLeaveRoomRes;
 
@@ -527,7 +526,7 @@ void LobbySubService::ProcessRequestLeaveRoom(std::shared_ptr<LobbyUser> user, j
 
     if (success)
     {
-        success = Stub_LeaveRoom(user);
+        success = co_await Stub_LeaveRoom(user);
         if (!success)
             error_reason = "服务器内部错误!";
     }
@@ -541,9 +540,10 @@ void LobbySubService::ProcessRequestLeaveRoom(std::shared_ptr<LobbyUser> user, j
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-void LobbySubService::ProcessRequestChangeReadyStatus(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
+Task<void> LobbySubService::ProcessRequestChangeReadyStatus(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
 {
     js_dest["command"] = LobbySubService_RequestChangeReadyStatusRes;
 
@@ -563,7 +563,7 @@ void LobbySubService::ProcessRequestChangeReadyStatus(std::shared_ptr<LobbyUser>
 
     if (success)
     {
-        success = Stub_ChangeReadyStatus(user, status);
+        success = co_await Stub_ChangeReadyStatus(user, status);
         if (!success)
             error_reason = "服务器内部错误!";
     }
@@ -577,9 +577,10 @@ void LobbySubService::ProcessRequestChangeReadyStatus(std::shared_ptr<LobbyUser>
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-void LobbySubService::ProcessRequestStartGame(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
+Task<void> LobbySubService::ProcessRequestStartGame(std::shared_ptr<LobbyUser> user, json &js_src, json &js_dest)
 {
     js_dest["command"] = LobbySubService_RequestStartGameRes;
 
@@ -590,7 +591,7 @@ void LobbySubService::ProcessRequestStartGame(std::shared_ptr<LobbyUser> user, j
     std::string gameid;
     if (success)
     {
-        success = Stub_StartGame(user, endpoint, gameid);
+        success = co_await Stub_StartGame(user, endpoint, gameid);
         if (!success)
             error_reason = "服务器内部错误!";
     }
@@ -610,9 +611,10 @@ void LobbySubService::ProcessRequestStartGame(std::shared_ptr<LobbyUser> user, j
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-bool LobbySubService::Stub_Login(std::shared_ptr<LobbyUser> user)
+Task<bool> LobbySubService::Stub_Login(std::shared_ptr<LobbyUser> user)
 {
     json js_req, js_resp;
     js_req["command"] = GameStateService_UserLogin;
@@ -621,13 +623,13 @@ bool LobbySubService::Stub_Login(std::shared_ptr<LobbyUser> user)
     js_req["serviceid"] = _serviceinfo->service_id;
     js_req["servicetype"] = (int)_serviceinfo->service_type;
 
-    if (!Stub_Request(js_req, js_resp))
-        return false;
+    if (!co_await Stub_Request(js_req, js_resp))
+        co_return false;
 
-    return true;
+    co_return true;
 }
 
-bool LobbySubService::Stub_Logout(std::shared_ptr<LobbyUser> user)
+Task<bool> LobbySubService::Stub_Logout(std::shared_ptr<LobbyUser> user)
 {
     json js_req, js_resp;
     js_req["command"] = GameStateService_UserLogoutService;
@@ -636,25 +638,25 @@ bool LobbySubService::Stub_Logout(std::shared_ptr<LobbyUser> user)
     js_req["serviceid"] = _serviceinfo->service_id;
     js_req["servicetype"] = (int)_serviceinfo->service_type;
 
-    if (!Stub_Request(js_req, js_resp))
-        return false;
+    if (!co_await Stub_Request(js_req, js_resp))
+        co_return false;
 
-    return true;
+    co_return true;
 }
 
-bool LobbySubService::Stub_GetOnlineLobbyUser(std::vector<LobbyUser> &users)
+Task<bool> LobbySubService::Stub_GetOnlineLobbyUser(std::vector<LobbyUser> &users)
 {
     json js_req, js_resp;
     js_req["command"] = GameStateService_GetOnlineLobbyUser;
 
-    if (!Stub_Request(js_req, js_resp))
-        return false;
+    if (!co_await Stub_Request(js_req, js_resp))
+        co_return false;
 
     json js_users = js_resp["users"];
     if (!js_users.is_array())
     {
         std::cout << "GameStateService_GetOnlineLobbyUser Request fail with null array!\n";
-        return false;
+        co_return false;
     }
 
     for (int i = 0; i < js_users.size(); i++)
@@ -671,130 +673,130 @@ bool LobbySubService::Stub_GetOnlineLobbyUser(std::vector<LobbyUser> &users)
         }
     }
 
-    return true;
+    co_return true;
 }
 
-bool LobbySubService::Stub_RoomInfo(std::shared_ptr<LobbyUser> user, json &js_roominfo)
+Task<bool> LobbySubService::Stub_RoomInfo(std::shared_ptr<LobbyUser> user, json &js_roominfo)
 {
     json js_req, js_resp;
     js_req["command"] = GameStateService_RoomInfo;
     js_req["token"] = user->token;
 
-    if (!Stub_Request(js_req, js_resp))
-        return false;
+    if (!co_await Stub_Request(js_req, js_resp))
+        co_return false;
 
     if (!js_resp["roominfo"].is_object())
     {
         std::cout << "GameStateService_GetOnlineLobbyUser Request fail with null array!\n";
-        return false;
+        co_return false;
     }
 
     js_roominfo = js_resp["roominfo"];
-    return true;
+    co_return true;
 }
 
-bool LobbySubService::Stub_CreateRoom(std::shared_ptr<LobbyUser> user)
+Task<bool> LobbySubService::Stub_CreateRoom(std::shared_ptr<LobbyUser> user)
 {
     json js_req, js_resp;
     js_req["command"] = GameStateService_CreateRoom;
     js_req["token"] = user->token;
 
-    return Stub_Request(js_req, js_resp);
+    co_return co_await Stub_Request(js_req, js_resp);
 }
 
-bool LobbySubService::Stub_JoinRoom(std::shared_ptr<LobbyUser> user, const std::string &roomid)
+Task<bool> LobbySubService::Stub_JoinRoom(std::shared_ptr<LobbyUser> user, const std::string &roomid)
 {
     json js_req, js_resp;
     js_req["command"] = GameStateService_JoinRoom;
     js_req["token"] = user->token;
     js_req["roomid"] = roomid;
 
-    return Stub_Request(js_req, js_resp);
+    co_return co_await Stub_Request(js_req, js_resp);
 }
 
-bool LobbySubService::Stub_LeaveRoom(std::shared_ptr<LobbyUser> user)
+Task<bool> LobbySubService::Stub_LeaveRoom(std::shared_ptr<LobbyUser> user)
 {
     json js_req, js_resp;
     js_req["command"] = GameStateService_LeaveRoom;
     js_req["token"] = user->token;
 
-    return Stub_Request(js_req, js_resp);
+    co_return co_await Stub_Request(js_req, js_resp);
 }
 
-bool LobbySubService::Stub_ChangeReadyStatus(std::shared_ptr<LobbyUser> user, int status)
+Task<bool> LobbySubService::Stub_ChangeReadyStatus(std::shared_ptr<LobbyUser> user, int status)
 {
     json js_req, js_resp;
     js_req["command"] = GameStateService_ChangeReadyStatus;
     js_req["token"] = user->token;
     js_req["status"] = status;
 
-    return Stub_Request(js_req, js_resp);
+    co_return co_await Stub_Request(js_req, js_resp);
 }
 
-bool LobbySubService::Stub_StartGame(std::shared_ptr<LobbyUser> user, NetworkEndpoint &endpoint, std::string &gameid)
+Task<bool> LobbySubService::Stub_StartGame(std::shared_ptr<LobbyUser> user, NetworkEndpoint &endpoint, std::string &gameid)
 {
     json js_req, js_resp;
     js_req["command"] = GameStateService_StartGame;
     js_req["token"] = user->token;
 
-    if (!Stub_Request(js_req, js_resp))
-        return false;
+    if (!co_await Stub_Request(js_req, js_resp))
+        co_return false;
 
     if (!js_resp.contains("gameendpoint") || !js_resp["gameendpoint"].is_object())
-        return false;
+        co_return false;
 
     endpoint.update_from_json(js_resp["gameendpoint"]);
 
     if (!js_resp.contains("gameid") ||
         !js_resp["gameid"].is_string())
-        return false;
+        co_return false;
 
     gameid = js_resp.value("gameid", "");
 
-    return true;
+    co_return true;
 }
 
-bool LobbySubService::Stub_GetAllLobbyRoom(json &js_rooms)
+Task<bool> LobbySubService::Stub_GetAllLobbyRoom(json &js_rooms)
 {
     json js_req, js_resp;
     js_req["command"] = GameStateService_GetAllLobbyRoom;
 
-    if (!Stub_Request(js_req, js_resp))
-        return false;
+    if (!co_await Stub_Request(js_req, js_resp))
+        co_return false;
 
     if (!js_resp["rooms"].is_array())
     {
         std::cout << "GameStateService_GetOnlineLobbyUser Request fail with null array!\n";
-        return false;
+        co_return false;
     }
 
     js_rooms = js_resp["rooms"];
 
-    return true;
+    co_return true;
 }
 
-bool LobbySubService::Stub_Request(const json &js_request, json &response)
+Task<bool> LobbySubService::Stub_Request(const json &js_request, json &response)
 {
-    if (!_gameStateStub->Request(js_request, response))
-        return false;
+    if (!co_await _gameStateStub->Request(js_request, response))
+        co_return false;
 
     if (!response.contains("result") || !response["result"].is_number_integer())
-        return false;
+        co_return false;
 
     int result = response["result"];
     if (result < 0)
     {
         std::string reason = response.value("reason", "");
         std::cout << "Stub Request fail! command =" << js_request.value("command", 0) << " reason:" << reason << '\n';
-        return false;
+        co_return false;
     }
-    return true;
+    co_return true;
 }
 
-bool LobbySubService::DelegateDispatch(const std::string &user_token, const json &js)
+Task<bool> LobbySubService::DelegateDispatch(const std::string &user_token, const json &js)
 {
     if (!_delegator)
-        return false;
+        co_return false;
 
     if (_delegator->SkipLocalService())
     {
@@ -802,6 +804,5 @@ bool LobbySubService::DelegateDispatch(const std::string &user_token, const json
         if (_tokenToUser.Find(user_token, local_user) && local_user)
             local_user->session.AsyncSendJson(js);
     }
-    _delegator->DelegateMessage(user_token, js);
-    return true;
+    co_return co_await _delegator->DelegateMessage(user_token, js);
 }

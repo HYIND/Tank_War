@@ -81,7 +81,7 @@ bool RequestManager::RequestCreateRoom()
 	js["command"] = LobbySubService_RequestCreateRoom;
 
 	json js_resp;
-	if (!ConnectManager::Instance()->SocialRequest(js, js_resp))
+	if (!ConnectManager::Instance()->SocialRequest(js, js_resp).sync_wait())
 		return false;
 
 	if (!js_resp.contains("result") || !js_resp["result"].is_number_integer())
@@ -105,7 +105,7 @@ bool RequestManager::RequestJoinRoom(const std::string& roomid)
 	js["roomid"] = roomid;
 
 	json js_resp;
-	if (!ConnectManager::Instance()->SocialRequest(js, js_resp))
+	if (!ConnectManager::Instance()->SocialRequest(js, js_resp).sync_wait())
 		return false;
 
 	if (!js_resp.contains("result") || !js_resp["result"].is_number_integer())
@@ -128,7 +128,7 @@ bool RequestManager::RequestLeaveRoom()
 	js["command"] = LobbySubService_RequestLeaveRoom;
 
 	json js_resp;
-	if (!ConnectManager::Instance()->SocialRequest(js, js_resp))
+	if (!ConnectManager::Instance()->SocialRequest(js, js_resp).sync_wait())
 		return false;
 
 	if (!js_resp.contains("result") || !js_resp["result"].is_number_integer())
@@ -152,7 +152,7 @@ bool RequestManager::RequestChangeReadyStatus(bool isready)
 	js["status"] = isready ? 1 : -1;
 
 	json js_resp;
-	if (!ConnectManager::Instance()->SocialRequest(js, js_resp))
+	if (!ConnectManager::Instance()->SocialRequest(js, js_resp).sync_wait())
 		return false;
 
 	if (!js_resp.contains("result") || !js_resp["result"].is_number_integer())
@@ -175,7 +175,7 @@ bool RequestManager::RequestStartGame(json& response)
 	js["command"] = LobbySubService_RequestStartGame;
 
 	json js_resp;
-	if (!ConnectManager::Instance()->SocialRequest(js, js_resp))
+	if (!ConnectManager::Instance()->SocialRequest(js, js_resp).sync_wait())
 		return false;
 
 	if (!js_resp.contains("result") || !js_resp["result"].is_number_integer())
@@ -199,7 +199,7 @@ bool RequestManager::RequestLeaveGame()
 	js["command"] = GameServiceCommand::GameService_LeaveGame;
 
 	json js_resp;
-	if (!ConnectManager::Instance()->GameRequest(js, js_resp))
+	if (!ConnectManager::Instance()->GameRequest(js, js_resp).sync_wait())
 		return false;
 
 	if (!js_resp.contains("result") || !js_resp["result"].is_number_integer())

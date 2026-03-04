@@ -12,7 +12,7 @@ MsgManager* MsgManager::Instance()
 	return instance;
 }
 
-void MsgManager::ProcessMsg(const json& js)
+Task<void> MsgManager::ProcessMsg(const json& js)
 {
 	if (!js.contains("command"))
 	{
@@ -74,6 +74,7 @@ void MsgManager::ProcessMsg(const json& js)
 	default:
 		break;
 	}
+	co_return;
 }
 
 MsgManager::MsgManager() {}

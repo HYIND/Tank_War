@@ -54,50 +54,50 @@ bool MessageDelegator::SkipLocalService()
     return _skipLocalService;
 }
 
-bool MessageDelegator::DelegateMessage(const std::string &goaltoken, const json &js)
+Task<bool> MessageDelegator::DelegateMessage(const std::string &goaltoken, const json &js)
 {
-    if (!ConnectGameStateService())
-        return false;
+    if (!co_await ConnectGameStateService())
+        co_return false;
 
     std::vector<ServiceInfo> services;
-    if (!GetAvailableServiceInfoForUser(goaltoken, services))
-        return false;
+    if (!co_await GetAvailableServiceInfoForUser(goaltoken, services))
+        co_return false;
 
-    return !RequestDelegateToServices(services, goaltoken, js);
+    co_return !co_await RequestDelegateToServices(services, goaltoken, js);
 }
 
-bool MessageDelegator::DelegateMessage(const std::string &goaltoken, ServiceType type, const json &js)
+Task<bool> MessageDelegator::DelegateMessage(const std::string &goaltoken, ServiceType type, const json &js)
 {
-    if (!ConnectGameStateService())
-        return false;
+    if (!co_await ConnectGameStateService())
+        co_return false;
 
     std::vector<ServiceInfo> services;
-    if (!GetAvailableServiceInfoForUser(goaltoken, services))
-        return false;
+    if (!co_await GetAvailableServiceInfoForUser(goaltoken, services))
+        co_return false;
 
-    return !RequestDelegateToServices(services, goaltoken, js);
+    co_return !co_await RequestDelegateToServices(services, goaltoken, js);
 }
 
-bool MessageDelegator::GetAvailableServiceInfoForUser(const std::string &goaltoken, std::vector<ServiceInfo> &services)
+Task<bool> MessageDelegator::GetAvailableServiceInfoForUser(const std::string &goaltoken, std::vector<ServiceInfo> &services)
 {
-    if (!ConnectGameStateService())
-        return false;
+    if (!co_await ConnectGameStateService())
+        co_return false;
 
     std::vector<GameStateDef::UserConnectedServiceInfo> infos;
-    if (!GetServiceIdsUserConnected(goaltoken, infos))
-        return false;
+    if (!co_await GetServiceIdsUserConnected(goaltoken, infos))
+        co_return false;
 
     std::vector<std::string> serviceids;
     for (auto &info : infos)
         serviceids.emplace_back(info.service_id);
 
-    if (!_serviceDiscoverClient.GetAvailableServiceInfoByServicesIds(serviceids, services))
-        return false;
+    if (!co_await _serviceDiscoverClient.GetAvailableServiceInfoByServicesIds(serviceids, services))
+        co_return false;
 
-    return true;
+    co_return true;
 }
 
-bool MessageDelegator::GetServiceIdsUserConnected(const std::string &goaltoken, std::vector<GameStateDef::UserConnectedServiceInfo> &infos)
+Task<bool> MessageDelegator::GetServiceIdsUserConnected(const std::string &goaltoken, std::vector<GameStateDef::UserConnectedServiceInfo> &infos)
 {
 
     json js_request;
@@ -105,11 +105,11 @@ bool MessageDelegator::GetServiceIdsUserConnected(const std::string &goaltoken, 
     js_request["token"] = goaltoken;
 
     json js_response;
-    if (!RequestGameStateService(js_request, js_response) || js_response.is_null())
-        return false;
+    if (!co_await RequestGameStateService(js_request, js_response) || js_response.is_null())
+        co_return false;
 
     if (!js_response.contains("result") || !js_response["result"].is_array())
-        return false;
+        co_return false;
 
     json js_result = js_response["result"];
     for (int i = 0; i < js_result.size(); i++)
@@ -124,33 +124,33 @@ bool MessageDelegator::GetServiceIdsUserConnected(const std::string &goaltoken, 
         }
     }
 
-    return true;
+    co_return true;
 }
 
-bool MessageDelegator::RequestDelegateToServices(std::vector<ServiceInfo> &services, const std::string &goaltoken, const json &js)
+Task<bool> MessageDelegator::RequestDelegateToServices(std::vector<ServiceInfo> &services, const std::string &goaltoken, const json &js)
 {
     if (services.empty())
-        return true;
+        co_return true;
 
     json delegate_req;
     delegate_req["command"] = MessageDelegate_UserMessageDelegate;
     delegate_req["delegate_token"] = goaltoken;
     delegate_req["content"] = js;
 
-    auto sendDelegate = [&](const std::string &ip, int port) -> bool
+    auto sendDelegate = [&](const std::string &ip, int port) -> Task<bool>
     {
         JsonProtocolClient client;
-        if (!client.Connect(ip, port))
-            return false;
+        if (!co_await client.Connect(ip, port))
+            co_return false;
 
         json response;
-        if (!client.Request(delegate_req, response))
-            return false;
+        if (!co_await client.Request(delegate_req, response))
+            co_return false;
 
-        return true;
+        co_return true;
     };
 
-    auto tryFindServiceLocal = [&](const std::string &serviceid) -> bool
+    auto tryFindServiceLocal = [&](const std::string &serviceid) -> Task<bool>
     {
         LocalServiceHandle handle;
         if (_localService.Find(serviceid, handle))
@@ -159,35 +159,35 @@ bool MessageDelegator::RequestDelegateToServices(std::vector<ServiceInfo> &servi
             if (service)
             {
                 if (_skipLocalService)
-                    return true;
+                    co_return true;
                 json resp;
-                service->OnStubRequest(delegate_req, resp);
-                return true;
+                co_await service->OnStubRequest(delegate_req, resp);
+                co_return true;
             }
             else
-                return false;
+                co_return false;
         }
-        return false;
+        co_return false;
     };
 
     bool result = true;
     for (auto &service : services)
     {
-        if (tryFindServiceLocal(service.service_id))
+        if (co_await tryFindServiceLocal(service.service_id))
             continue;
         else
         {
             if (service.stub_endpoint.ip.empty() || service.stub_endpoint.port == 0)
                 continue;
-            if (!sendDelegate(service.stub_endpoint.ip, service.stub_endpoint.port) && result)
+            if (!co_await sendDelegate(service.stub_endpoint.ip, service.stub_endpoint.port) && result)
                 result = false;
         }
     }
 
-    return result;
+    co_return result;
 }
 
-bool MessageDelegator::ConnectGameStateService()
+Task<bool> MessageDelegator::ConnectGameStateService()
 {
     if (!isGameStateServiceConnected.load())
     {
@@ -195,13 +195,13 @@ bool MessageDelegator::ConnectGameStateService()
         if (!isGameStateServiceConnected.load())
         {
             _gameStateServiceClient.Release();
-            isGameStateServiceConnected = _gameStateServiceClient.Connect(_gameStateServiceIP, _gameStateServicePort);
+            isGameStateServiceConnected = co_await _gameStateServiceClient.Connect(_gameStateServiceIP, _gameStateServicePort);
         }
     }
-    return isGameStateServiceConnected;
+    co_return isGameStateServiceConnected;
 }
 
-bool MessageDelegator::RequestGameStateService(json &src, json &dest)
+Task<bool> MessageDelegator::RequestGameStateService(json &src, json &dest)
 {
-    return _gameStateServiceClient.Request(src, dest);
+    co_return co_await _gameStateServiceClient.Request(src, dest);
 }

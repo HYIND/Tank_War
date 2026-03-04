@@ -19,12 +19,12 @@ public:
 
     void SetGameStateEndPoint(const std::string &IP, int Port);
 
-    virtual bool Start();
+    virtual Task<bool> Start();
 
 public:
     virtual std::vector<ServiceInfo> GetServiceInfo();
-    virtual void OnStubRequest(json &js_src, json &js_dest);
-
+    virtual Task<void> OnStubRequest(json &js_src, json &js_dest);
+    
 private:
     std::shared_ptr<JsonProtocolClient> _gameStateStub;
     std::string _gameStateStubIP;

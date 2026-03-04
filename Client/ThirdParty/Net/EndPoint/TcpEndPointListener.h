@@ -16,18 +16,18 @@ public:
 	TCPNetProtocol Protocol();
 	void SetProtocol(const TCPNetProtocol& proto);
 	bool Listen(const std::string& IP, int Port);
-	void BindEstablishConnectionCallBack(std::function<void(TCPEndPoint*)> callback);
+	void BindEstablishConnectionCallBack(std::function<Task<void>(TCPEndPoint*)> callback);
 
 private:
-	void RecvCon(std::shared_ptr<TCPTransportConnection> waitCon);
-	void ConClose(TCPTransportConnection* Con);
-	void Handshake(TCPTransportConnection* waitCon, Buffer* buf);
+	Task<void> RecvCon(std::shared_ptr<TCPTransportConnection> waitCon);
+	Task<void> ConClose(TCPTransportConnection* Con);
+	Task<void> Handshake(TCPTransportConnection* waitCon, Buffer* buf);
 	void CleanExpiredClient();
 
 private:
 	std::shared_ptr<TCPTransportListener> BaseListener;
 	TCPNetProtocol _Protocol;
-	std::function<void(TCPEndPoint*)> _callBackEstablish;
+	std::function<Task<void>(TCPEndPoint*)> _callBackEstablish;
 	SafeArray<std::shared_ptr<ClientData>> waitClients; // 等待校验协议的客户端
 	std::shared_ptr<TimerTask> CleanExpiredTask;
 };

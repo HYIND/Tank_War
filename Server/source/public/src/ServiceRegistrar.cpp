@@ -22,7 +22,7 @@ ServiceRegistrar::~ServiceRegistrar()
     _client.Release();
 }
 
-bool ServiceRegistrar::Start(const std::string &IP, int Port)
+Task<bool> ServiceRegistrar::Start(const std::string &IP, int Port)
 {
     _client.Release();
     if (_timer)
@@ -32,14 +32,14 @@ bool ServiceRegistrar::Start(const std::string &IP, int Port)
     }
 
     _client.BindCallBackCloseClient(std::bind(&ServiceRegistrar::ConnectClose, this, std::placeholders::_1));
-    bool success = _client.Connect(IP, Port);
+    bool success = co_await _client.Connect(IP, Port);
     if (success)
     {
         _timer = TimerTask::CreateRepeat("ServiceRegistrar_SendServiceInfo", _send_interval_mssecond, std::bind(&ServiceRegistrar::SendAllServiceInfo, this), 100);
         _timer->Run();
     }
 
-    return success;
+    co_return success;
 }
 
 void ServiceRegistrar::AddServiceSource(std::shared_ptr<BaseService> source)
@@ -62,13 +62,14 @@ void ServiceRegistrar::RemoveServiceSource(std::shared_ptr<BaseService> source)
     }
 }
 
-void ServiceRegistrar::ConnectClose(JsonProtocolClient *session)
+Task<void> ServiceRegistrar::ConnectClose(JsonProtocolClient *session)
 {
     if (_timer)
     {
         _timer->Clean();
         _timer.reset();
     }
+    co_return;
 }
 
 void ServiceRegistrar::SendAllServiceInfo()

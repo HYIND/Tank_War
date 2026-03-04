@@ -23,8 +23,8 @@ public: // 供Listener/EndPoint调用,须继承实现
 	virtual CheckHandshakeStatus CheckHandshakeConfirmMsg(Buffer& buffer) = 0;
 
 public: // 供外部调用
-	void BindRecvDataCallBack(std::function<void(BaseNetWorkSession*, Buffer* recv)> callback);
-	void BindSessionCloseCallBack(std::function<void(BaseNetWorkSession*)> callback);
+	void BindRecvDataCallBack(std::function<Task<void>(BaseNetWorkSession*, Buffer* recv)> callback);
+	void BindSessionCloseCallBack(std::function<Task<void>(BaseNetWorkSession*)> callback);
 	char* GetIPAddr();
 	uint16_t GetPort();
 
@@ -32,13 +32,13 @@ public: // 供外部调用
 	uint32_t GetHandShakeTimeOut();
 
 public: // 供Listener/EndPoint调用
-	void RecvData(TCPEndPoint* client, Buffer* buffer);
-	void SessionClose(TCPEndPoint* client);
+	Task<void> RecvData(TCPEndPoint* client, Buffer* buffer);
+	Task<void> SessionClose(TCPEndPoint* client);
 	TCPEndPoint* GetBaseClient();
 
 protected: // 须继承实现
-	virtual bool OnSessionClose() = 0;
-	virtual bool OnRecvData(Buffer* buffer) = 0;
+	virtual Task<void> OnSessionClose() = 0;
+	virtual Task<void> OnRecvData(Buffer* buffer) = 0;
 	virtual void OnBindRecvDataCallBack() = 0;
 	virtual void OnBindSessionCloseCallBack() = 0;
 
@@ -47,8 +47,8 @@ protected:
 
 	bool isHandshakeComplete;
 
-	std::function<void(BaseNetWorkSession*, Buffer* recv)> _callbackRecvData;
-	std::function<void(BaseNetWorkSession*)> _callbackSessionClose;
+	std::function<Task<void>(BaseNetWorkSession*, Buffer* recv)> _callbackRecvData;
+	std::function<Task<void>(BaseNetWorkSession*)> _callbackSessionClose;
 
 	std::shared_ptr<CoTimer> _handshaketimer;
 

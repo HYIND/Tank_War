@@ -23,9 +23,9 @@ GameStateService::~GameStateService()
 {
 }
 
-bool GameStateService::Start()
+Task<bool> GameStateService::Start()
 {
-    bool result = BaseService::Start();
+    bool result = co_await BaseService::Start();
     if (result)
     {
         _delegator.AddLocalService(shared_from_this(), _serviceinfo->service_id, _serviceinfo->service_type);
@@ -39,7 +39,7 @@ bool GameStateService::Start()
         _serviceinfo->set_endpoint("", 0);
         _serviceinfo->set_stub_endpoint("", 0);
     }
-    return result;
+    co_return result;
 }
 
 void GameStateService::SetGameStateManager(std::shared_ptr<GameStateManager> gsm)
@@ -47,28 +47,30 @@ void GameStateService::SetGameStateManager(std::shared_ptr<GameStateManager> gsm
     _GSM_Weak = gsm;
 }
 
-void GameStateService::OnSessionEstablish(JsonProtocolSession session)
+Task<void> GameStateService::OnSessionEstablish(JsonProtocolSession session)
 {
     _service_server->SetCallBackRecvJsonMessage(session, std::bind(&GameStateService::OnRecvMessage, this, std::placeholders::_1, std::placeholders::_2));
     _service_server->SetCallBackRecvJsonRequest(session, std::bind(&GameStateService::OnRecvRequest, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     _service_server->SetCallBackCloseConnect(session, std::bind(&GameStateService::OnSessionClose, this, std::placeholders::_1));
+    co_return;
 }
 
-void GameStateService::OnRecvMessage(JsonProtocolSession session, json &src)
+Task<void> GameStateService::OnRecvMessage(JsonProtocolSession session, json &src)
 {
     json dest;
-    ProcessMsg(src, dest);
+    co_await ProcessMsg(src, dest);
     if (!dest.is_null())
         session.AsyncSendJson(dest);
 }
 
-void GameStateService::OnRecvRequest(JsonProtocolSession session, json &src, json &dest)
+Task<void> GameStateService::OnRecvRequest(JsonProtocolSession session, json &src, json &dest)
 {
-    ProcessMsg(src, dest);
+    co_await ProcessMsg(src, dest);
 }
 
-void GameStateService::OnSessionClose(JsonProtocolSession session)
+Task<void> GameStateService::OnSessionClose(JsonProtocolSession session)
 {
+    co_return;
 }
 
 std::vector<ServiceInfo> GameStateService::GetServiceInfo()
@@ -76,69 +78,69 @@ std::vector<ServiceInfo> GameStateService::GetServiceInfo()
     return std::vector<ServiceInfo>{*_serviceinfo};
 }
 
-void GameStateService::OnStubRequest(json &js_src, json &js_dest)
+Task<void> GameStateService::OnStubRequest(json &js_src, json &js_dest)
 {
-    ProcessMsg(js_src, js_dest);
+    co_await ProcessMsg(js_src, js_dest);
 }
 
-void GameStateService::ProcessMsg(json &js_src, json &js_dest)
+Task<void> GameStateService::ProcessMsg(json &js_src, json &js_dest)
 {
     if (!js_src.contains("command"))
-        return;
+        co_return;
     int command = js_src.at("command");
 
     switch (command)
     {
     case GameStateService_FindUserEndPoint:
-        HandleFindUserEndPoint(js_src, js_dest);
+        co_await HandleFindUserEndPoint(js_src, js_dest);
         break;
 
     case GameStateService_UserLogin:
-        HandleUserLogin(js_src, js_dest);
+        co_await HandleUserLogin(js_src, js_dest);
         break;
 
     case GameStateService_UserLogoutService:
-        HandleUserLogoutService(js_src, js_dest);
+        co_await HandleUserLogoutService(js_src, js_dest);
         break;
 
     case GameStateService_GetOnlineLobbyUser:
-        HandleGetOnlineLobbyUser(js_src, js_dest);
+        co_await HandleGetOnlineLobbyUser(js_src, js_dest);
         break;
 
     case GameStateService_GetAllLobbyRoom:
-        HandleGetAllLobbyRoom(js_src, js_dest);
+        co_await HandleGetAllLobbyRoom(js_src, js_dest);
         break;
 
     case GameStateService_CreateRoom:
-        HandleCreateRoom(js_src, js_dest);
+        co_await HandleCreateRoom(js_src, js_dest);
         break;
 
     case GameStateService_JoinRoom:
-        HandleJoinRoom(js_src, js_dest);
+        co_await HandleJoinRoom(js_src, js_dest);
         break;
 
     case GameStateService_LeaveRoom:
-        HandleLeaveRoom(js_src, js_dest);
+        co_await HandleLeaveRoom(js_src, js_dest);
         break;
 
     case GameStateService_ChangeReadyStatus:
-        HandleChangeReadyStatus(js_src, js_dest);
+        co_await HandleChangeReadyStatus(js_src, js_dest);
         break;
 
     case GameStateService_RoomInfo:
-        HandleGetRoomInfo(js_src, js_dest);
+        co_await HandleGetRoomInfo(js_src, js_dest);
         break;
 
     case GameStateService_StartGame:
-        HandleStartGame(js_src, js_dest);
+        co_await HandleStartGame(js_src, js_dest);
         break;
 
     case GameStateService_PlayerLeaveGame:
-        HanlePlayerLeaveGame(js_src, js_dest);
+        co_await HanlePlayerLeaveGame(js_src, js_dest);
         break;
 
     case GameStateService_GameEnd:
-        HanleGameEnd(js_src, js_dest);
+        co_await HanleGameEnd(js_src, js_dest);
         break;
 
     default:
@@ -147,21 +149,21 @@ void GameStateService::ProcessMsg(json &js_src, json &js_dest)
     }
 }
 
-void GameStateService::HandleFindUserEndPoint(json &js_src, json &js_dest)
+Task<void> GameStateService::HandleFindUserEndPoint(json &js_src, json &js_dest)
 {
     js_dest["command"] = GameStateService_FindUserEndPointRes;
 
     auto gsm = _GSM_Weak.lock();
     if (!gsm)
-        return;
+        co_return;
 
     const std::string token = js_src.value("token", "");
     if (token.empty())
-        return;
+        co_return;
 
     std::vector<GameStateDef::UserConnectedServiceInfo> userserviceinfos;
     if (!gsm->GetUserEndPoint(token, userserviceinfos))
-        return;
+        co_return;
 
     json js_services = json::array();
 
@@ -175,7 +177,7 @@ void GameStateService::HandleFindUserEndPoint(json &js_src, json &js_dest)
     js_dest["result"] = js_services;
 }
 
-void GameStateService::HandleUserLogin(json &js_src, json &js_dest)
+Task<void> GameStateService::HandleUserLogin(json &js_src, json &js_dest)
 {
     js_dest["command"] = GameStateService_UserLoginRes;
 
@@ -184,7 +186,7 @@ void GameStateService::HandleUserLogin(json &js_src, json &js_dest)
     {
         js_dest["result"] = -1;
         js_dest["reason"] = "服务器内部错误";
-        return;
+        co_return;
     }
 
     const std::string token = js_src.value("token", "");
@@ -193,14 +195,14 @@ void GameStateService::HandleUserLogin(json &js_src, json &js_dest)
     {
         js_dest["result"] = -1;
         js_dest["reason"] = "token或者name 为空!";
-        return;
+        co_return;
     }
 
     if (!gsm->user_login(name, token))
     {
         js_dest["result"] = -1;
         js_dest["reason"] = "登录失败！检查是否已登录！";
-        return;
+        co_return;
     }
 
     auto u = gsm->get_user_manager().get_user(token);
@@ -208,7 +210,7 @@ void GameStateService::HandleUserLogin(json &js_src, json &js_dest)
     {
         js_dest["result"] = -1;
         js_dest["reason"] = "服务器内部错误！";
-        return;
+        co_return;
     }
 
     if (js_src.contains("serviceid") && js_src["serviceid"].is_string() &&
@@ -230,7 +232,7 @@ void GameStateService::HandleUserLogin(json &js_src, json &js_dest)
     js_dest["result"] = 1;
 }
 
-void GameStateService::HandleUserLogoutService(json &js_src, json &js_dest)
+Task<void> GameStateService::HandleUserLogoutService(json &js_src, json &js_dest)
 {
     js_dest["command"] = GameStateService_UserLogoutServiceRes;
 
@@ -297,9 +299,10 @@ void GameStateService::HandleUserLogoutService(json &js_src, json &js_dest)
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-void GameStateService::HandleGetOnlineLobbyUser(json &js_src, json &js_dest)
+Task<void> GameStateService::HandleGetOnlineLobbyUser(json &js_src, json &js_dest)
 {
     js_dest["command"] = GameStateService_GetOnlineLobbyUserRes;
 
@@ -337,9 +340,10 @@ void GameStateService::HandleGetOnlineLobbyUser(json &js_src, json &js_dest)
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-void GameStateService::HandleGetAllLobbyRoom(json &js_src, json &js_dest)
+Task<void> GameStateService::HandleGetAllLobbyRoom(json &js_src, json &js_dest)
 {
 
     js_dest["command"] = GameStateService_GetAllLobbyRoomRes;
@@ -381,9 +385,10 @@ void GameStateService::HandleGetAllLobbyRoom(json &js_src, json &js_dest)
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-void GameStateService::HandleGetRoomInfo(json &js_src, json &js_dest)
+Task<void> GameStateService::HandleGetRoomInfo(json &js_src, json &js_dest)
 {
     js_dest["command"] = GameStateService_RoomInfoRes;
 
@@ -454,9 +459,10 @@ void GameStateService::HandleGetRoomInfo(json &js_src, json &js_dest)
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-void GameStateService::HandleCreateRoom(json &js_src, json &js_dest)
+Task<void> GameStateService::HandleCreateRoom(json &js_src, json &js_dest)
 {
     js_dest["command"] = GameStateService_CreateRoomRes;
 
@@ -532,9 +538,10 @@ void GameStateService::HandleCreateRoom(json &js_src, json &js_dest)
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-void GameStateService::HandleJoinRoom(json &js_src, json &js_dest)
+Task<void> GameStateService::HandleJoinRoom(json &js_src, json &js_dest)
 {
     js_dest["command"] = GameStateService_JoinRoomRes;
 
@@ -593,7 +600,7 @@ void GameStateService::HandleJoinRoom(json &js_src, json &js_dest)
                 notify["command"] = LobbySubServiceCommand::LobbySubService_RequestRoomInfoRes;
                 notify["result"] = 1;
                 notify["roominfo"] = room->ToJson();
-                NotifyRoommember(room, notify, user);
+                co_await NotifyRoommember(room, notify, user);
             }
         }
     }
@@ -607,9 +614,10 @@ void GameStateService::HandleJoinRoom(json &js_src, json &js_dest)
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-void GameStateService::HandleLeaveRoom(json &js_src, json &js_dest)
+Task<void> GameStateService::HandleLeaveRoom(json &js_src, json &js_dest)
 {
     js_dest["command"] = GameStateService_LeaveRoomRes;
 
@@ -680,7 +688,7 @@ void GameStateService::HandleLeaveRoom(json &js_src, json &js_dest)
         notify["command"] = LobbySubServiceCommand::LobbySubService_RequestRoomInfoRes;
         notify["result"] = 1;
         notify["roominfo"] = room->ToJson();
-        NotifyRoommember(room, notify, user);
+        co_await NotifyRoommember(room, notify, user);
     }
 
     if (success)
@@ -692,9 +700,10 @@ void GameStateService::HandleLeaveRoom(json &js_src, json &js_dest)
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-void GameStateService::HandleChangeReadyStatus(json &js_src, json &js_dest)
+Task<void> GameStateService::HandleChangeReadyStatus(json &js_src, json &js_dest)
 {
     js_dest["command"] = GameStateService_ChangeReadyStatusRes;
 
@@ -769,7 +778,7 @@ void GameStateService::HandleChangeReadyStatus(json &js_src, json &js_dest)
         notify["command"] = LobbySubServiceCommand::LobbySubService_RequestRoomInfoRes;
         notify["result"] = 1;
         notify["roominfo"] = room->ToJson();
-        NotifyRoommember(room, notify, user);
+        co_await NotifyRoommember(room, notify, user);
     }
 
     if (success)
@@ -781,9 +790,10 @@ void GameStateService::HandleChangeReadyStatus(json &js_src, json &js_dest)
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-void GameStateService::HandleStartGame(json &js_src, json &js_dest)
+Task<void> GameStateService::HandleStartGame(json &js_src, json &js_dest)
 {
     js_dest["command"] = GameStateService_StartGameRes;
 
@@ -872,7 +882,7 @@ void GameStateService::HandleStartGame(json &js_src, json &js_dest)
     std::shared_ptr<GameServiceHandle> handle;
     if (success)
     {
-        if (!Stub_NewGame(room, handle))
+        if (!co_await Stub_NewGame(room, handle))
         {
             success = false;
             error_reason = "分配服务器失败！";
@@ -903,7 +913,7 @@ void GameStateService::HandleStartGame(json &js_src, json &js_dest)
         notify["result"] = 1;
         notify["gameendpoint"] = handle->service_endpoint.to_json();
         notify["gameid"] = handle->game_id;
-        NotifyRoommember(room, notify, user);
+        co_await NotifyRoommember(room, notify, user);
     }
 
     if (success)
@@ -915,9 +925,10 @@ void GameStateService::HandleStartGame(json &js_src, json &js_dest)
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-void GameStateService::HanlePlayerLeaveGame(json &js_src, json &js_dest)
+Task<void> GameStateService::HanlePlayerLeaveGame(json &js_src, json &js_dest)
 {
     js_dest["command"] = GameStateService_PlayerLeaveGameRes;
 
@@ -993,9 +1004,10 @@ void GameStateService::HanlePlayerLeaveGame(json &js_src, json &js_dest)
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-void GameStateService::HanleGameEnd(json &js_src, json &js_dest)
+Task<void> GameStateService::HanleGameEnd(json &js_src, json &js_dest)
 {
     js_dest["command"] = GameStateService_GameEndRes;
 
@@ -1049,13 +1061,14 @@ void GameStateService::HanleGameEnd(json &js_src, json &js_dest)
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
+    co_return;
 }
 
-bool GameStateService::Stub_NewGame(std::shared_ptr<Room> room, std::shared_ptr<GameServiceHandle> &handle)
+Task<bool> GameStateService::Stub_NewGame(std::shared_ptr<Room> room, std::shared_ptr<GameServiceHandle> &handle)
 {
     std::vector<ServiceInfo> services;
-    if (!_servcieDiscoverClient.GetAvailableServiceInfo(ServiceType::GAME, services) || services.empty())
-        return false;
+    if (!co_await _servcieDiscoverClient.GetAvailableServiceInfo(ServiceType::GAME, services) || services.empty())
+        co_return false;
 
     json js_request, js_response;
     js_request["command"] = GameServiceCommand::GameService_NewGame;
@@ -1088,10 +1101,10 @@ bool GameStateService::Stub_NewGame(std::shared_ptr<Room> room, std::shared_ptr<
             service.stub_endpoint.port == 0)
             continue;
 
-        if (!client.Connect(service.stub_endpoint.ip, service.stub_endpoint.port))
+        if (!co_await client.Connect(service.stub_endpoint.ip, service.stub_endpoint.port))
             continue;
 
-        if (Stub_Request(client, js_request, js_response))
+        if (co_await Stub_Request(client, js_request, js_response))
         {
             handle = std::make_shared<GameServiceHandle>();
             handle->service_id = service.service_id;
@@ -1099,23 +1112,23 @@ bool GameStateService::Stub_NewGame(std::shared_ptr<Room> room, std::shared_ptr<
             handle->service_stub_endpoint = service.stub_endpoint;
 
             if (!js_response.contains("gameid") || !js_response["gameid"].is_string())
-                return false;
+                co_return false;
 
             handle->game_id = js_response.value("gameid", "");
             if (handle->game_id.empty())
-                return false;
+                co_return false;
 
-            return true;
+            co_return true;
         }
     }
 
-    return false;
+    co_return false;
 }
 
-bool GameStateService::NotifyRoommember(std::shared_ptr<Room> room, json &js, std::shared_ptr<User> excludeuser)
+Task<bool> GameStateService::NotifyRoommember(std::shared_ptr<Room> room, json &js, std::shared_ptr<User> excludeuser)
 {
     if (!room)
-        return false;
+        co_return false;
 
     bool result = true;
     if (!room->members.IsEmpty())
@@ -1125,27 +1138,27 @@ bool GameStateService::NotifyRoommember(std::shared_ptr<Room> room, json &js, st
         {
             if (excludeuser && excludeuser->token == token)
                 continue;
-            if (!_delegator.DelegateMessage(token, js))
+            if (!co_await _delegator.DelegateMessage(token, js))
                 result = false;
         }
     }
-    return result;
+    co_return result;
 }
 
-bool GameStateService::Stub_Request(JsonProtocolClient &client, const json &js_request, json &response)
+Task<bool> GameStateService::Stub_Request(JsonProtocolClient &client, const json &js_request, json &response)
 {
-    if (!client.Request(js_request, response))
-        return false;
+    if (!co_await client.Request(js_request, response))
+        co_return false;
 
     if (!response.contains("result") || !response["result"].is_number_integer())
-        return false;
+        co_return false;
 
     int result = response["result"];
     if (result < 0)
     {
         std::string reason = response.value("reason", "");
         std::cout << "Stub Request fail! command =" << js_request.value("command", 0) << " reason:" << reason << '\n';
-        return false;
+        co_return false;
     }
-    return true;
+    co_return true;
 }

@@ -29,14 +29,14 @@ public:
 	virtual CheckHandshakeStatus CheckHandshakeConfirmMsg(Buffer& buffer);
 
 protected:
-	virtual bool OnSessionClose();
-	virtual bool OnRecvData(Buffer* buffer);
+	virtual Task<void> OnSessionClose();
+	virtual Task<void> OnRecvData(Buffer* buffer);
 	virtual void OnBindRecvDataCallBack();
 	virtual void OnBindSessionCloseCallBack();
 
 private:
 	bool Send(const Buffer& buffer);
-	void ProcessPakage(PureWebSocketSessionPakage* newPak = nullptr);
+	Task<void> ProcessPakage(PureWebSocketSessionPakage* newPak = nullptr);
 	SpinLock _ProcessLock;
 
 private:

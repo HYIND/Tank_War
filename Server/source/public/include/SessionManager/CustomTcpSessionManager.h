@@ -6,18 +6,18 @@
 
 class CustomTcpSessionConnectManager : public BaseSessionManager
 {
-    using CallBackRequestMessage = std::function<void(std::string, Buffer *, Buffer *)>;
+    using CallBackRequestMessage = std::function<Task<void>(ConID, Buffer *, Buffer *)>;
 
 public:
     CustomTcpSessionConnectManager();
 
     void SetCallBackRequestMessage(CallBackRequestMessage &&callback);
 
-    bool AwaitSend(const std::string &conid, const Buffer &buf, Buffer &response);
+    Task<bool> AwaitSend(const std::string &conid, const Buffer &buf, Buffer &response);
 
 public:
-    virtual void SessionEstablish(BaseNetWorkSession *session);
-    virtual void RequestMessage(BaseNetWorkSession *session, Buffer *recv, Buffer *resp);
+    virtual Task<void> SessionEstablish(BaseNetWorkSession *session);
+    virtual Task<void> RequestMessage(BaseNetWorkSession *session, Buffer *recv, Buffer *resp);
 
 protected:
     CallBackRequestMessage _CallBackRequestMessage;

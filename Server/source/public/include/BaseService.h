@@ -10,7 +10,7 @@ class BaseService
 public:
     BaseService();
 
-    virtual bool Start();
+    virtual Task<bool> Start();
     void SetServiceEndPoint(const std::string &IP, int Port);
     void SetStubEndPoint(const std::string &IP, int Port);
 
@@ -21,13 +21,13 @@ public:
     bool StubEnable();
 
 public:
-    void OnStubSessionEstablish(JsonProtocolSession session);
-    void OnRecvStubMessage(JsonProtocolSession session, json &src);
-    void OnRecvStubRequest(JsonProtocolSession session, json &src, json &dest);
+    Task<void> OnStubSessionEstablish(JsonProtocolSession session);
+    Task<void> OnRecvStubMessage(JsonProtocolSession session, json &src);
+    Task<void> OnRecvStubRequest(JsonProtocolSession session, json &src, json &dest);
 
 public:
     virtual std::vector<ServiceInfo> GetServiceInfo() = 0;
-    virtual void OnStubRequest(json &js_src, json &js_dest);
+    virtual Task<void> OnStubRequest(json &js_src, json &js_dest);
 
 protected:
     bool _service_enable = true;

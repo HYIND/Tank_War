@@ -14,14 +14,14 @@ public:
     void SetServiceRegistryManager(std::shared_ptr<ServiceRegistryManager> service);
 
 public:
-    void OnSessionEstablish(JsonProtocolSession session);
-    void OnRecvMessage(JsonProtocolSession session, json &src);
-    void OnRecvRequest(JsonProtocolSession session, json &src, json &dest);
-    void OnSessionClose(JsonProtocolSession session);
+    Task<void> OnSessionEstablish(JsonProtocolSession session);
+    Task<void> OnRecvMessage(JsonProtocolSession session, json &src);
+    Task<void> OnRecvRequest(JsonProtocolSession session, json &src, json &dest);
+    Task<void> OnSessionClose(JsonProtocolSession session);
 
 private:
-    void ProcessMsg(json &src, json &js_dest);
-    void ProcessUpdateServiceInfo(json &js_src, json &js_dest);
+    Task<void> ProcessMsg(json &src, json &js_dest);
+    Task<void> ProcessUpdateServiceInfo(json &js_src, json &js_dest);
 
 private:
     std::shared_ptr<JsonProtocolServer> _connectmanager;

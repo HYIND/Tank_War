@@ -20,8 +20,8 @@ public:
 	bool Release();
 	bool Send(const Buffer& buffer);
 
-	void BindBufferCallBack(std::function<void(TCPTransportConnection*, Buffer*)> callback);
-	void BindRDHUPCallBack(std::function<void(TCPTransportConnection*)> callback);
+	void BindBufferCallBack(std::function<Task<void>(TCPTransportConnection*, Buffer*)> callback);
+	void BindRDHUPCallBack(std::function<Task<void>(TCPTransportConnection*)> callback);
 
 	SafeQueue<Buffer*>& GetRecvData();
 	SafeQueue<Buffer*>& GetSendData();
@@ -29,27 +29,27 @@ public:
 
 protected:
 #ifdef __linux__
-	virtual void OnREAD(BaseSocket socket);									// 可读事件
-	virtual void OnACCEPT(BaseSocket socket);									// 接受新连接事件
+	virtual Task<void> OnREAD(BaseSocket socket);									// 可读事件
+	virtual Task<void> OnACCEPT(BaseSocket socket);									// 接受新连接事件
 #endif
-	virtual void OnREAD(BaseSocket socket, Buffer& buf);						// 可读事件
-	virtual void OnACCEPT(BaseSocket socket, BaseSocket newsocket, sockaddr_in addr); // 接受新连接事件
-	virtual void OnRDHUP();
+	virtual Task<void> OnREAD(BaseSocket socket, Buffer& buf);						// 可读事件
+	virtual Task<void> OnACCEPT(BaseSocket socket, BaseSocket newsocket, sockaddr_in addr); // 接受新连接事件
+	virtual Task<void> OnRDHUP();
 
 protected:
 	virtual void OnBindBufferCallBack();
 	virtual void OnBindRDHUPCallBack();
 
 private:
-	void ProcessRecvQueue();
+	Task<void> ProcessRecvQueue();
 
 private:
 	SafeQueue<Buffer*> _RecvDatas;
 	SafeQueue<Buffer*> _SendDatas;
 
 private:
-	std::function<void(TCPTransportConnection*, Buffer*)> _callbackBuffer;
-	std::function<void(TCPTransportConnection*)> _callbackRDHUP;
+	std::function<Task<void>(TCPTransportConnection*, Buffer*)> _callbackBuffer;
+	std::function<Task<void>(TCPTransportConnection*)> _callbackRDHUP;
 	CriticalSectionLock _SendResMtx;
 	SpinLock _ProcessLock;
 };

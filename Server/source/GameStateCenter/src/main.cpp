@@ -47,34 +47,34 @@ void signal_handler(int sig)
 }
 #endif
 
-bool StartServiceRegistry(const std::string& IP, int Port)
+Task<bool> StartServiceRegistry(const std::string& IP, int Port)
 {
 	g_SRy->SetServiceRegistryManager(g_SRM);
-	return g_SRy->Start(IP, Port);
+	co_return g_SRy->Start(IP, Port);
 }
 
-bool StartServiceDiscovery(const std::string& IP, int Port)
+Task<bool> StartServiceDiscovery(const std::string& IP, int Port)
 {
 	g_SD->SetServiceRegistryManager(g_SRM);
-	return g_SD->Start(IP, Port);
+	co_return g_SD->Start(IP, Port);
 }
 
-bool StartGameStateService(const std::string& IP, int Port)
+Task<bool> StartGameStateService(const std::string& IP, int Port)
 {
 	g_GSS->SetStubEndPoint(IP, Port);
 	g_GSS->SetGameStateManager(g_GSM);
-	return g_GSS->Start();
+	co_return co_await g_GSS->Start();
 }
 
-bool StartServiceRegistrar(const std::string& IP, int Port)
+Task<bool> StartServiceRegistrar(const std::string& IP, int Port)
 {
 	g_SRr->AddServiceSource(g_GSS);
-	return g_SRr->Start(IP, Port);
+	co_return co_await g_SRr->Start(IP, Port);
 }
 
 int main()
 {
-	#ifdef _WIN32
+#ifdef _WIN32
 	system("chcp 65001 > nul"); // 切换到 UTF-8
 #endif
 
@@ -95,9 +95,8 @@ int main()
 	sigaction(SIGINT, &sa, NULL);
 #endif
 
-
 	{
-		if (!StartServiceRegistry(ServiceRegistryIP, ServiceRegistryPort))
+		if (!StartServiceRegistry(ServiceRegistryIP, ServiceRegistryPort).sync_wait())
 		{
 			std::cout << "StartServiceRegistry Error!\n";
 			return -1;
@@ -105,7 +104,7 @@ int main()
 	}
 
 	{
-		if (!StartServiceDiscovery(ServiceDiscoveryIP, ServiceDiscoveryPort))
+		if (!StartServiceDiscovery(ServiceDiscoveryIP, ServiceDiscoveryPort).sync_wait())
 		{
 			std::cout << "StartServiceDiscovery Error!\n";
 			return -1;
@@ -113,7 +112,7 @@ int main()
 	}
 
 	{
-		if (!StartGameStateService(GameStatesServiceStubIP, GameStatesServiceStubPort))
+		if (!StartGameStateService(GameStatesServiceStubIP, GameStatesServiceStubPort).sync_wait())
 		{
 			std::cout << "StartService Error!\n";
 			return -1;
@@ -121,7 +120,7 @@ int main()
 	}
 
 	{
-		if (!StartServiceRegistrar(ServiceRegistryIP, ServiceRegistryPort))
+		if (!StartServiceRegistrar(ServiceRegistryIP, ServiceRegistryPort).sync_wait())
 		{
 			std::cout << "StartServiceRegistrar Error!\n";
 			return -1;

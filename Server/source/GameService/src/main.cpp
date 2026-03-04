@@ -37,7 +37,7 @@ void signal_handler(int sig)
 auto g_ServiceRegistrar = std::make_shared<ServiceRegistrar>();
 auto g_gameservice = std::make_shared<GameService>();
 
-bool StartGameService(
+Task<bool> StartGameService(
 	const std::string &IP, int Port,
 	const std::string &stub_IP, int stub_Port,
 	const std::string &gameStateService_IP, int gameStateService_Port)
@@ -45,13 +45,13 @@ bool StartGameService(
 	g_gameservice->SetServiceEndPoint(IP, Port);
 	g_gameservice->SetStubEndPoint(stub_IP, stub_Port);
 	g_gameservice->SetGameStateEndPoint(gameStateService_IP, gameStateService_Port);
-	return g_gameservice->Start();
+	co_return co_await g_gameservice->Start();
 }
 
-bool StartServiceRegistrar(const std::string &IP, int Port)
+Task<bool> StartServiceRegistrar(const std::string &IP, int Port)
 {
 	g_ServiceRegistrar->AddServiceSource(g_gameservice);
-	return g_ServiceRegistrar->Start(IP, Port);
+	co_return co_await g_ServiceRegistrar->Start(IP, Port);
 }
 
 int main()
@@ -81,7 +81,7 @@ int main()
 	{
 		if (!StartGameService(GameServiceIP, GameServicePort,
 							  GameServiceStubIP, GameServiceStubPort,
-							  GameStatesServiceStubIP, GameStatesServiceStubPort))
+							  GameStatesServiceStubIP, GameStatesServiceStubPort).sync_wait())
 		{
 			std::cout << "StartService Error!\n";
 			return -1;
@@ -89,7 +89,7 @@ int main()
 	}
 
 	{
-		if (!StartServiceRegistrar(ServiceRegistryIP, ServiceRegistryPort))
+		if (!StartServiceRegistrar(ServiceRegistryIP, ServiceRegistryPort).sync_wait())
 		{
 			std::cout << "StartServiceRegistrar Error!\n";
 			return -1;

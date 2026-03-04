@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include <thread>
 #include "Timer.h"
+#include "SafeStl.h"
 
 #include "PublicShareExportMacro.h"
 
@@ -31,6 +32,46 @@ using BaseSocket = int;
 using BaseSocket = SOCKET;
 #endif
 #endif
+
+class CoroutineContextImpl;
+using CoroHandle = std::coroutine_handle<>;
+class PUBLICSHARE_API CoroutineContext
+{
+
+public:
+	// ==================== 协程线程标记 ====================
+	static bool isCoroutineThread();	// 检查当前线程是否是协程线程
+
+	// ==================== 当前协程管理 ====================
+	static void setCurrent(CoroHandle coro);	// 设置当前正在执行的协程（在resume前调用）
+	static CoroHandle getCurrent();	// 获取当前正在执行的协程
+	static void clearCurrent();	// 清除当前协程
+
+	// ==================== 协程关系管理 ====================
+	static void setParent(CoroHandle child, CoroHandle parent);			// 设置父子关系（在co_await时调用）
+	static void setParent(CoroHandle child, std::thread::id parent);// 设置父子关系（在sync_wait时调用）
+	static CoroHandle getCurrentRoot();			// 获取当前协程的根协程
+	static CoroHandle getRoot(CoroHandle coro);		// 获取指定协程的根协程
+	static void clearParent(CoroHandle child);	// 协程结束时清除关系
+
+	// ==================== 关系判断 ====================
+	static bool isAncestor(CoroHandle descendant, CoroHandle ancestor);				// 检查一个协程是否是另一个协程的祖先
+	static bool isAncestor(CoroHandle descendant, std::thread::id threadid);	// 检查一个普通线程是否在sync_wait协程
+
+	template<typename T>
+	static bool setData(const std::string& key, T&& value) {
+		return setDataImpl(key, std::make_shared<T>(std::forward<T>(value)));
+	}
+	template<typename T>
+	static T* getData(const std::string& key, bool skipcurrent = false) {
+		return static_cast<T*>(getDataImpl(key, skipcurrent));
+	}
+
+private:
+	static bool setDataImpl(const std::string& key, std::shared_ptr<void> ptr);
+	static void* getDataImpl(const std::string& key, bool skipcurrent = false);
+	static CoroutineContextImpl& getImpl();
+};
 
 PUBLICSHARE_API std::coroutine_handle<> DeleteLater(std::shared_ptr<std::coroutine_handle<>> p);
 
@@ -79,7 +120,7 @@ struct TaskPromiseBase
 
 		struct FinalAwaiter
 		{
-			TaskPromiseBase *promise;
+			TaskPromiseBase* promise;
 
 			bool await_ready() noexcept { return false; }
 			std::coroutine_handle<> await_suspend(std::coroutine_handle<> completed_coro) noexcept
@@ -90,18 +131,24 @@ struct TaskPromiseBase
 				promise->_syncwaitcv->NotifyAll();
 
 				if (continuation)
+				{
+					CoroutineContext::setCurrent(continuation);
 					return continuation;
+				}
 				else
 				{
 					auto p = promise->on_post_final_suspend();
-					return DeleteLater(std::move(p));
+					auto delete_coro = DeleteLater(std::move(p));
+
+					CoroutineContext::setCurrent(delete_coro);
+					return delete_coro;
 				}
 			}
 
 			void await_resume() noexcept {}
 		};
 
-		return FinalAwaiter{this};
+		return FinalAwaiter{ this };
 	}
 
 	void unhandled_exception() noexcept
@@ -133,17 +180,17 @@ struct TaskPromise : TaskPromiseBase<T>
 
 	Task<T> get_return_object() noexcept;
 
-	void return_value(T &&value)
+	void return_value(T&& value)
 	{
 		value_.emplace(std::move(value));
 	}
 
-	void return_value(const T &value)
+	void return_value(const T& value)
 	{
 		value_.emplace(value);
 	}
 
-	T &result()
+	T& result()
 	{
 		if (this->exception_)
 		{
@@ -225,8 +272,9 @@ struct TaskAwaiter
 		if (coroutine_.done())
 			return false;
 
-		auto &promise = coroutine_.promise();
+		auto& promise = coroutine_.promise();
 		promise.set_continuation(awaiting_coroutine);
+		CoroutineContext::setParent(coroutine_, awaiting_coroutine);
 		return true;
 	}
 
@@ -246,9 +294,11 @@ struct TaskAwaiter
 		}
 		catch (...)
 		{
+			CoroutineContext::clearParent(coroutine_);
 			coroutine_.promise().co_await_Delete();
 			throw;
 		}
+		CoroutineContext::clearParent(coroutine_);
 		coroutine_.promise().co_await_Delete();
 		return value;
 	}
@@ -268,9 +318,11 @@ struct TaskAwaiter
 		}
 		catch (...)
 		{
+			CoroutineContext::clearParent(coroutine_);
 			coroutine_.promise().co_await_Delete();
 			throw;
 		}
+		CoroutineContext::clearParent(coroutine_);
 		coroutine_.promise().co_await_Delete();
 	}
 };
@@ -288,14 +340,14 @@ public:
 	{
 	}
 
-	Task(Task &&other) noexcept
+	Task(Task&& other) noexcept
 		: _shared_coroutine(std::move(other._shared_coroutine)), _continuationlock(other._continuationlock), _syncwaitcv(other._syncwaitcv)
 	{
 		other._continuationlock.reset();
 		other._syncwaitcv.reset();
 	}
 
-	Task &operator=(Task &&other) noexcept
+	Task& operator=(Task&& other) noexcept
 	{
 		if (this != &other)
 		{
@@ -309,8 +361,8 @@ public:
 		return *this;
 	}
 
-	Task(const Task &) = delete;
-	Task &operator=(const Task &) = delete;
+	Task(const Task&) = delete;
+	Task& operator=(const Task&) = delete;
 
 	~Task()
 	{
@@ -328,10 +380,14 @@ public:
 		{
 			LockGuard guard(*_continuationlock);
 			if ((*_shared_coroutine).done())
-			{
 				return (*_shared_coroutine).promise().result();
-			}
+
+			if (CoroutineContext::isCoroutineThread())
+				CoroutineContext::setParent(*_shared_coroutine, CoroutineContext::getCurrent());
+			else
+				CoroutineContext::setParent(*_shared_coroutine, std::this_thread::get_id());
 			_syncwaitcv->Wait(guard);
+			CoroutineContext::clearParent(*_shared_coroutine);
 			return (*_shared_coroutine).promise().result();
 		}
 		throw std::runtime_error("Invalid task");
@@ -351,7 +407,13 @@ public:
 				(*_shared_coroutine).promise().result();
 				return;
 			}
+
+			if (CoroutineContext::isCoroutineThread())
+				CoroutineContext::setParent(*_shared_coroutine, CoroutineContext::getCurrent());
+			else
+				CoroutineContext::setParent(*_shared_coroutine, std::this_thread::get_id());
 			_syncwaitcv->Wait(guard);
+			CoroutineContext::clearParent(*_shared_coroutine);
 			(*_shared_coroutine).promise().result();
 			return;
 		}
@@ -384,17 +446,17 @@ inline Task<T> TaskPromise<T>::get_return_object() noexcept
 {
 	auto raw_handle = CoroHandleType::from_promise(*this);
 	_shared_handle = std::shared_ptr<CoroHandleType>(new CoroHandleType(raw_handle),
-													 [](CoroHandleType *handle)
-													 {
-														 if (handle)
-														 {
-															 if (*handle)
-															 {
-																 handle->destroy();
-															 }
-															 delete handle;
-														 }
-													 });
+		[](CoroHandleType* handle)
+		{
+			if (handle)
+			{
+				if (*handle)
+				{
+					handle->destroy();
+				}
+				delete handle;
+			}
+		});
 
 	return Task<T>(
 		_shared_handle,
@@ -406,17 +468,17 @@ inline Task<void> TaskPromise<void>::get_return_object() noexcept
 {
 	auto raw_handle = CoroHandleType::from_promise(*this);
 	_shared_handle = std::shared_ptr<CoroHandleType>(new CoroHandleType(raw_handle),
-													 [](CoroHandleType *handle)
-													 {
-														 if (handle)
-														 {
-															 if (*handle)
-															 {
-																 handle->destroy();
-															 }
-															 delete handle;
-														 }
-													 });
+		[](CoroHandleType* handle)
+		{
+			if (handle)
+			{
+				if (*handle)
+				{
+					handle->destroy();
+				}
+				delete handle;
+			}
+		});
 
 	return Task<void>(
 		_shared_handle,
@@ -516,11 +578,11 @@ public:
 public:
 	CoTimer(std::chrono::milliseconds timeout);
 
-	CoTimer(CoTimer &&other) noexcept;
-	CoTimer &operator=(CoTimer &&other) noexcept;
+	CoTimer(CoTimer&& other) noexcept;
+	CoTimer& operator=(CoTimer&& other) noexcept;
 
-	CoTimer(const CoTimer &) = delete;
-	CoTimer &operator=(const CoTimer &) = delete;
+	CoTimer(const CoTimer&) = delete;
+	CoTimer& operator=(const CoTimer&) = delete;
 
 	~CoTimer();
 	Awaiter operator co_await(); // 协程等待操作
@@ -575,17 +637,44 @@ public:
 	};
 
 public:
-	CoConnection(const std::string &ip, const int port);
+	CoConnection(const std::string& ip, const int port);
 
-	CoConnection(CoConnection &&other) noexcept;
-	CoConnection &operator=(CoConnection &&other) noexcept;
+	CoConnection(CoConnection&& other) noexcept;
+	CoConnection& operator=(CoConnection&& other) noexcept;
 
-	CoConnection(const CoConnection &) = delete;
-	CoConnection &operator=(const CoConnection &) = delete;
+	CoConnection(const CoConnection&) = delete;
+	CoConnection& operator=(const CoConnection&) = delete;
 
 	~CoConnection();
 	Awaiter operator co_await();
 
 private:
 	std::shared_ptr<Handle> handle;
+};
+
+class PUBLICSHARE_API CoroCriticalSectionLock
+{
+public:
+	CoroCriticalSectionLock();
+	~CoroCriticalSectionLock();
+
+public:
+	bool try_lock();
+	void lock();
+	void unlock();
+
+private:
+	struct HolderStatus {
+		enum class Type { None, Thread, Coroutine } type = Type::None;
+
+		std::thread::id thread_id;	// 线程持有者
+		CoroHandle coro_id;         // 协程持有者
+		int recursive_count = 0;
+
+	};
+
+	CriticalSectionLock mutex;
+	ConditionVariable cv;
+
+	HolderStatus _status;
 };
