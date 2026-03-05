@@ -264,51 +264,51 @@ void LobbyManager::ProcessRoomInfo(const json& js)
 		});
 }
 
-void LobbyManager::ProcessStartGameRes(const json& js)
+Task<void> LobbyManager::ProcessStartGameRes(const json& js)
 {
 	if (!js.contains("command") || !js["command"].is_number_integer())
-		return;
+		co_return;
 
 	if (!js.contains("result") || !js["result"].is_number_integer())
-		return;
+		co_return;
 
 	int command = js["command"];
 	int result = js["result"];
 
 	if (command != LobbySubService_RequestStartGameRes)
-		return;
+		co_return;
 	if (result < 0)
-		return;
+		co_return;
 
 	if (!js.contains("gameendpoint") || !js["gameendpoint"].is_object())
-		return;
+		co_return;
 
 	json js_endpoint = js["gameendpoint"];
 	if (!js_endpoint.contains("ip") ||
 		!js_endpoint["ip"].is_string() ||
 		!js_endpoint.contains("port") ||
 		!js_endpoint["port"].is_number_integer())
-		return;
+		co_return;
 
 	NetworkEndpoint endpoint;
 	endpoint.update_from_json(js_endpoint);
 
 	if (!js.contains("gameid") ||
 		!js["gameid"].is_string())
-		return;
+		co_return;
 
 	std::string gameid = js.value("gameid", "");
 	UserInfoManager::Instance()->setGameId(gameid);
 
-	if (!CONNECTMANAGER->LoginGameSeervice(endpoint).sync_wait())
-		return;
+	if (!co_await CONNECTMANAGER->LoginGameSeervice(endpoint))
+		co_return;
 
 	json req, resp;
 	req["command"] = GameServiceCommand::GameService_JoinGame;
 	req["playerid"] = UserInfoManager::Instance()->usertoken();
 	req["gameid"] = gameid;
-	if (!CONNECTMANAGER->GameRequest(req, resp).sync_wait())
-		return;
+	if (!co_await CONNECTMANAGER->GameRequest(req, resp))
+		co_return;
 
 	if (resp.contains("result") && resp["result"].is_number_integer())
 	{
@@ -317,11 +317,11 @@ void LobbyManager::ProcessStartGameRes(const json& js)
 		{
 			std::string reason = resp.value("reason", "");
 			std::cout << "GameService_JoinGame Request fail! reason:" << reason << '\n';
-			return;
+			co_return;
 		}
 	}
 	else
-		return;
+		co_return;
 
 	SendMessage(_hwnd, WM_COMMAND, START, (LPARAM)_hwnd);
 }
@@ -338,51 +338,51 @@ std::shared_ptr<Room> LobbyManager::GetSelectRoom()
 	return nullptr;
 }
 
-bool LobbyManager::TryJoinRoom(std::shared_ptr<Room> room)
+Task<bool> LobbyManager::TryJoinRoom(std::shared_ptr<Room> room)
 {
 	if (!room)
-		return false;
+		co_return false;
 
-	bool result = REQUESTMANAGER->RequestJoinRoom(room->room_id);
+	bool result = co_await REQUESTMANAGER->RequestJoinRoom(room->room_id);
 	if (result)
 	{
 		SetIsHost(false);
 		_curroominfo = std::make_shared<Room>();
 	}
-	return result;
+	co_return result;
 }
 
-bool LobbyManager::TryCreateRoom()
+Task<bool> LobbyManager::TryCreateRoom()
 {
-	bool result = REQUESTMANAGER->RequestCreateRoom();
+	bool result = co_await REQUESTMANAGER->RequestCreateRoom();
 	if (result)
 	{
 		SetIsHost(true);
 		_curroominfo = std::make_shared<Room>();
 	}
-	return result;
+	co_return result;
 }
 
-bool LobbyManager::TryLeaveRoom()
+Task<bool> LobbyManager::TryLeaveRoom()
 {
-	bool result = REQUESTMANAGER->RequestLeaveRoom();
+	bool result = co_await REQUESTMANAGER->RequestLeaveRoom();
 	if (result)
 		_curroominfo.reset();
-	return result;
+	co_return result;
 }
 
-bool LobbyManager::TryChangeReadyStatus(bool isready)
+Task<bool> LobbyManager::TryChangeReadyStatus(bool isready)
 {
-	return REQUESTMANAGER->RequestChangeReadyStatus(isready);
+	co_return co_await REQUESTMANAGER->RequestChangeReadyStatus(isready);
 }
 
-bool LobbyManager::TryStartGame()
+Task<bool> LobbyManager::TryStartGame()
 {
 	json resp;
-	if (REQUESTMANAGER->RequestStartGame(resp))
+	if (co_await REQUESTMANAGER->RequestStartGame(resp))
 	{
-		ProcessStartGameRes(resp);
-		return true;
+		co_await ProcessStartGameRes(resp);
+		co_return true;
 	}
-	return false;
+	co_return false;
 }

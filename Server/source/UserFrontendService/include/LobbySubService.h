@@ -75,8 +75,8 @@ private:
 
     std::shared_ptr<ServiceInfo> _serviceinfo;
 
-    SafeUnorderedMap<std::string, std::shared_ptr<LobbyUser>> _tokenToUser;
-    SafeUnorderedMap<JsonProtocolSession, std::shared_ptr<LobbyUser>> _sessionToUser;
+    SafeUnorderedMap<std::string, std::shared_ptr<LobbyUser>, CoroCriticalSectionLock> _tokenToUser;
+    SafeUnorderedMap<JsonProtocolSession, std::shared_ptr<LobbyUser>, CoroCriticalSectionLock> _sessionToUser;
 
     std::shared_ptr<MessageDelegator> _delegator;
 };

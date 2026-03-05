@@ -28,9 +28,9 @@ Task<void> CustomTcpSessionConnectManager::SessionEstablish(BaseNetWorkSession *
 {
     CustomTcpSession *customtcpsession = (CustomTcpSession *)session;
 
-    customtcpsession->BindRecvDataCallBack(std::bind(&BaseSessionManager::RecvMessage, this, std::placeholders::_1, std::placeholders::_2));
-    customtcpsession->BindSessionCloseCallBack(std::bind(&BaseSessionManager::CloseConnect, this, std::placeholders::_1));
-    customtcpsession->BindRecvRequestCallBack(std::bind(&CustomTcpSessionConnectManager::RequestMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    co_await customtcpsession->BindSessionCloseCallBack(std::bind(&BaseSessionManager::CloseConnect, this, std::placeholders::_1));
+    co_await customtcpsession->BindRecvDataCallBack(std::bind(&BaseSessionManager::RecvMessage, this, std::placeholders::_1, std::placeholders::_2));
+    co_await customtcpsession->BindRecvRequestCallBack(std::bind(&CustomTcpSessionConnectManager::RequestMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
     ConID ConId = Tool::GenerateSimpleUuid();
     ConIdToBaseNetWork.InsertOrUpdate(ConId, session);

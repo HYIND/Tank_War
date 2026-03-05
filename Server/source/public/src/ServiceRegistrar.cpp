@@ -57,7 +57,7 @@ void ServiceRegistrar::RemoveServiceSource(std::shared_ptr<BaseService> source)
         auto &handle = _sources[source.get()];
         for (auto &serviceinfo : handle->ServiceInfos)
             serviceinfo.status = ServiceStatus::OFFLINE;
-        SendServiceInfo(*handle);
+        SendAllServiceInfo();
         _sources.Erase(source.get());
     }
 }
@@ -85,7 +85,11 @@ void ServiceRegistrar::SendAllServiceInfo()
                     try
                     {
                         handle->ServiceInfos = servicesource->GetServiceInfo();
-                        SendServiceInfo(*handle);
+                        if (!SendServiceInfo(*handle))
+                        {
+                            _client.Release();
+                            ConnectClose(&_client).sync_wait();
+                        }
                     }
                     catch (...)
                     {
@@ -97,14 +101,18 @@ void ServiceRegistrar::SendAllServiceInfo()
                 {
                     for (auto &serviceinfo : handle->ServiceInfos)
                         serviceinfo.status = ServiceStatus::OFFLINE;
-                    SendServiceInfo(*handle);
+                    if(!SendServiceInfo(*handle))
+                    {
+                        _client.Release();
+                        ConnectClose(&_client).sync_wait();
+                    }
                     it = map.erase(it);
                 }
             }
         });
 }
 
-void ServiceRegistrar::SendServiceInfo(ServiceSourceHandle &handle)
+bool ServiceRegistrar::SendServiceInfo(ServiceSourceHandle &handle)
 {
     for (auto &serviceinfo : handle.ServiceInfos)
     {
@@ -114,9 +122,7 @@ void ServiceRegistrar::SendServiceInfo(ServiceSourceHandle &handle)
 
         std::string str = js_info.dump();
         if (!_client.Send(js_info))
-        {
-            _client.Release();
-            ConnectClose(&_client);
-        }
+            return false;
     }
+    return true;
 }

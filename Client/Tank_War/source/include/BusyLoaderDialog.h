@@ -10,7 +10,7 @@ enum class DialogResult
 {
 	FAILED = -1,
 	MANUEL_CANCEL = 0,
-	SUCCESSED = 0
+	SUCCESSED = 1
 };
 
 class BusyLoaderDialog {

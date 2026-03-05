@@ -22,9 +22,9 @@ Task<bool> JsonProtocolClient::Connect(const std::string& IP, uint16_t Port)
 
 	if (result)
 	{
-		_session->BindRecvDataCallBack(std::bind(&JsonProtocolClient::RecvData, this, std::placeholders::_1, std::placeholders::_2));
-		_session->BindRecvRequestCallBack(std::bind(&JsonProtocolClient::RecvRequest, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-		_session->BindSessionCloseCallBack(std::bind(&JsonProtocolClient::SessionClose, this, std::placeholders::_1));
+		co_await _session->BindSessionCloseCallBack(std::bind(&JsonProtocolClient::SessionClose, this, std::placeholders::_1));
+		co_await _session->BindRecvDataCallBack(std::bind(&JsonProtocolClient::RecvData, this, std::placeholders::_1, std::placeholders::_2));
+		co_await _session->BindRecvRequestCallBack(std::bind(&JsonProtocolClient::RecvRequest, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 	}
 	co_return result;
 }

@@ -1,6 +1,6 @@
 #include "AudioProc/AudioTool.h"
-#include "Helper/Tools.h"
 #include "Net/Helper/Buffer.h"
+#include "Helper/Tools.h"
 
 #define fourccRIFF 'FFIR'
 #define fourccDATA 'atad'

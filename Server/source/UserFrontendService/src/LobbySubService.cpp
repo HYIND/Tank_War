@@ -211,9 +211,6 @@ Task<void> LobbySubService::ProcessLogout(std::shared_ptr<LobbyUser> user, json 
         js_dest["result"] = -1;
         js_dest["reason"] = error_reason;
     }
-
-    auto guard1 = _tokenToUser.MakeLockGuard();
-    auto guard2 = _sessionToUser.MakeLockGuard();
     _tokenToUser.Erase(user->token);
     _sessionToUser.Erase(user->session);
 }
@@ -315,13 +312,16 @@ Task<void> LobbySubService::ProcessRoomMsg(std::shared_ptr<LobbyUser> sender, js
         js_broadcast["name"] = sender->name;
         js_broadcast["msg"] = msg;
 
-        roominfo.members.EnsureCall(
-            [&](std::map<std::string, std::shared_ptr<GameStateDef::RoomMemeber>> &map) -> void
+        co_await roominfo.members.AsyncEnsureCall(
+            [&](std::map<std::string, std::shared_ptr<GameStateDef::RoomMemeber>> &map) -> Task<void>
             {
+                std::vector<Task<bool>> tasks;
+
                 for (auto &[token, memberinfo] : map)
-                {
-                    DelegateDispatch(token, js_broadcast).sync_wait();
-                }
+                    tasks.push_back(std::move(DelegateDispatch(token, js_broadcast)));
+
+                for (auto& task : tasks)
+                    co_await task;
             });
     }
 

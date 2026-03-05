@@ -39,7 +39,7 @@ struct Room
 
 	RoomStatus status;
 
-	SafeMap<std::string, std::shared_ptr<RoomMemeber>> members; // token->Info
+	SafeMap<std::string, std::shared_ptr<RoomMemeber>, CoroCriticalSectionLock> members; // token->Info
 
 	json ToJson()
 	{

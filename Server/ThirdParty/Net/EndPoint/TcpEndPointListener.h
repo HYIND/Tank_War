@@ -28,6 +28,6 @@ private:
 	std::shared_ptr<TCPTransportListener> BaseListener;
 	TCPNetProtocol _Protocol;
 	std::function<Task<void>(TCPEndPoint*)> _callBackEstablish;
-	SafeArray<std::shared_ptr<ClientData>> waitClients; // 等待校验协议的客户端
+	SafeArray<std::shared_ptr<ClientData>, CoroCriticalSectionLock> waitClients; // 等待校验协议的客户端
 	std::shared_ptr<TimerTask> CleanExpiredTask;
 };

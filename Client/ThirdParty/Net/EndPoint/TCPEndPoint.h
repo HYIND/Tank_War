@@ -50,12 +50,12 @@ public:
 	Task<void> RecvBuffer(TCPTransportConnection* con, Buffer* buffer); // 用于绑定网络层(TCP/UDP)触发的Buffer回调
 	Task<void> ConnectClose(TCPTransportConnection* con);               // 用于绑定网络层(TCP/UDP)触发的RDHUP回调
 
-	void BindMessageCallBack(std::function<Task<void>(TCPEndPoint*, Buffer*)> callback);
-	void BindCloseCallBack(std::function<Task<void>(TCPEndPoint*)> callback);
+	Task<void> BindMessageCallBack(std::function<Task<void>(TCPEndPoint*, Buffer*)> callback);
+	Task<void> BindCloseCallBack(std::function<Task<void>(TCPEndPoint*)> callback);
 
 protected:
-	virtual void OnBindMessageCallBack() = 0;
-	virtual void OnBindCloseCallBack() = 0;
+	virtual Task<void> OnBindMessageCallBack() = 0;
+	virtual Task<void> OnBindCloseCallBack() = 0;
 
 protected:
 	TCPNetProtocol Protocol;

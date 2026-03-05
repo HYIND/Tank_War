@@ -71,8 +71,8 @@ private:
 	IXAudio2* m_xAudio2;
 	IXAudio2MasteringVoice* m_pXAudio2MasteringVoice;
 	std::atomic<DeviceState> m_deviceState;
-	SafeUnorderedMap<AudioPlayHandle, std::shared_ptr<SourceVoiceHandle>> m_HandleToSourceVoiceHandle;
-	SafeUnorderedMap<AudioChannelID, IXAudio2SubmixVoice*> m_ChannelIDToSubmixVoice;
+	SafeUnorderedMap<AudioPlayHandle, std::shared_ptr<SourceVoiceHandle>, CoroCriticalSectionLock> m_HandleToSourceVoiceHandle;
+	SafeUnorderedMap<AudioChannelID, IXAudio2SubmixVoice*, CoroCriticalSectionLock> m_ChannelIDToSubmixVoice;
 };
 
 class AudioInfo

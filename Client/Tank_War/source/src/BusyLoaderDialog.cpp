@@ -7,7 +7,8 @@ using namespace D2D1;
 
 BusyLoaderDialog::BusyLoaderDialog() :hWnd(nullptr), hParentWnd(nullptr),
 hInst(nullptr), globalTime(0.0f),
-speed(0.5f), isRunning(false)
+speed(0.5f), isRunning(false),
+m_result(DialogResult::FAILED)
 {
 	dots.resize(DOT_COUNT);
 	for (int i = 0; i < DOT_COUNT; i++) {

@@ -368,7 +368,7 @@ void Scene_Hall::Load(RECT& rect)
 
 	{
 		Hall_room_list = CreateWindowW(L"LISTBOX", L"",
-			WS_CHILD | WS_VSCROLL | WS_HSCROLL,
+			WS_CHILD | WS_VSCROLL | WS_HSCROLL | LBS_NOTIFY,
 			broder_left + len_x, broder_top + len_y - 5,
 			len_x * 4, len_y * 4,
 			_hwnd, (HMENU)HALL_ROOM_LIST, (HINSTANCE)GetWindowLong(_hwnd, GWLP_HINSTANCE), NULL);

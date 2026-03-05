@@ -20,7 +20,6 @@
 #include <stdexcept>
 #include <thread>
 #include "Timer.h"
-#include "SafeStl.h"
 
 #include "PublicShareExportMacro.h"
 

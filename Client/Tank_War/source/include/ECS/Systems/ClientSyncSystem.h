@@ -43,5 +43,5 @@ private:
 
 private:
 	std::shared_ptr<TripleBuffer<GameState>> _gamestate_tripbuffer;
-	SafeArray<SyncEvent> _syncEvents;
+	SafeArray<SyncEvent, CoroCriticalSectionLock> _syncEvents;
 };

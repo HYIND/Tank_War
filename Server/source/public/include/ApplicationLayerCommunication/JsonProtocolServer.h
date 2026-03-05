@@ -86,6 +86,8 @@ private:
 
 	bool IsValidSession(const JsonProtocolSession& session);
 
+	Task<bool> ProcessWaitCon(json& js_src, ConID conId, json& js_dest);
+
 private:
 	struct SessionHandle
 	{
@@ -102,10 +104,10 @@ private:
 private:
 	CustomTcpSessionConnectManager _sessionmanager;
 
-	SafeBiDirectionalMap<JsonProtocolSessionID, std::shared_ptr<SessionHandle>> _SessionIdToSessionHandle;
-	SafeBiDirectionalMap<ConID, JsonProtocolSessionID> _ConIdToSessionId;
+	SafeBiDirectionalMap<JsonProtocolSessionID, std::shared_ptr<SessionHandle>, CoroCriticalSectionLock> _SessionIdToSessionHandle;
+	SafeBiDirectionalMap<ConID, JsonProtocolSessionID, CoroCriticalSectionLock> _ConIdToSessionId;
 
-	SafeSet<ConID> _waitConId; // 等待协商的
+	SafeSet<ConID, CoroCriticalSectionLock> _waitConId; // 等待协商的
 
 	CallBackSessionEstablish _CallBackSessionEstablish;
 };

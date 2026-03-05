@@ -4,7 +4,6 @@
 #include <variant>
 #include "RenderEngine/D2DTools.h"
 #include "RenderEngine/RenderContext.h"
-#include "CriticalSectionLock.h"
 
 namespace Render
 {

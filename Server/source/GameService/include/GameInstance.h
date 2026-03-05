@@ -57,8 +57,8 @@ public:
     json GetPlayerView(const PlayerID &playerId) const;
 
     // 状态游戏变更
-    void GameOver();
-    void GameOverWithWinner(const PlayerID &winner);
+    Task<void> GameOver();
+    Task<void> GameOverWithWinner(const PlayerID &winner);
     void PlayerEliminated(const PlayerID &playerId, const PlayerID &killer);
 
 private:
@@ -70,7 +70,7 @@ private:
     State _state;
 
     // 玩家管理
-    SafeUnorderedMap<PlayerID, std::shared_ptr<GamePlayer>> _PlayerIdToGamePlayer;
+    SafeUnorderedMap<PlayerID, std::shared_ptr<GamePlayer>, CoroCriticalSectionLock> _PlayerIdToGamePlayer;
     mutable std::mutex _playersMutex;
 
     // 游戏状态

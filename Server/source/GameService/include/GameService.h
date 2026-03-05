@@ -70,11 +70,11 @@ private:
     std::shared_ptr<ServiceInfo> _serviceinfo;
 
     // 游戏实例管理
-    SafeUnorderedMap<GameID, std::shared_ptr<GameInstance>> _GameIdToGameInstance;
+    SafeUnorderedMap<GameID, std::shared_ptr<GameInstance>, CoroCriticalSectionLock> _GameIdToGameInstance;
 
     // 玩家会话管理
-    SafeBiDirectionalMap<JsonProtocolSession, PlayerID> _SessionToplayerId;
-    SafeUnorderedMap<PlayerID, GameID> _PlayerIdToGameId;
+    SafeBiDirectionalMap<JsonProtocolSession, PlayerID, CoroCriticalSectionLock> _SessionToplayerId;
+    SafeUnorderedMap<PlayerID, GameID, CoroCriticalSectionLock> _PlayerIdToGameId;
 
     ServiceDiscoveryClient _servcieDiscoverClient;
 };

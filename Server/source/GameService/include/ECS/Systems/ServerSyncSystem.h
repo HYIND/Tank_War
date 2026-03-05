@@ -7,7 +7,6 @@
 #include "GameDataDef.h"
 #include "stdafx.h"
 #include "ECS/Event/SyncEventDef.h"
-#include "SafeStl.h"
 
 class ServerSyncSystem : public System
 {

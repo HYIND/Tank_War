@@ -202,11 +202,11 @@ Task<bool> ConnectManager::LoginGameSeervice(NetworkEndpoint endpoint)
 	}
 }
 
-Task<bool> ConnectManager::LogoutGameSeervice()
+bool ConnectManager::LogoutGameSeervice()
 {
 	_gameSession->Release();
 	UserInfoManager::Instance()->setGameId(""); 
-	co_return true;
+	return true;
 }
 
 bool ConnectManager::SocialSend(json& js)

@@ -75,144 +75,144 @@ void RequestManager::RequestRoomInfo()
 	ConnectManager::Instance()->SocialSend(js);
 }
 
-bool RequestManager::RequestCreateRoom()
+Task<bool> RequestManager::RequestCreateRoom()
 {
 	json js;
 	js["command"] = LobbySubService_RequestCreateRoom;
 
 	json js_resp;
-	if (!ConnectManager::Instance()->SocialRequest(js, js_resp).sync_wait())
-		return false;
+	if (!co_await ConnectManager::Instance()->SocialRequest(js, js_resp))
+		co_return false;
 
 	if (!js_resp.contains("result") || !js_resp["result"].is_number_integer())
-		return false;
+		co_return false;
 
 	int result = js_resp["result"];
 	if (result < 0)
 	{
 		std::string reason = js_resp.value("reason", "");
 		std::cout << "LobbySubService_RequestJoinRoom Request fail! reason:" << reason << '\n';
-		return false;
+		co_return false;
 	}
 
-	return true;
+	co_return true;
 }
 
-bool RequestManager::RequestJoinRoom(const std::string& roomid)
+Task<bool> RequestManager::RequestJoinRoom(const std::string& roomid)
 {
 	json js;
 	js["command"] = LobbySubService_RequestJoinRoom;
 	js["roomid"] = roomid;
 
 	json js_resp;
-	if (!ConnectManager::Instance()->SocialRequest(js, js_resp).sync_wait())
-		return false;
+	if (!co_await ConnectManager::Instance()->SocialRequest(js, js_resp))
+		co_return false;
 
 	if (!js_resp.contains("result") || !js_resp["result"].is_number_integer())
-		return false;
+		co_return false;
 
 	int result = js_resp["result"];
 	if (result < 0)
 	{
 		std::string reason = js_resp.value("reason", "");
 		std::cout << "LobbySubService_RequestJoinRoom Request fail! reason:" << reason << '\n';
-		return false;
+		co_return false;
 	}
 
-	return true;
+	co_return true;
 }
 
-bool RequestManager::RequestLeaveRoom()
+Task<bool> RequestManager::RequestLeaveRoom()
 {
 	json js;
 	js["command"] = LobbySubService_RequestLeaveRoom;
 
 	json js_resp;
-	if (!ConnectManager::Instance()->SocialRequest(js, js_resp).sync_wait())
-		return false;
+	if (!co_await ConnectManager::Instance()->SocialRequest(js, js_resp))
+		co_return false;
 
 	if (!js_resp.contains("result") || !js_resp["result"].is_number_integer())
-		return false;
+		co_return false;
 
 	int result = js_resp["result"];
 	if (result < 0)
 	{
 		std::string reason = js_resp.value("reason", "");
 		std::cout << "LobbySubService_RequestLeaveRoom Request fail! reason:" << reason << '\n';
-		return false;
+		co_return false;
 	}
 
-	return true;
+	co_return true;
 }
 
-bool RequestManager::RequestChangeReadyStatus(bool isready)
+Task<bool> RequestManager::RequestChangeReadyStatus(bool isready)
 {
 	json js;
 	js["command"] = LobbySubService_RequestChangeReadyStatus;
 	js["status"] = isready ? 1 : -1;
 
 	json js_resp;
-	if (!ConnectManager::Instance()->SocialRequest(js, js_resp).sync_wait())
-		return false;
+	if (!co_await ConnectManager::Instance()->SocialRequest(js, js_resp))
+		co_return false;
 
 	if (!js_resp.contains("result") || !js_resp["result"].is_number_integer())
-		return false;
+		co_return false;
 
 	int result = js_resp["result"];
 	if (result < 0)
 	{
 		std::string reason = js_resp.value("reason", "");
 		std::cout << "LobbySubService_RequestJoinRoom Request fail! reason:" << reason << '\n';
-		return false;
+		co_return false;
 	}
 
-	return true;
+	co_return true;
 }
 
-bool RequestManager::RequestStartGame(json& response)
+Task<bool> RequestManager::RequestStartGame(json& response)
 {
 	json js;
 	js["command"] = LobbySubService_RequestStartGame;
 
 	json js_resp;
-	if (!ConnectManager::Instance()->SocialRequest(js, js_resp).sync_wait())
-		return false;
+	if (!co_await ConnectManager::Instance()->SocialRequest(js, js_resp))
+		co_return false;
 
 	if (!js_resp.contains("result") || !js_resp["result"].is_number_integer())
-		return false;
+		co_return false;
 
 	int result = js_resp["result"];
 	if (result < 0)
 	{
 		std::string reason = js_resp.value("reason", "");
 		std::cout << "LobbySubService_RequestStartGame Request fail! reason:" << reason << '\n';
-		return false;
+		co_return false;
 	}
 
 	response = js_resp;
-	return true;
+	co_return true;
 }
 
-bool RequestManager::RequestLeaveGame()
+Task<bool> RequestManager::RequestLeaveGame()
 {
 	json js;
 	js["command"] = GameServiceCommand::GameService_LeaveGame;
 
 	json js_resp;
-	if (!ConnectManager::Instance()->GameRequest(js, js_resp).sync_wait())
-		return false;
+	if (!co_await ConnectManager::Instance()->GameRequest(js, js_resp))
+		co_return false;
 
 	if (!js_resp.contains("result") || !js_resp["result"].is_number_integer())
-		return false;
+		co_return false;
 
 	int result = js_resp["result"];
 	if (result < 0)
 	{
 		std::string reason = js_resp.value("reason", "");
 		std::cout << "GameService_LeaveGame Request fail! reason:" << reason << '\n';
-		return false;
+		co_return false;
 	}
 
-	return true;
+	co_return true;
 }
 

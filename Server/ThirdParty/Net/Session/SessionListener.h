@@ -34,6 +34,6 @@ private:
 	SessionType _sessiontype;
 	TcpEndPointListener BaseListener;
 	std::function<Task<void>(BaseNetWorkSession*)> _callBackSessionEstablish;
-	SafeArray<std::shared_ptr<SessionData>> waitSessions; // 等待校验协议的客户端
+	SafeArray<std::shared_ptr<SessionData>, CoroCriticalSectionLock> waitSessions; // 等待校验协议的客户端
 	std::shared_ptr<TimerTask> CleanExpiredTask;
 };

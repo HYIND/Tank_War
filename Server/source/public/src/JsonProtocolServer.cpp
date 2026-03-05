@@ -154,19 +154,21 @@ bool JsonProtocolServer::ReleaseSession(const JsonProtocolSessionID &sessionId)
 {
     ConID conId;
     {
-        auto guard1 = _SessionIdToSessionHandle.MakeLockGuard();
-        auto guard2 = _ConIdToSessionId.MakeLockGuard();
-
         std::shared_ptr<JsonProtocolServer::SessionHandle> temp;
-        if (!_SessionIdToSessionHandle.FindByLeft(sessionId, temp) || !temp)
-            return false;
+        {
+            auto guard1 = _SessionIdToSessionHandle.MakeLockGuard();
+            if (!_SessionIdToSessionHandle.FindByLeft(sessionId, temp) || !temp)
+                return false;
+            _SessionIdToSessionHandle.EraseByLeft(sessionId);
+        }
 
-        _SessionIdToSessionHandle.EraseByLeft(sessionId);
-
-        if (!_ConIdToSessionId.FindByRight(sessionId, conId) || conId.empty())
-            return false;
+        auto guard2 = _ConIdToSessionId.MakeLockGuard();
+        {
+            if (!_ConIdToSessionId.FindByRight(sessionId, conId) || conId.empty())
+                return false;
+            _ConIdToSessionId.EraseByRight(conId);
+        }
     }
-
     return _sessionmanager.ReleaseSession(conId);
 }
 
@@ -178,102 +180,7 @@ bool JsonProtocolServer::ReleaseSession(const JsonProtocolSession &session)
     return ReleaseSession(session.getsessionId());
 }
 
-Task<void> JsonProtocolServer::RecvMessage(ConID conId, Buffer *recv)
-{
-    if (_waitConId.Exist(conId))
-    {
-        json js_src;
-        if (!ParseJson(*recv, js_src))
-            co_return;
-        json js_dest;
-
-        if (!js_src.contains("command") || !js_src["command"].is_number_integer())
-        {
-            js_dest["result"] = -1;
-            js_dest["reason"] = "命令号缺失！";
-            _sessionmanager.AsyncSend(conId, Buffer(js_dest.dump()));
-            co_return;
-        }
-        int command = js_src.at("command");
-        if (command == 999888)
-        {
-            JsonProtocolSessionID sessionId;
-            {
-                auto guard1 = _SessionIdToSessionHandle.MakeLockGuard();
-                auto guard2 = _ConIdToSessionId.MakeLockGuard();
-                bool needcreate = false;
-                if (js_src.contains("sessionid") && js_src["sessionid"].is_string())
-                {
-                    sessionId = js_src.value("sessionid", "");
-                    std::shared_ptr<SessionHandle> handle;
-                    if (_SessionIdToSessionHandle.FindByLeft(sessionId, handle) && handle)
-                    {
-                        handle->connectionId = conId;
-                        handle->lastActiveTimeSecond = Tool::GetTimestampSecond();
-
-                        _ConIdToSessionId.InsertOrUpdate(conId, sessionId);
-                        _waitConId.Erase(conId);
-                    }
-                    else
-                        needcreate = true;
-                }
-                else
-                    needcreate = true;
-
-                if (needcreate)
-                {
-                    sessionId = Tool::GenerateSimpleUuid();
-                    auto handle = std::make_shared<SessionHandle>();
-                    handle->connectionId = conId;
-                    handle->sessionEstablishTimeSecond = Tool::GetTimestampSecond();
-                    handle->lastActiveTimeSecond = Tool::GetTimestampSecond();
-                    _SessionIdToSessionHandle.InsertOrUpdate(sessionId, handle);
-                    _ConIdToSessionId.InsertOrUpdate(conId, sessionId);
-                    _waitConId.Erase(conId);
-                }
-                js_dest["result"] = 1;
-                js_dest["sessionid"] = sessionId;
-                _sessionmanager.AsyncSend(conId, Buffer(js_dest.dump()));
-            }
-            JsonProtocolSession newsession(sessionId, this);
-            if (newsession)
-            {
-                auto callback = _CallBackSessionEstablish;
-                if (callback)
-                    co_await callback(newsession);
-            }
-            co_return;
-        }
-        else
-        {
-            js_dest["result"] = -1;
-            js_dest["reason"] = "无效命令号！";
-            _sessionmanager.AsyncSend(conId, Buffer(js_dest.dump()));
-            co_return;
-        }
-    }
-    else
-    {
-        json js_src;
-        if (!ParseJson(*recv, js_src))
-            co_return;
-
-        JsonProtocolSessionID sessionId;
-        if (!_ConIdToSessionId.FindByLeft(conId, sessionId) || sessionId.empty())
-            co_return;
-
-        std::shared_ptr<SessionHandle> handle;
-        if (!_SessionIdToSessionHandle.FindByLeft(sessionId, handle) || !handle)
-            co_return;
-
-        handle->lastActiveTimeSecond = Tool::GetTimestampSecond();
-        auto callback = handle->c_message;
-        if (callback)
-            co_await callback(JsonProtocolSession(sessionId, this), js_src);
-    }
-}
-
-Task<void> JsonProtocolServer::RequestMessage(ConID conId, Buffer *recv, Buffer *resp)
+Task<void> JsonProtocolServer::RecvMessage(ConID conId, Buffer* recv)
 {
     json js_src;
     if (!ParseJson(*recv, js_src))
@@ -282,116 +189,83 @@ Task<void> JsonProtocolServer::RequestMessage(ConID conId, Buffer *recv, Buffer 
     if (_waitConId.Exist(conId))
     {
         json js_dest;
-
-        if (!js_src.contains("command") || !js_src["command"].is_number_integer())
-        {
-            js_dest["result"] = -1;
-            js_dest["reason"] = "命令号缺失！";
-            resp->QuoteFromBuf(Buffer(js_dest.dump()));
-            co_return;
-        }
-        int command = js_src.at("command");
-        if (command == 999888)
-        {
-            JsonProtocolSessionID sessionId;
-            {
-                auto guard1 = _SessionIdToSessionHandle.MakeLockGuard();
-                auto guard2 = _ConIdToSessionId.MakeLockGuard();
-                bool needcreate = false;
-                if (js_src.contains("sessionid") && js_src["sessionid"].is_string())
-                {
-                    sessionId = js_src.value("sessionid", "");
-                    std::shared_ptr<SessionHandle> handle;
-                    if (_SessionIdToSessionHandle.FindByLeft(sessionId, handle) && handle)
-                    {
-                        handle->connectionId = conId;
-                        handle->lastActiveTimeSecond = Tool::GetTimestampSecond();
-
-                        _ConIdToSessionId.InsertOrUpdate(conId, sessionId);
-                        _waitConId.Erase(conId);
-                    }
-                    else
-                        needcreate = true;
-                }
-                else
-                    needcreate = true;
-
-                if (needcreate)
-                {
-                    sessionId = Tool::GenerateSimpleUuid();
-                    auto handle = std::make_shared<SessionHandle>();
-                    handle->connectionId = conId;
-                    handle->sessionEstablishTimeSecond = Tool::GetTimestampSecond();
-                    handle->lastActiveTimeSecond = Tool::GetTimestampSecond();
-                    _SessionIdToSessionHandle.InsertOrUpdate(sessionId, handle);
-                    _ConIdToSessionId.InsertOrUpdate(conId, sessionId);
-                    _waitConId.Erase(conId);
-                }
-                js_dest["result"] = 1;
-                js_dest["sessionid"] = sessionId;
-                resp->QuoteFromBuf(Buffer(js_dest.dump()));
-            }
-
-            JsonProtocolSession newsession(sessionId, this);
-            if (newsession)
-            {
-                auto callback = _CallBackSessionEstablish;
-                if (callback)
-                    co_await callback(newsession);
-            }
-
-            co_return;
-        }
-        else
-        {
-            js_dest["result"] = -1;
-            js_dest["reason"] = "无效命令号！";
-            resp->QuoteFromBuf(Buffer(js_dest.dump()));
-            co_return;
-        }
+        co_await ProcessWaitCon(js_src, conId, js_dest);
+        if (!js_dest.is_null())
+            _sessionmanager.AsyncSend(conId, Buffer(js_dest.dump()));
+        co_return;
     }
-    else
+
+
+    JsonProtocolSessionID sessionId;
+    if (!_ConIdToSessionId.FindByLeft(conId, sessionId) || sessionId.empty())
+        co_return;
+
+    std::shared_ptr<SessionHandle> handle;
+    if (!_SessionIdToSessionHandle.FindByLeft(sessionId, handle) || !handle)
+        co_return;
+
+    handle->lastActiveTimeSecond = Tool::GetTimestampSecond();
+    auto callback = handle->c_message;
+    if (callback)
+        co_await callback(JsonProtocolSession(sessionId, this), js_src);
+}
+
+Task<void> JsonProtocolServer::RequestMessage(ConID conId, Buffer* recv, Buffer* resp)
+{
+    json js_src;
+    if (!ParseJson(*recv, js_src))
+        co_return;
+
+    if (_waitConId.Exist(conId))
     {
+        json js_dest;
+        co_await ProcessWaitCon(js_src, conId, js_dest);
+        if (!js_dest.is_null())
+            resp->QuoteFromBuf(Buffer(js_dest.dump()));
+        co_return;
+    }
 
-        JsonProtocolSessionID sessionId;
-        if (!_ConIdToSessionId.FindByLeft(conId, sessionId) || sessionId.empty())
-            co_return;
 
-        std::shared_ptr<SessionHandle> handle;
-        if (!_SessionIdToSessionHandle.FindByLeft(sessionId, handle)|| !handle)
-            co_return;
+    JsonProtocolSessionID sessionId;
+    if (!_ConIdToSessionId.FindByLeft(conId, sessionId) || sessionId.empty())
+        co_return;
 
-        handle->lastActiveTimeSecond = Tool::GetTimestampSecond();
-        auto callback = handle->c_request;
-        if (callback)
-        {
-            json js_resp;
-            co_await callback(JsonProtocolSession(sessionId, this), js_src, js_resp);
-            resp->QuoteFromBuf(Buffer(js_resp.dump()));
-        }
+    std::shared_ptr<SessionHandle> handle;
+    if (!_SessionIdToSessionHandle.FindByLeft(sessionId, handle) || !handle)
+        co_return;
+
+    handle->lastActiveTimeSecond = Tool::GetTimestampSecond();
+    auto callback = handle->c_request;
+    if (callback)
+    {
+        json js_resp;
+        co_await callback(JsonProtocolSession(sessionId, this), js_src, js_resp);
+        resp->QuoteFromBuf(Buffer(js_resp.dump()));
     }
 }
 
 Task<void> JsonProtocolServer::CloseConnect(ConID conId)
 {
-    if (_waitConId.Exist(conId))
     {
-        _waitConId.Erase(conId);
-    }
-    else
-    {
-
-        JsonProtocolSessionID sessionId;
-        if (!_ConIdToSessionId.FindByLeft(conId, sessionId) || sessionId.empty())
-            co_return;
-
-        std::shared_ptr<SessionHandle> handle;
-        if (_SessionIdToSessionHandle.FindByLeft(sessionId, handle) && handle)
+        _waitConId.MakeLockGuard();
+        if (_waitConId.Exist(conId))
         {
-            auto callback = handle->c_closeconnect;
-            if (callback)
-                co_await callback(JsonProtocolSession(sessionId, this));
+            _waitConId.Erase(conId);
+            co_return;
         }
+    }
+
+
+    JsonProtocolSessionID sessionId;
+    if (!_ConIdToSessionId.FindByLeft(conId, sessionId) || sessionId.empty())
+        co_return;
+
+    std::shared_ptr<SessionHandle> handle;
+    if (_SessionIdToSessionHandle.FindByLeft(sessionId, handle) && handle)
+    {
+        auto callback = handle->c_closeconnect;
+        if (callback)
+            co_await callback(JsonProtocolSession(sessionId, this));
     }
 }
 
@@ -419,4 +293,75 @@ bool JsonProtocolServer::ParseJson(Buffer &buf, json &js)
 bool JsonProtocolServer::IsValidSession(const JsonProtocolSession &session)
 {
     return !session.getsessionId().empty() && session.getOwner() == this;
+}
+
+Task<bool> JsonProtocolServer::ProcessWaitCon(json& js_src, ConID conId, json& js_dest)
+{
+    JsonProtocolSessionID sessionId;
+
+    {
+        _waitConId.MakeLockGuard();
+        if (!_waitConId.Exist(conId))
+            co_return false;
+
+        if (!js_src.contains("command") || !js_src["command"].is_number_integer())
+        {
+            js_dest["result"] = -1;
+            js_dest["reason"] = "命令号缺失！";
+            co_return false;
+        }
+        int command = js_src.at("command");
+        if (command != 999888)
+        {
+            js_dest["result"] = -1;
+            js_dest["reason"] = "无效命令号！";
+            co_return false;
+        }
+
+        {
+            auto guard1 = _SessionIdToSessionHandle.MakeLockGuard();
+            auto guard2 = _ConIdToSessionId.MakeLockGuard();
+            bool needcreate = false;
+            if (js_src.contains("sessionid") && js_src["sessionid"].is_string())
+            {
+                sessionId = js_src.value("sessionid", "");
+                std::shared_ptr<SessionHandle> handle;
+                if (_SessionIdToSessionHandle.FindByLeft(sessionId, handle) && handle)
+                {
+                    handle->connectionId = conId;
+                    handle->lastActiveTimeSecond = Tool::GetTimestampSecond();
+
+                    _ConIdToSessionId.InsertOrUpdate(conId, sessionId);
+                    _waitConId.Erase(conId);
+                }
+                else
+                    needcreate = true;
+            }
+            else
+                needcreate = true;
+
+            if (needcreate)
+            {
+                sessionId = Tool::GenerateSimpleUuid();
+                auto handle = std::make_shared<SessionHandle>();
+                handle->connectionId = conId;
+                handle->sessionEstablishTimeSecond = Tool::GetTimestampSecond();
+                handle->lastActiveTimeSecond = Tool::GetTimestampSecond();
+                _SessionIdToSessionHandle.InsertOrUpdate(sessionId, handle);
+                _ConIdToSessionId.InsertOrUpdate(conId, sessionId);
+                _waitConId.Erase(conId);
+            }
+            js_dest["result"] = 1;
+            js_dest["sessionid"] = sessionId;
+        }
+    }
+
+    JsonProtocolSession newsession(sessionId, this);
+    if (newsession)
+    {
+        auto callback = _CallBackSessionEstablish;
+        if (callback)
+            co_await callback(newsession);
+    }
+    co_return true;
 }

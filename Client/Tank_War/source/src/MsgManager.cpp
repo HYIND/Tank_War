@@ -52,7 +52,7 @@ Task<void> MsgManager::ProcessMsg(const json& js)
 		break;
 
 	case LobbySubService_RequestStartGameRes:
-		LOBBYMANAGER->ProcessStartGameRes(js);
+		co_await LOBBYMANAGER->ProcessStartGameRes(js);
 		break;
 
 	case GameService_BroadCastGameState:

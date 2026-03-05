@@ -18,8 +18,10 @@ BaseSessionManager::~BaseSessionManager()
         for (auto session : sessions)
         {
             session->Release();
-            CloseConnect(session);
+            ConIdToBaseNetWork.EraseByRight(session);
+            DeleteLater(session);
         }
+        listener.reset();
     }
     catch (const std::exception &e)
     {
@@ -66,25 +68,20 @@ bool BaseSessionManager::AsyncSend(const ConID& conid, const Buffer& buf)
 bool BaseSessionManager::ReleaseSession(const ConID &conid)
 {
     BaseNetWorkSession *session;
-    if (!ConIdToBaseNetWork.FindByLeft(conid, session) || !session)
-        return false;
-
     {
         auto guard = ConIdToBaseNetWork.MakeLockGuard();
+        if (!ConIdToBaseNetWork.FindByLeft(conid, session) || !session)
+            return false;
         ConIdToBaseNetWork.EraseByLeft(conid);
     }
-
-    session->Release();
-
     DeleteLater(session);
-
     return true;
 }
 
 Task<void> BaseSessionManager::SessionEstablish(BaseNetWorkSession *session)
 {
-    session->BindRecvDataCallBack(std::bind(&BaseSessionManager::RecvMessage, this, std::placeholders::_1, std::placeholders::_2));
-    session->BindSessionCloseCallBack(std::bind(&BaseSessionManager::CloseConnect, this, std::placeholders::_1));
+    co_await session->BindSessionCloseCallBack(std::bind(&BaseSessionManager::CloseConnect, this, std::placeholders::_1));
+    co_await session->BindRecvDataCallBack(std::bind(&BaseSessionManager::RecvMessage, this, std::placeholders::_1, std::placeholders::_2));
 
     ConID ConId = Tool::GenerateSimpleUuid();
     ConIdToBaseNetWork.InsertOrUpdate(ConId, session);
@@ -108,17 +105,14 @@ Task<void> BaseSessionManager::RecvMessage(BaseNetWorkSession *session, Buffer *
 Task<void> BaseSessionManager::CloseConnect(BaseNetWorkSession *session)
 {
     ConID conid;
-    if (!ConIdToBaseNetWork.FindByRight(session, conid) || conid.empty())
-        co_return;
-
     {
         auto guard = ConIdToBaseNetWork.MakeLockGuard();
+        if (!ConIdToBaseNetWork.FindByRight(session, conid) || conid.empty())
+            co_return;
         ConIdToBaseNetWork.EraseByLeft(conid);
     }
-
     auto callback = _CallBackCloseConnect;
     if (callback)
         co_await callback(conid);
-
     DeleteLater(session);
 }

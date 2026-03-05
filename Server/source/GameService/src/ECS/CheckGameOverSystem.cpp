@@ -28,7 +28,7 @@ void CheckGameOverSystem::preUpdate(float deltaTime)
 	if (_gameTimeLimit <= 0)
 	{
 		if (m_instance)
-			m_instance->GameOver();
+			m_instance->GameOver().sync_wait();
 	}
 }
 
@@ -86,7 +86,7 @@ void CheckGameOverSystem::handleProcessKillEvent(const TankDestroyedEvent &event
 		{
 			if (entities.empty())
 			{
-				m_instance->GameOver();
+				m_instance->GameOver().sync_wait();
 				return;
 			}
 		}
@@ -102,7 +102,7 @@ void CheckGameOverSystem::handleProcessKillEvent(const TankDestroyedEvent &event
 				}
 				else
 				{
-					m_instance->GameOver();
+					m_instance->GameOver().sync_wait();
 				}
 			}
 		}

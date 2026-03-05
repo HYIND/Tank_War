@@ -26,11 +26,11 @@ public:
 
 private:
     void SendAllServiceInfo();
-    void SendServiceInfo(ServiceSourceHandle &handle);
+    bool SendServiceInfo(ServiceSourceHandle &handle);
 
 private:
     uint32_t _send_interval_mssecond;
-    SafeMap<BaseService *, std::shared_ptr<ServiceSourceHandle>> _sources;
+    SafeMap<BaseService *, std::shared_ptr<ServiceSourceHandle>, CoroCriticalSectionLock> _sources;
 
     JsonProtocolClient _client;
     std::shared_ptr<TimerTask> _timer;

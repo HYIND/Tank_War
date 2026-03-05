@@ -44,10 +44,10 @@ private:
 
     JsonProtocolClient _gameStateServiceClient;
     std::atomic<bool> isGameStateServiceConnected;
-    CriticalSectionLock _sessionStatusChangeLock;
+    CoroCriticalSectionLock _sessionStatusChangeLock;
 
     ServiceDiscoveryClient _serviceDiscoverClient;
 
-    SafeMap<std::string, LocalServiceHandle> _localService;
+    SafeMap<std::string, LocalServiceHandle, CoroCriticalSectionLock> _localService;
     bool _skipLocalService  = false;
 };

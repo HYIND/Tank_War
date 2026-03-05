@@ -6,6 +6,8 @@
 #pragma once
 
 #include "BaseTransportConnection.h"
+#include "SafeStl.h"
+#include "SpinLock.h"
 
  // TCP传输层客户端(连接对象)
 class NET_API TCPTransportConnection : public BaseTransportConnection
@@ -20,12 +22,12 @@ public:
 	bool Release();
 	bool Send(const Buffer& buffer);
 
-	void BindBufferCallBack(std::function<Task<void>(TCPTransportConnection*, Buffer*)> callback);
-	void BindRDHUPCallBack(std::function<Task<void>(TCPTransportConnection*)> callback);
+	Task<void> BindBufferCallBack(std::function<Task<void>(TCPTransportConnection*, Buffer*)> callback);
+	Task<void> BindRDHUPCallBack(std::function<Task<void>(TCPTransportConnection*)> callback);
 
-	SafeQueue<Buffer*>& GetRecvData();
-	SafeQueue<Buffer*>& GetSendData();
-	CriticalSectionLock& GetSendMtx();
+	SafeQueue<Buffer*, CoroCriticalSectionLock>& GetRecvData();
+	SafeQueue<Buffer*, CoroCriticalSectionLock>& GetSendData();
+	CoroCriticalSectionLock& GetSendMtx();
 
 protected:
 #ifdef __linux__
@@ -37,20 +39,20 @@ protected:
 	virtual Task<void> OnRDHUP();
 
 protected:
-	virtual void OnBindBufferCallBack();
-	virtual void OnBindRDHUPCallBack();
+	virtual Task<void> OnBindBufferCallBack();
+	virtual Task<void> OnBindRDHUPCallBack();
 
 private:
 	Task<void> ProcessRecvQueue();
 
 private:
-	SafeQueue<Buffer*> _RecvDatas;
-	SafeQueue<Buffer*> _SendDatas;
+	SafeQueue<Buffer*, CoroCriticalSectionLock> _RecvDatas;
+	SafeQueue<Buffer*, CoroCriticalSectionLock> _SendDatas;
 
 private:
 	std::function<Task<void>(TCPTransportConnection*, Buffer*)> _callbackBuffer;
 	std::function<Task<void>(TCPTransportConnection*)> _callbackRDHUP;
-	CriticalSectionLock _SendResMtx;
+	CoroCriticalSectionLock _SendResMtx;
 	SpinLock _ProcessLock;
 };
 

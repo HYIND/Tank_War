@@ -45,8 +45,8 @@ public:
 protected:
 	virtual Task<void> OnSessionClose();
 	virtual Task<void> OnRecvData(Buffer* buffer);
-	virtual void OnBindRecvDataCallBack();
-	virtual void OnBindSessionCloseCallBack();
+	virtual Task<void> OnBindRecvDataCallBack();
+	virtual Task<void> OnBindSessionCloseCallBack();
 
 private:
 	bool Send(const Buffer& buffer, int ack = -1);
@@ -54,7 +54,7 @@ private:
 	SpinLock _ProcessLock;
 
 private:
-	SafeQueue<CustomWebSocketSessionPakage*> _RecvPaks;
+	SafeQueue<CustomWebSocketSessionPakage*, CoroCriticalSectionLock> _RecvPaks;
 
 	std::atomic<int> seq;
 	SafeMap<int, AwaitTask*> _AwaitMap; // seq->AwaitTask

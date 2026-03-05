@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "CriticalSectionLock.h"
+#include "Coroutine.h"
 
 template<typename DataType>
 class TripleBuffer
@@ -114,7 +114,7 @@ private:
 	int _readIndex = 2;     // 可读
 
 	// 同步
-	CriticalSectionLock _mutex;
+	CoroCriticalSectionLock _mutex;
 	std::atomic<bool> _dataReady = false;
 
 	// 统计

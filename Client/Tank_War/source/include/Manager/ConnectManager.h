@@ -27,7 +27,7 @@ public:
 	Task<void> Logout();
 
 	Task<bool> LoginGameSeervice(NetworkEndpoint endpoint);
-	Task<bool> LogoutGameSeervice();
+	bool LogoutGameSeervice();
 
 	bool SocialSend(json& js);
 	Task<bool> SocialRequest(json& js_req, json& js_resp);

@@ -20,15 +20,15 @@ public:
 	void ProcessPrivateMsg(const json& js);
 	void ProcessSendMsgReceipt(const json& js);
 	void ProcessRoomInfo(const json& js);
-	void ProcessStartGameRes(const json& js);
+	Task<void> ProcessStartGameRes(const json& js);
 
 public:
 	std::shared_ptr<Room> GetSelectRoom();
-	bool TryJoinRoom(std::shared_ptr<Room> room);
-	bool TryCreateRoom();
-	bool TryLeaveRoom();
-	bool TryChangeReadyStatus(bool isready);
-	bool TryStartGame();
+	Task<bool> TryJoinRoom(std::shared_ptr<Room> room);
+	Task<bool> TryCreateRoom();
+	Task<bool> TryLeaveRoom();
+	Task<bool> TryChangeReadyStatus(bool isready);
+	Task<bool> TryStartGame();
 
 	void SetIsHost(bool value) { ishost = value; }
 	bool IsHost() { return ishost; }
@@ -38,7 +38,7 @@ private:
 
 private:
 	std::vector<Room*> _currooms;
-	CriticalSectionLock _curroomsmutex;
+	CoroCriticalSectionLock _curroomsmutex;
 
 	bool ishost;
 	std::shared_ptr<Room> _curroominfo;

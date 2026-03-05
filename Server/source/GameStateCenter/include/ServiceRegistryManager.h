@@ -22,7 +22,7 @@ struct ServiceState
 // 服务注册
 class ServiceRegistryManager
 {
-    using ServiceStateMap = SafeMap<std::string, std::shared_ptr<ServiceState>>; // name->ServiceState
+    using ServiceStateMap = SafeMap<std::string, std::shared_ptr<ServiceState>, CoroCriticalSectionLock>; // name->ServiceState
 
 public:
     ServiceRegistryManager();
@@ -35,5 +35,5 @@ public:
     std::vector<ServiceInfo> QueryServiceInfoByServiceIds(const std::vector<std::string> &serviceid_list);
 
 private:
-    SafeMap<ServiceType, ServiceStateMap> _service_map;
+    SafeMap<ServiceType, ServiceStateMap, CoroCriticalSectionLock> _service_map;
 };

@@ -356,6 +356,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 	{
 		int wmId = LOWORD(wParam);
+		int wmEvent = HIWORD(wParam);
 		switch (Get_CurScene())
 		{
 		case STATUS::Main:
@@ -492,9 +493,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					BusyLoaderDialog dialog;
 					if (dialog.Create(_hwnd, hInst))
 					{
-						auto task = CoroTask::Run([selectRoom]()->bool {
-							return LOBBYMANAGER->TryJoinRoom(selectRoom);
-							});
+						auto task = LOBBYMANAGER->TryJoinRoom(selectRoom);
 
 						dialog.Show(std::move(task), nullptr, "加入房间中......");
 
@@ -517,10 +516,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				BusyLoaderDialog dialog;
 				if (dialog.Create(_hwnd, hInst))
 				{
-					auto task = CoroTask::Run([]()->bool {
-						ConnectManager::Instance()->Logout().sync_wait();
-						return true;
-						});
+					auto task = []()->Task<bool> {
+						co_await ConnectManager::Instance()->Logout();
+						co_return true;
+						}();
 
 					dialog.Show(std::move(task), nullptr, "离开大厅......");
 
@@ -549,9 +548,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				BusyLoaderDialog dialog;
 				if (dialog.Create(_hwnd, hInst))
 				{
-					auto task = CoroTask::Run([]()->bool {
-						return LOBBYMANAGER->TryCreateRoom();
-						});
+					auto task = LOBBYMANAGER->TryCreateRoom();
 
 					dialog.Show(std::move(task), nullptr, "创建房间......");
 
@@ -571,6 +568,33 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				}
 				break;
 			}
+			case HALL_ROOM_LIST:
+			{
+				if (wmEvent == LBN_DBLCLK)
+				{
+					if (auto selectRoom = LOBBYMANAGER->GetSelectRoom())
+					{
+						BusyLoaderDialog dialog;
+						if (dialog.Create(_hwnd, hInst))
+						{
+							auto task = LOBBYMANAGER->TryJoinRoom(selectRoom);
+
+							dialog.Show(std::move(task), nullptr, "加入房间中......");
+
+							auto result = dialog.WaitResultAndClose();
+							if (result == DialogResult::SUCCESSED)
+							{
+								SendMessage(_hwnd, WM_COMMAND, Enterroom, (LPARAM)_hwnd);
+							}
+							else if (result == DialogResult::FAILED)
+							{
+								MessageBox(_hwnd, L"状态异常！", NULL, MB_OK);
+							}
+						}
+					}
+				}
+				break;
+			}
 			}
 			break;
 		}
@@ -586,9 +610,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				BusyLoaderDialog dialog;
 				if (dialog.Create(_hwnd, hInst))
 				{
-					auto task = CoroTask::Run([]()->bool {
-						return LOBBYMANAGER->TryStartGame();
-						});
+					auto task = LOBBYMANAGER->TryStartGame();
 
 					dialog.Show(std::move(task), nullptr, "开始游戏......");
 
@@ -608,9 +630,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				BusyLoaderDialog dialog;
 				if (dialog.Create(_hwnd, hInst))
 				{
-					auto task = CoroTask::Run([]()->bool {
-						return LOBBYMANAGER->TryChangeReadyStatus(true);
-						});
+					auto task = LOBBYMANAGER->TryChangeReadyStatus(true);
 
 					dialog.Show(std::move(task), nullptr, "取消准备......");
 
@@ -633,9 +653,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				BusyLoaderDialog dialog;
 				if (dialog.Create(_hwnd, hInst))
 				{
-					auto task = CoroTask::Run([]()->bool {
-						return LOBBYMANAGER->TryChangeReadyStatus(false);
-						});
+					auto task = LOBBYMANAGER->TryChangeReadyStatus(false);
 
 					dialog.Show(std::move(task), nullptr, "取消准备......");
 
@@ -667,9 +685,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				BusyLoaderDialog dialog;
 				if (dialog.Create(_hwnd, hInst))
 				{
-					auto task = CoroTask::Run([]()->bool {
-						return LOBBYMANAGER->TryLeaveRoom();
-						});
+					auto task = LOBBYMANAGER->TryLeaveRoom();
 
 					dialog.Show(std::move(task), nullptr, "取消准备......");
 
@@ -757,7 +773,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				case 10:	//回到游戏
 					break;
 				case 20:	//退出游戏
-					if (REQUESTMANAGER->RequestLeaveGame())
+					if (REQUESTMANAGER->RequestLeaveGame().sync_wait())
 					{
 						GameWorldManager::Instance()->StopWorld();
 						Set_CurScene(STATUS::Hall_Status);
@@ -773,13 +789,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			case WIN:
 			{
-				CONNECTMANAGER->LogoutGameSeervice().sync_wait();
+				CONNECTMANAGER->LogoutGameSeervice();
 				_Scene::CurScene = _Scene::SWinGame;
 				break;
 			}
 			case FAIL:
 			{
-				CONNECTMANAGER->LogoutGameSeervice().sync_wait();
+				CONNECTMANAGER->LogoutGameSeervice();
 				_Scene::CurScene = _Scene::SFailGame;
 				break;
 			}

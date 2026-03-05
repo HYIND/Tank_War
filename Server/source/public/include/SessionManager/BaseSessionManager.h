@@ -36,7 +36,7 @@ protected:
     std::unique_ptr<NetWorkSessionListener> listener;
     SessionType type;
 
-    SafeBiDirectionalMap<ConID, BaseNetWorkSession *> ConIdToBaseNetWork;
+    SafeBiDirectionalMap<ConID, BaseNetWorkSession *, CoroCriticalSectionLock> ConIdToBaseNetWork;
 
     CallBackSessionEstablish _CallBackSessionEstablish;
     CallBackRecvMessage _CallBackRecvMessage;

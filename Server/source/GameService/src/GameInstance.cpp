@@ -291,7 +291,7 @@ json GameInstance::GetPlayerView(const PlayerID& playerId) const
 	return json();
 }
 
-void GameInstance::GameOver()
+Task<void> GameInstance::GameOver()
 {
 	_state = State::ENDED;
 	_stop = true;
@@ -304,10 +304,10 @@ void GameInstance::GameOver()
 	if (_sender)
 		_sender->Broadcast(js_GameOver);
 	if (_service)
-		_service->GameOver(_gameId).sync_wait();
+		co_await _service->GameOver(_gameId);
 }
 
-void GameInstance::GameOverWithWinner(const PlayerID& winner)
+Task<void> GameInstance::GameOverWithWinner(const PlayerID& winner)
 {
 	_state = State::ENDED;
 	_stop = true;
@@ -320,7 +320,7 @@ void GameInstance::GameOverWithWinner(const PlayerID& winner)
 	if (_sender)
 		_sender->Broadcast(js_GameOver);
 	if (_service)
-		_service->GameOver(_gameId).sync_wait();
+		co_await _service->GameOver(_gameId);
 }
 
 void GameInstance::PlayerEliminated(const PlayerID& playerId, const PlayerID& killer)

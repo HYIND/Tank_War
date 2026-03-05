@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include "Net/Helper/Buffer.h"
+#include "Coroutine.h"
 
 class RequestManager
 {
@@ -16,13 +17,13 @@ public:
 	void RequestLobbyRoomData();
 
 	void RequestRoomInfo();
-	bool RequestCreateRoom();
-	bool RequestJoinRoom(const std::string& roomid);
-	bool RequestLeaveRoom();
-	bool RequestChangeReadyStatus(bool isready);
-	bool RequestStartGame(json& response);
 
-	bool RequestLeaveGame();
+	Task<bool> RequestCreateRoom();
+	Task<bool> RequestJoinRoom(const std::string& roomid);
+	Task<bool> RequestLeaveRoom();
+	Task<bool> RequestChangeReadyStatus(bool isready);
+	Task<bool> RequestStartGame(json& response);
+	Task<bool> RequestLeaveGame();
 
 private:
 	RequestManager();

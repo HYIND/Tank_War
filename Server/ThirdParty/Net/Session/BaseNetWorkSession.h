@@ -23,8 +23,8 @@ public: // 供Listener/EndPoint调用,须继承实现
 	virtual CheckHandshakeStatus CheckHandshakeConfirmMsg(Buffer& buffer) = 0;
 
 public: // 供外部调用
-	void BindRecvDataCallBack(std::function<Task<void>(BaseNetWorkSession*, Buffer* recv)> callback);
-	void BindSessionCloseCallBack(std::function<Task<void>(BaseNetWorkSession*)> callback);
+	Task<void> BindRecvDataCallBack(std::function<Task<void>(BaseNetWorkSession*, Buffer* recv)> callback);
+	Task<void> BindSessionCloseCallBack(std::function<Task<void>(BaseNetWorkSession*)> callback);
 	char* GetIPAddr();
 	uint16_t GetPort();
 
@@ -39,8 +39,8 @@ public: // 供Listener/EndPoint调用
 protected: // 须继承实现
 	virtual Task<void> OnSessionClose() = 0;
 	virtual Task<void> OnRecvData(Buffer* buffer) = 0;
-	virtual void OnBindRecvDataCallBack() = 0;
-	virtual void OnBindSessionCloseCallBack() = 0;
+	virtual Task<void> OnBindRecvDataCallBack() = 0;
+	virtual Task<void> OnBindSessionCloseCallBack() = 0;
 
 protected:
 	TCPEndPoint* BaseClient;

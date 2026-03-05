@@ -31,5 +31,5 @@ private:
 
 	JsonProtocolClient _client;
 	std::atomic<bool> isConnected;
-	CriticalSectionLock _sessionStatusChangeLock;
+	CoroCriticalSectionLock _sessionStatusChangeLock;
 };
