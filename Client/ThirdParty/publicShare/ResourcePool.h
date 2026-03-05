@@ -4,11 +4,11 @@
 #include <vector>
 #include "CriticalSectionLock.h"
 
-template <class DataType>
+template <class DataType, Lockable Mutex = CriticalSectionLock>
 class ResPool
 {
 protected:
-	CriticalSectionLock _lock;
+	Mutex _lock;
 	std::list<DataType *> _iDleList;
 	std::vector<DataType *> _datas;
 	uint32_t _maxResNum = 1000;
@@ -16,7 +16,7 @@ protected:
 public:
 	ResPool(uint32_t InitResNum = 300, uint32_t maxResNum = 1000)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard lock(_lock);
 
 		_maxResNum = maxResNum;
 
@@ -33,7 +33,7 @@ public:
 
 	~ResPool()
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard lock(_lock);
 		_datas.clear();
 		for (auto it = _iDleList.begin(); it != _iDleList.end(); it++)
 		{
@@ -47,7 +47,7 @@ public:
 	{
 		DataType *data = nullptr;
 
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard lock(_lock);
 		if (_iDleList.size() > 0) // list不为空，从list中取一个
 		{
 			data = _iDleList.front();
@@ -66,7 +66,7 @@ public:
 	// 回收
 	void ReleaseData(DataType *data)
 	{
-		std::lock_guard<CriticalSectionLock> lock(_lock);
+		LockGuard lock(_lock);
 
 		// 已持有的数据
 		auto it = find(_datas.begin(), _datas.end(), data);
