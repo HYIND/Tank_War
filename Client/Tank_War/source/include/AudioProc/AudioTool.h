@@ -4,6 +4,7 @@
 #include <xaudio2.h>
 #include <vector>
 #include "SafeStl.h"
+#include "Coroutine.h"
 
 class AudioInfo;
 

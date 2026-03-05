@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include "SafeStl.h"
+#include "Coroutine.h"
 #include "stdafx.h"
 
 struct LobbyUser

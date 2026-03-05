@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Coroutine.h"
 #include "ServiceRegistryData.h"
 #include <memory>
 #include "SafeStl.h"

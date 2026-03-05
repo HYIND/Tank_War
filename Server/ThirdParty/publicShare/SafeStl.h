@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Coroutine.h"
 #include "CriticalSectionLock.h"
 #include <map>
 #include <queue>
@@ -175,18 +174,6 @@ public:
 		}
 	}
 
-	using CoCallback = std::function<Task<void>(std::map<K,V>& map)>;
-	template <typename M = Mutex>
-		requires CoLockable<M>
-	Task<void> AsyncEnsureCall(CoCallback&& callback)
-	{
-		if (callback)
-		{
-			LockGuard guard(_lock);
-			co_await callback(this->_map);
-		}
-	}
-
 	auto MakeLockGuard() const
 	{
 		return LockGuard(_lock);
@@ -358,18 +345,6 @@ public:
 		}
 	}
 
-	using CoCallback = std::function<Task<void>(std::unordered_map<K,V>& map)>;
-	template <typename M = Mutex>
-		requires CoLockable<M>
-	Task<void> AsyncEnsureCall(CoCallback&& callback)
-	{
-		if (callback)
-		{
-			LockGuard guard(_lock);
-			co_await callback(this->_map);
-		}
-	}
-
 	auto MakeLockGuard() const
 	{
 		return LockGuard(_lock);
@@ -488,18 +463,6 @@ public:
 		{
 			LockGuard guard(_lock);
 			callback(this->_deque);
-		}
-	}
-
-	using CoCallback = std::function<Task<void>(std::deque<T>& deque)>;
-	template <typename M = Mutex>
-		requires CoLockable<M>
-	Task<void> AsyncEnsureCall(CoCallback&& callback)
-	{
-		if (callback)
-		{
-			LockGuard guard(_lock);
-			co_await callback(this->_deque);
 		}
 	}
 
@@ -625,18 +588,6 @@ public:
 		}
 	}
 
-	using CoCallback = std::function<Task<void>(std::vector<T>& array)>;
-	template <typename M = Mutex>
-	requires CoLockable<M>
-	Task<void> AsyncEnsureCall(CoCallback&& callback)
-	{
-		if (callback)
-		{
-			LockGuard guard(_lock);
-			co_await callback(this->_array);
-		}
-	}
-
 	auto MakeLockGuard() const
 	{
 		return LockGuard(_lock);
@@ -756,18 +707,6 @@ public:
 		}
 	}
 
-	using CoCallback = std::function<Task<void>(std::deque<T>& deque)>;
-	template <typename M = Mutex>
-		requires CoLockable<M>
-	Task<void> AsyncEnsureCall(CoCallback&& callback)
-	{
-		if (callback)
-		{
-			LockGuard guard(_lock);
-			co_await callback(this->_deque);
-		}
-	}
-
 	auto MakeLockGuard() const
 	{
 		return LockGuard(_lock);
@@ -856,18 +795,6 @@ public:
 		{
 			LockGuard guard(_lock);
 			call(this->_set);
-		}
-	}
-
-	using CoCallback = std::function<Task<void>(std::set<T>& set)>;
-	template <typename M = Mutex>
-		requires CoLockable<M>
-	Task<void> AsyncEnsureCall(CoCallback&& call)
-	{
-		if (call)
-		{
-			LockGuard guard(_lock);
-			co_await call(this->_array);
 		}
 	}
 

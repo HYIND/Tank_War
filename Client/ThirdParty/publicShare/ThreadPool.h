@@ -193,6 +193,20 @@ private:
 	public:
 		ThreadWorker(ThreadPool* pool, std::shared_ptr<ThreadData> data);
 		void operator()();
+		void yield_until(std::function<bool()>&& predicate);
+	};
+
+	class YieldWorker
+	{
+		using ThreadTask = ThreadPool::ThreadData::ThreadTask;
+
+	private:
+		ThreadPool* m_pool;                 // 所属线程池
+		std::shared_ptr<ThreadData> m_data; // 线程信息
+		std::function<bool()> m_predicate;
+	public:
+		YieldWorker(ThreadPool* pool, std::shared_ptr<ThreadData> data, std::function<bool()> predicate);
+		void operator()();
 	};
 
 public:
@@ -209,6 +223,9 @@ public:
 	void stopnow();
 	bool running();
 	uint32_t workersize();
+
+	static bool can_yield();
+	static void yield_until(std::function<bool()> predicate);
 
 private:
 	uint32_t GetAvailablieThread();

@@ -32,6 +32,9 @@ using BaseSocket = SOCKET;
 #endif
 #endif
 
+bool PUBLICSHARE_API Can_Yield();
+void PUBLICSHARE_API Yield_Until(std::function<bool()> predicate);
+
 class CoroutineContextImpl;
 using CoroHandle = std::coroutine_handle<>;
 class PUBLICSHARE_API CoroutineContext
@@ -375,8 +378,29 @@ public:
 	template <typename U = T>
 	std::enable_if_t<!std::is_void_v<U>, U> sync_wait()
 	{
+		if (!_shared_coroutine || !_continuationlock || !_syncwaitcv)
+			throw std::runtime_error("Invalid Coroutine");
+
 		if (*_shared_coroutine)
 		{
+			if (CoroutineContext::isCoroutineThread() && Can_Yield())
+			{
+				auto current = CoroutineContext::getCurrent();
+				CoroutineContext::setParent(*_shared_coroutine, current);
+
+				if ((*_shared_coroutine).done())
+					return (*_shared_coroutine).promise().result();
+
+				while (!(*_shared_coroutine).done())
+				{
+					Yield_Until([coro_ptr = this->_shared_coroutine]()->bool {return (*coro_ptr).done(); });
+					std::this_thread::sleep_for(std::chrono::milliseconds(5));
+				}
+				CoroutineContext::setCurrent(current);
+				CoroutineContext::clearParent(*_shared_coroutine);
+				return (*_shared_coroutine).promise().result();
+			}
+
 			LockGuard guard(*_continuationlock);
 			if ((*_shared_coroutine).done())
 				return (*_shared_coroutine).promise().result();
@@ -400,6 +424,24 @@ public:
 
 		if (*_shared_coroutine)
 		{
+			if (CoroutineContext::isCoroutineThread() && Can_Yield())
+			{
+				auto current = CoroutineContext::getCurrent();
+				CoroutineContext::setParent(*_shared_coroutine, current);
+
+				if ((*_shared_coroutine).done())
+					return (*_shared_coroutine).promise().result();
+
+				while (!(*_shared_coroutine).done())
+				{
+					Yield_Until([coro_ptr = this->_shared_coroutine]()->bool {return (*coro_ptr).done(); });
+					std::this_thread::sleep_for(std::chrono::milliseconds(5));
+				}
+				CoroutineContext::setCurrent(current);
+				CoroutineContext::clearParent(*_shared_coroutine);
+				return (*_shared_coroutine).promise().result();
+			}
+
 			LockGuard guard(*_continuationlock);
 			if ((*_shared_coroutine).done())
 			{

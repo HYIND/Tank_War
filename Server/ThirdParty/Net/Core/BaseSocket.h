@@ -32,7 +32,6 @@ using BaseSocket = SOCKET;
 #include "NetExportMarco.h"
 
 bool NET_API CloseSocket(BaseSocket);
+bool NET_API IsInvaildSocket(BaseSocket);
 
 constexpr BaseSocket Invaild_Socket = 0;
-
-

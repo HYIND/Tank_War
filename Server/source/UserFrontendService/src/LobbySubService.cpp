@@ -248,10 +248,12 @@ Task<void> LobbySubService::ProcessHallMsg(std::shared_ptr<LobbyUser> sender, js
         js_broadcast["srctoken"] = sender->token;
         js_broadcast["name"] = sender->name;
         js_broadcast["msg"] = msg;
-        for (auto &user : users)
-        {
-            co_await DelegateDispatch(user.token, js_broadcast);
-        }
+
+        std::vector<Task<bool>> tasks;
+        for (auto& user : users)
+            tasks.push_back(std::move(DelegateDispatch(user.token, js_broadcast)));
+        for (auto& task : tasks)
+            co_await task;
     }
 
     if (success)
@@ -312,8 +314,8 @@ Task<void> LobbySubService::ProcessRoomMsg(std::shared_ptr<LobbyUser> sender, js
         js_broadcast["name"] = sender->name;
         js_broadcast["msg"] = msg;
 
-        co_await roominfo.members.AsyncEnsureCall(
-            [&](std::map<std::string, std::shared_ptr<GameStateDef::RoomMemeber>> &map) -> Task<void>
+        roominfo.members.EnsureCall(
+            [&](std::map<std::string, std::shared_ptr<GameStateDef::RoomMemeber>> &map) -> void
             {
                 std::vector<Task<bool>> tasks;
 
@@ -321,7 +323,7 @@ Task<void> LobbySubService::ProcessRoomMsg(std::shared_ptr<LobbyUser> sender, js
                     tasks.push_back(std::move(DelegateDispatch(token, js_broadcast)));
 
                 for (auto& task : tasks)
-                    co_await task;
+                    task.sync_wait();
             });
     }
 

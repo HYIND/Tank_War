@@ -6,6 +6,7 @@
 #include <memory>
 #include "SafeStl.h"
 #include "ServiceRegistryData.h"
+#include "Coroutine.h"
 #include "stdafx.h"
 
 struct NetworkEndpoint;

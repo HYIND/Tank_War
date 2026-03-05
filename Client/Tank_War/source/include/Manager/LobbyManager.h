@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include "LobbyDataDef.h"
+#include "Coroutine.h"
 
 class LobbyManager
 {
