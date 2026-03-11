@@ -38,6 +38,8 @@ Entity BulletFactory::CreateServerBullet(World &world, Entity owner, PlayerID pl
 
 	if (owner.hasComponent<Physics>())
 		physics.groupIndex = owner.getComponent<Physics>().groupIndex;
+	physics.categoryBits = CATEGORY_BULLET;
+	physics.maskBits = ~CATEGORY_BULLET;
 
 	auto &lifetime = entity.addComponent<LifeTime>(10);
 

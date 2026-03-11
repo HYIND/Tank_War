@@ -48,6 +48,7 @@ void AIInputSystem::handleAIInputToTank(Entity AITank)
 {
 	float target_factor = 1.f;
 	float wall_factor = 1.f;
+	float boundary_factor = 3.f;
 
 	auto& world = getWorld();
 
@@ -155,7 +156,7 @@ void AIInputSystem::handleAIInputToTank(Entity AITank)
 					strength = strength / 5.0f;
 				return v + away_dir * strength;
 			}
-	).normalize();
+		).normalize();
 
 	float distanceToTarget = PosDistance(trans.position, targettrans.position);
 	float to_target_dir = std::atan2(direction_Target.y, direction_Target.x) * 180.0 / M_PI;
@@ -178,7 +179,42 @@ void AIInputSystem::handleAIInputToTank(Entity AITank)
 		wall_factor = 1.0f;
 	}
 
-	Vec2 move_Dir = (direction_Target * target_factor + direction_Wall * wall_factor).normalize();
+	Vec2 direction_Boundary;
+	auto boundaryEntitys = world.getEntitiesWith<TagGameBoundary, BoundaryPhysisc>();
+	if (boundaryEntitys.empty())
+	{
+		boundary_factor = 0.f;
+	}
+	else {
+		auto& boundary = boundaryEntitys[0];
+		if (auto* boundaryPhysics = boundary.tryGetComponent<BoundaryPhysisc>())
+		{
+			const float MAX_BOUNDARY_ENABLE_DISTANCE = std::max(tankProperty.width * 3.f, tankProperty.height * 3.f);
+
+			auto calculate_force = [MAX_BOUNDARY_ENABLE_DISTANCE](float boundarypos, float aipos)-> float {
+				float dis = std::abs(boundarypos - aipos);
+				if (dis >= MAX_BOUNDARY_ENABLE_DISTANCE)
+					return 0.f;
+				float strength = 1.0f - (dis / MAX_BOUNDARY_ENABLE_DISTANCE);
+				strength = strength * strength;
+
+				return 1.0f * strength;
+				};
+
+			direction_Boundary.x = calculate_force(boundaryPhysics->x1, trans.position.x) - calculate_force(boundaryPhysics->x2, trans.position.x);
+			direction_Boundary.y = calculate_force(boundaryPhysics->y1, trans.position.y) - calculate_force(boundaryPhysics->y2, trans.position.y);
+
+			if (direction_Boundary.x == 0.f && direction_Boundary.y == 0.f)
+				boundary_factor = 0.f;
+			else
+				direction_Boundary = direction_Boundary.normalize();
+
+		}
+		else
+			boundary_factor = 0.f;
+	}
+
+	Vec2 move_Dir = (direction_Target * target_factor + direction_Wall * wall_factor + direction_Boundary * boundary_factor).normalize();
 
 	Vec2 smooth_Dir = aiControl.smoothedDirection * (1 - aiControl.SMOOTH_FACTOR)
 		+ move_Dir * aiControl.SMOOTH_FACTOR;
@@ -230,13 +266,13 @@ void AIInputSystem::handleAIInputToTank(Entity AITank)
 void AIInputSystem::drawDebugInfo(Entity AITank)
 {
 	static auto getlines = [](const Pos2& pos, const Vec2& dir, float length = 10.f)->Line2
-	{
-		Pos2 start = pos;
-		Pos2 end = pos + Pos2(dir.normalize() * length);
-		Line2 result(start, end);
-		return result;
+		{
+			Pos2 start = pos;
+			Pos2 end = pos + Pos2(dir.normalize() * length);
+			Line2 result(start, end);
+			return result;
 
-	};
+		};
 
 	auto& world = getWorld();
 
@@ -246,6 +282,7 @@ void AIInputSystem::drawDebugInfo(Entity AITank)
 
 	float target_factor = 1.f;
 	float wall_factor = 1.f;
+	float boundary_factor = 3.f;
 
 	std::vector<Line2> debuglines;
 
@@ -306,7 +343,7 @@ void AIInputSystem::drawDebugInfo(Entity AITank)
 
 				return v + away_dir * strength;
 			}
-	).normalize();
+		).normalize();
 
 	float distanceToTarget = PosDistance(trans.position, targettrans.position);
 	float to_target_dir = std::atan2(direction_Target.y, direction_Target.x) * 180.0 / M_PI;
@@ -329,11 +366,47 @@ void AIInputSystem::drawDebugInfo(Entity AITank)
 		wall_factor = 1.0f;
 	}
 
-	Vec2 direction = (direction_Target * target_factor + direction_Wall * wall_factor).normalize();
+	Vec2 direction_Boundary;
+	auto boundaryEntitys = world.getEntitiesWith<TagGameBoundary, BoundaryPhysisc>();
+	if (boundaryEntitys.empty())
+	{
+		boundary_factor = 0.f;
+	}
+	else {
+		auto& boundary = boundaryEntitys[0];
+		if (auto* boundaryPhysics = boundary.tryGetComponent<BoundaryPhysisc>())
+		{
+			const float MAX_BOUNDARY_ENABLE_DISTANCE = std::max(tankProperty.width * 3.f, tankProperty.height * 3.f);
+
+			auto calculate_force = [MAX_BOUNDARY_ENABLE_DISTANCE](float boundarypos, float aipos)-> float {
+				float dis = std::abs(boundarypos - aipos);
+				if (dis >= MAX_BOUNDARY_ENABLE_DISTANCE)
+					return 0.f;
+				float strength = 1.0f - (dis / MAX_BOUNDARY_ENABLE_DISTANCE);
+				strength = strength * strength;
+
+				return 1.0f * strength;
+				};
+
+			direction_Boundary.x = calculate_force(boundaryPhysics->x1, trans.position.x) - calculate_force(boundaryPhysics->x2, trans.position.x);
+			direction_Boundary.y = calculate_force(boundaryPhysics->y1, trans.position.y) - calculate_force(boundaryPhysics->y2, trans.position.y);
+
+			if (direction_Boundary.x == 0.f && direction_Boundary.y == 0.f)
+				boundary_factor = 0.f;
+			else
+				direction_Boundary = direction_Boundary.normalize();
+
+		}
+		else
+			boundary_factor = 0.f;
+	}
+
+	Vec2 move_Dir = (direction_Target * target_factor + direction_Wall * wall_factor + direction_Boundary * boundary_factor).normalize();
 
 	debuglines.push_back(getlines(trans.position, direction_Target, 40));
 	debuglines.push_back(getlines(trans.position, direction_Wall, 40));
-	debuglines.push_back(getlines(trans.position, direction, 40));
+	if (direction_Boundary.x != 0.f || direction_Boundary.y != 0.f) debuglines.push_back(getlines(trans.position, direction_Boundary, 40));
+	debuglines.push_back(getlines(trans.position, move_Dir, 60));
 
 	for (auto& line : debuglines)
 		rendersystem->pushDebugLine(line);

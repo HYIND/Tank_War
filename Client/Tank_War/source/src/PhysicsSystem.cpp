@@ -250,8 +250,8 @@ void PhysicsSystem::createBody(Entity entity, Physics& physics, Transform& trans
 	fixtureDef.isSensor = physics.isSensor;      // 传感器模式
 
 	fixtureDef.filter.groupIndex = physics.groupIndex;
-	fixtureDef.filter.categoryBits = 0x0001;     // 碰撞类别
-	fixtureDef.filter.maskBits = 0xFFFF;         // 碰撞掩码
+	fixtureDef.filter.categoryBits = physics.categoryBits;     // 碰撞类别
+	fixtureDef.filter.maskBits = physics.maskBits;         // 碰撞掩码
 
 	// 应用 Fixture
 	physics.body->CreateFixture(&fixtureDef);

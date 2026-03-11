@@ -34,6 +34,8 @@ Entity BulletFactory::CreateLocalBullet(World& world, Entity owner, int bulletDa
 
 	if (owner.hasComponent<Physics>())
 		physics.groupIndex = owner.getComponent<Physics>().groupIndex;
+	physics.categoryBits = CATEGORY_BULLET;
+	physics.maskBits = ~CATEGORY_BULLET;
 
 	entity.addComponent<Sprite>(radius, radius, ResFactory->GetBitMapRes(ResName::defBullet));
 

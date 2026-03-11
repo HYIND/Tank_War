@@ -9,6 +9,11 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+enum Category {
+	CATEGORY_DEFAULT = 0x0001, // 墙壁
+	CATEGORY_BULLET = 0x0002,  // 所有子弹
+};
+
 struct Physics :public IComponent
 {
 	// === 形状定义 ===
@@ -42,7 +47,8 @@ struct Physics :public IComponent
 	b2World* world = nullptr;    // world
 
 	int16 groupIndex = 0;
-
+	uint16 categoryBits = CATEGORY_DEFAULT;
+	uint16 maskBits = 0xFFFF;
 
 	virtual void OnRemove(const Entity& e) override
 	{
