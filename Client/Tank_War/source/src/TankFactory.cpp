@@ -19,7 +19,7 @@ Entity TankFactory::CreateLocalGameTank(World& world,
 	tank.addComponent<Controller>();
 	auto& move = tank.addComponent<Movement>();
 	move.maxMoveSpeed = 300.f;
-	move.maxRotationSpeed = 180.f;
+	move.maxRotationSpeed = 240.f;
 
 	tank.addComponent<TankProperty>(owner, width, height);
 	tank.addComponent<Health>();
@@ -72,7 +72,7 @@ Entity TankFactory::CreateClientTank(World& world,
 	tank.addComponent<Controller>();
 	auto& move = tank.addComponent<Movement>();
 	move.maxMoveSpeed = 300.f;
-	move.maxRotationSpeed = 180.f;
+	move.maxRotationSpeed = 240.f;
 
 	tank.addComponent<TankProperty>(owner, playerid, width, height);
 	tank.addComponent<Health>();
