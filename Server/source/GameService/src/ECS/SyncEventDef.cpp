@@ -148,7 +148,9 @@ json BulletState::toJson() const
 
 	result["rotation"] = rotation;
 
-	result["radius"] = radius;
+	result["type"] = int(type);
+	result["width"] = width;
+	result["height"] = height;
 	result["bulletdamage"] = bulletDamage;
 
 	result["max_move_speed"] = maxMoveSpeed;
@@ -171,7 +173,9 @@ BulletState BulletState::fromJson(const json& j)
 
 	state.rotation = j.value("rotation", 0.0f);
 
-	state.radius = j.value("radius", 0);
+	state.type = (WeaponType)j.value("type", 0);
+	state.width = j.value("width", 0);
+	state.height = j.value("height", 0);
 	state.bulletDamage = j.value("bulletdamage", 0);
 
 	state.maxMoveSpeed = j.value("max_move_speed", 0.0f);

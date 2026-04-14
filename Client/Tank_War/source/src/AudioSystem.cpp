@@ -21,9 +21,11 @@ void AudioSystem::onAttach(World& world)
 		{
 			auto source = event.source;
 			auto target = event.target;
-			if (source.hasComponent<TagBullet>() && source.hasComponent<BulletProperty>())
+			if (source.hasComponent<TagBullet>() && source.hasComponent<BulletCore>())
 			{
-				spawnAudio(ResName::defaultAttackedAudio);
+				auto& bulletcore = source.getComponent<BulletCore>();
+				if (bulletcore.type == WeaponType::Default)
+					spawnAudio(ResName::defaultAttackedAudio);
 			}
 		}
 	);

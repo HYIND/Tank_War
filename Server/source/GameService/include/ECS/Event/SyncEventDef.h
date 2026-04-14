@@ -88,7 +88,9 @@ struct BulletState
 	float posX, posY;
 	float rotation;
 
-	int radius;
+	WeaponType type;
+	int width;
+	int height;
 	int bulletDamage;
 
 	float maxMoveSpeed;

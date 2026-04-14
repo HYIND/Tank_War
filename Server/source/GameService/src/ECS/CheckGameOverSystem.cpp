@@ -48,9 +48,9 @@ void CheckGameOverSystem::handleProcessKillEvent(const TankDestroyedEvent &event
 				if (event.killer)
 				{
 					auto killer = event.killer;
-					if (killer->hasComponent<TagBullet>() && killer->hasComponent<BulletProperty>())
+					if (killer->hasComponent<TagBullet>() && killer->hasComponent<BulletCore>())
 					{
-						auto &bulletproperty = killer->getComponent<BulletProperty>();
+						auto &bulletproperty = killer->getComponent<BulletCore>();
 						if (m_world->IsValidWorldEntity(bulletproperty.owner))
 						{
 							if (bulletproperty.owner.hasComponent<TagTank>() && bulletproperty.owner.hasComponent<TankProperty>())

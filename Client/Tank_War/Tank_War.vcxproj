@@ -276,6 +276,8 @@
     <Image Include="..\Resource\Bullet_Green.png" />
     <Image Include="..\Resource\Bullet_Orange.png" />
     <Image Include="..\Resource\Bullet_Purple.png" />
+    <Image Include="..\Resource\EnergyWave.gif" />
+    <Image Include="..\Resource\EnergyWave_Prop.png" />
     <Image Include="..\Resource\explosion.gif" />
     <Image Include="..\Resource\Fail.png" />
     <Image Include="..\Resource\GAME_BG_SAND.jpg" />

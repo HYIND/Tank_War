@@ -28,8 +28,10 @@ Entity TankFactory::CreateServerTank(World &world,
 	tank.addComponent<TankProperty>(owner, playerid, width, height);
 	tank.addComponent<Health>();
 
-	auto &weapon = tank.addComponent<Weapon>();
-	weapon.bulletSpeed = 500.f;
+	auto& weaponcontainer = tank.addComponent<WeaponContainer>();
+	auto weaponconfig = new WeaponConfig(WeaponType::Default);
+	weaponconfig->bulletSpeed = 500.f;
+	weaponcontainer.addWeapon(weaponconfig);
 
 	auto &tankvisual = tank.addComponent<TankVisual>(TankVisual::VisualState::BASIC, width, height);
 	tankvisual.layer = (int)RenderLayer::TankLayer;

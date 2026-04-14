@@ -92,7 +92,7 @@ void PropGenerateSystem::prepareGenerateProp()
 void PropGenerateSystem::doGenerateProp()
 {
 	static auto avaliablePropType =
-		std::vector<PropProperty::PropType>{ PropProperty::PropType::HEALTH_PACK };
+		std::vector<PropProperty::PropType>{ PropProperty::PropType::HEALTH_PACK,PropProperty::PropType::ENERGY_WAVE };
 
 	if (!m_world || avaliablePropType.empty())
 		return;

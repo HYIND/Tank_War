@@ -131,7 +131,10 @@ bool ResourceManager::InitResource()
 	ID2D1Bitmap* brick_wall_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(BRICK_WALL));
 	ID2D1Bitmap* iron_wall_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(IRON_WALL));
 	ID2D1Bitmap* sand_BK = LoadResourceBitmap(hInst, pRenderTarget, L"JPG", MAKEINTRESOURCE(BK_SAND));
+
 	ID2D1Bitmap* aidkit_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(AID_KIT));
+	ID2D1Bitmap* EnergyWave_Prop_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(EnergyWave_Prop));
+
 	ID2D1Bitmap* Def_Tank_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(TANK_PNG));
 	ID2D1Bitmap* Blue_Tank_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(TANK_BLUE));
 	ID2D1Bitmap* Red_Tank_pBitmap = LoadResourceBitmap(hInst, pRenderTarget, L"PNG", MAKEINTRESOURCE(TANK_RED));
@@ -153,6 +156,17 @@ bool ResourceManager::InitResource()
 		}
 	}
 
+	{
+		UINT count = 0;
+		IWICBitmapDecoder* pDecoder = NULL;
+		IWICStream* pStream = NULL;
+		if (LoadResourceGIF(hInst, pRenderTarget, L"GIF", MAKEINTRESOURCE(EnergyWave_GIF), count, pDecoder, pStream))
+		{
+			GIFINFO* Explosion_GIF = new GIFINFO(500, count, pDecoder, pStream);
+			GIFRes[ResName::energywaveGIF] = Explosion_GIF;
+		}
+	}
+
 	auto heal_audio = GetAudioFromResource(hInst, L"AUDIO", MAKEINTRESOURCE(Heal_Audio));
 	auto default_Shoot_Audio = GetAudioFromResource(hInst, L"AUDIO", MAKEINTRESOURCE(Default_Shoot_Audio));
 	auto default_Attacked_Audio = GetAudioFromResource(hInst, L"AUDIO", MAKEINTRESOURCE(Default_Attacked_Audio));
@@ -170,6 +184,7 @@ bool ResourceManager::InitResource()
 	BitMapRes[ResName::sandBK] = sand_BK;
 
 	BitMapRes[ResName::aidKit] = aidkit_pBitmap;
+	BitMapRes[ResName::EnergyWaveProp] = EnergyWave_Prop_pBitmap;
 
 	BitMapRes[ResName::defTank] = Def_Tank_pBitmap;
 	BitMapRes[ResName::blueTank] = Blue_Tank_pBitmap;

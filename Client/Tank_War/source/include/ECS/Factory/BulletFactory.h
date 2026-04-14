@@ -7,15 +7,27 @@
 
 class BulletFactory {
 public:
-	static Entity CreateLocalBullet(World& world, Entity owner, int bulletDamage, float bulletSpeed,
+	static Entity CreateLocalDefaultBullet(World& world, Entity owner, int bulletDamage, float bulletSpeed,
 		float x, float y, int radius,
 		float rotation
 	);
 
-	static Entity CreateClientBullet(World& world,
+	static Entity CreateClientDefaultBullet(World& world,
 		SyncID syncid, Entity owner, PlayerID playerid,
 		int bulletDamage, float bulletSpeed,
 		float x, float y, int radius,
+		float rotation
+	);
+
+	static Entity CreateLocalEnergyWaveBullet(World& world, Entity owner, int bulletDamage, float bulletSpeed,
+		float x, float y, float width, float height,
+		float rotation
+	);
+
+	static Entity CreateClientEnergyWaveBullet(World& world,
+		SyncID syncid, Entity owner, PlayerID playerid,
+		int bulletDamage, float bulletSpeed,
+		float x, float y, float width, float height,
 		float rotation
 	);
 };

@@ -7,8 +7,12 @@
 
 class BulletFactory {
 public:
-	static Entity CreateServerBullet(World& world, Entity owner, PlayerID playerid,int bulletDamage, float bulletSpeed,
+	static Entity CreateServerDefaultBullet(World& world, Entity owner, PlayerID playerid,int bulletDamage, float bulletSpeed,
 		float x, float y, int radius,
+		float rotation
+	);
+	static Entity CreateServerEnergyWaveBullet(World& world, Entity owner, PlayerID playerid,int bulletDamage, float bulletSpeed,
+		float x, float y, float width, float height,
 		float rotation
 	);
 };
