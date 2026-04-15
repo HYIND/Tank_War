@@ -200,6 +200,7 @@ Task<bool> ConnectManager::LoginGameSeervice(NetworkEndpoint endpoint)
 
 		co_return true;
 	}
+	co_return false;
 }
 
 bool ConnectManager::LogoutGameSeervice()
