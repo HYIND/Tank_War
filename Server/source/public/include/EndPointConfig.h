@@ -22,3 +22,16 @@ const std::string GameServiceIP = Config::Instance()->Read(std::string("GameServ
 const int GameServicePort = Config::Instance()->Read(std::string("GameServicePort"), 0);
 const std::string GameServiceStubIP = Config::Instance()->Read(std::string("GameServiceStubIP"), std::string(""));
 const int GameServiceStubPort = Config::Instance()->Read(std::string("GameServiceStubPort"), 0);
+
+const std::string GameStatesServiceStubReportIP = Config::Instance()->Read(std::string("GameStatesServiceStubReportIP"), std::string(""));
+const int GameStatesServiceStubReportPort = Config::Instance()->Read(std::string("GameStatesServiceStubReportPort"), 0);
+
+const std::string UserFrontendServiceReportIP = Config::Instance()->Read(std::string("UserFrontendServiceReportIP"), std::string(""));
+const int UserFrontendServiceReportPort = Config::Instance()->Read(std::string("UserFrontendServiceReportPort"), 0);
+const std::string UserFrontendServiceStubReportIP = Config::Instance()->Read(std::string("UserFrontendServiceStubReportIP"), std::string(""));
+const int UserFrontendServiceStubReportPort = Config::Instance()->Read(std::string("UserFrontendServiceStubReportPort"), 0);
+
+const std::string GameServiceReportIP = Config::Instance()->Read(std::string("GameServiceReportIP"), std::string(""));
+const int GameServiceReportPort = Config::Instance()->Read(std::string("GameServiceReportPort"), 0);
+const std::string GameServiceStubReportIP = Config::Instance()->Read(std::string("GameServiceStubReportIP"), std::string(""));
+const int GameServiceStubReportPort = Config::Instance()->Read(std::string("GameServiceStubReportPort"), 0);

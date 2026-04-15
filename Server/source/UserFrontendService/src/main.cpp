@@ -40,11 +40,16 @@ auto g_userfrontendservice = std::make_shared<UserFrontendService>();
 Task<bool> StartUserFrontendService(
 	const std::string& IP, int Port,
 	const std::string& stub_IP, int stub_Port,
-	const std::string& gameStateService_IP, int gameStateService_Port)
+	const std::string& gameStateService_IP, int gameStateService_Port,
+	const std::string& report_IP, int report_Port,
+	const std::string& stubReport_IP, int stubReport_Port
+)
 {
 	g_userfrontendservice->SetServiceEndPoint(IP, Port);
 	g_userfrontendservice->SetStubEndPoint(stub_IP, stub_Port);
 	g_userfrontendservice->SetGameStateEndPoint(gameStateService_IP, gameStateService_Port);
+	g_userfrontendservice->SetServiceReportEndPoint(report_IP,report_Port);
+	g_userfrontendservice->SetStubReportEndPoint(stubReport_IP,stubReport_Port);
 	co_return co_await g_userfrontendservice->Start();
 }
 
@@ -81,8 +86,10 @@ int main()
 	{
 		if (!StartUserFrontendService(UserFrontendServiceIP, UserFrontendServicePort,
 			UserFrontendServiceStubIP, UserFrontendServiceStubPort,
-			GameStatesServiceStubIP, GameStatesServiceStubPort)
-			.sync_wait())
+			GameStatesServiceStubIP, GameStatesServiceStubPort,
+			UserFrontendServiceReportIP, UserFrontendServiceReportPort,
+			UserFrontendServiceStubReportIP, UserFrontendServiceStubReportPort
+		).sync_wait())
 		{
 			std::cout << "StartService Error!\n";
 			return -1;

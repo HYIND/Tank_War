@@ -18,6 +18,7 @@ public:
     virtual Task<bool> Start();
 
     void SetGameStateManager(std::shared_ptr<GameStateManager> gsm);
+    void SetStubReportEndPoint(const std::string &IP, int Port);
 
 public:
     Task<void> OnSessionEstablish(JsonProtocolSession session);
@@ -60,6 +61,9 @@ private:
 private:
     std::weak_ptr<GameStateManager> _GSM_Weak;
     std::shared_ptr<ServiceInfo> _serviceinfo;
+
+    std::string _stubReportIP;
+    int _stubReportPort;
 
     ServiceDiscoveryClient _servcieDiscoverClient;
     MessageDelegator _delegator;

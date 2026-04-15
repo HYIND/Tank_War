@@ -20,6 +20,8 @@ public:
     ~GameService();
 
     void SetGameStateEndPoint(const std::string &IP, int Port);
+    void SetServiceReportEndPoint(const std::string &IP, int Port);
+    void SetStubReportEndPoint(const std::string &IP, int Port);
 
     virtual Task<bool> Start();
 
@@ -66,6 +68,12 @@ private:
     std::shared_ptr<JsonProtocolClient> _gameStateStub;
     std::string _gameStateStubIP;
     int _gameStateStubPort;
+
+    std::string _serviceReportIP;
+    int _serviceReportPort;
+
+    std::string _stubReportIP;
+    int _stubReportPort;
 
     std::shared_ptr<ServiceInfo> _serviceinfo;
 
