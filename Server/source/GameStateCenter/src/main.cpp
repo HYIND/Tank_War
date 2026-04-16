@@ -97,7 +97,7 @@ int main()
 #endif
 
 	{
-		if (!StartServiceRegistry(ServiceRegistryIP, ServiceRegistryPort).sync_wait())
+		if (!StartServiceRegistry(ServiceRegistryListenIP, ServiceRegistryListenPort).sync_wait())
 		{
 			std::cout << "StartServiceRegistry Error!\n";
 			return -1;
@@ -105,7 +105,7 @@ int main()
 	}
 
 	{
-		if (!StartServiceDiscovery(ServiceDiscoveryIP, ServiceDiscoveryPort).sync_wait())
+		if (!StartServiceDiscovery(ServiceDiscoveryListenIP, ServiceDiscoveryListenPort).sync_wait())
 		{
 			std::cout << "StartServiceDiscovery Error!\n";
 			return -1;
