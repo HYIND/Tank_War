@@ -1,0 +1,60 @@
+
+networks:
+  tank-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+
+services:
+  # ========== GameStateCenter 服务 ==========
+  game-state-center:
+    image: tank-server:latest
+    container_name: tank-game-state-center
+    command: ["stdbuf", "-oL", "-eL", "/app/bin/GameStateCenter"]
+    privileged: true
+    networks:
+      tank-network:
+        ipv4_address: 172.20.0.10
+    ports:
+      - "25059:25059"
+      - "26070:26070"
+      - "27080:27080"
+    volumes:
+      - ./docker-config/game-state-center.ini:/app/config/config.ini:ro
+    restart: unless-stopped
+
+  # ========== UserFrontendService 服务 ==========
+  user-frontend:
+    image: tank-server:latest
+    container_name: tank-user-frontend
+    command: ["stdbuf", "-oL", "-eL", "/app/bin/UserFrontendService"]
+    privileged: true
+    networks:
+      tank-network:
+        ipv4_address: 172.20.0.11
+    ports:
+      - "28093:28093"
+    volumes:
+      - ./docker-config/user-frontend.ini:/app/config/config.ini:ro
+    depends_on:
+      - game-state-center
+    restart: unless-stopped
+
+  # ========== GameService 服务 ==========
+  game-service:
+    image: tank-server:latest
+    container_name: tank-game-service
+    command: ["stdbuf", "-oL", "-eL", "/app/bin/GameService"]
+    privileged: true
+    networks:
+      tank-network:
+        ipv4_address: 172.20.0.12
+    ports:
+      - "29100:29100"
+    volumes:
+      - ./docker-config/game-service.ini:/app/config/config.ini:ro
+    depends_on:
+      - game-state-center
+    restart: unless-stopped
