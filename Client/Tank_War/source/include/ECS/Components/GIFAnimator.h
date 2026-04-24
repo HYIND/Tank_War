@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "RenderBase.h"
 #include "Manager/ResourceManager.h"
@@ -23,7 +23,7 @@ struct GIFAnimator : public RenderBase
 	GIFAnimator(int width, int height, GIFINFO* gifInfo)
 		: GIFAnimator(width, height, gifInfo, 1, 1.0f) {
 	}
-	GIFAnimator(int width, int height, GIFINFO* gifInfo, int loopCount, float opacity) :
+	GIFAnimator(int width, int height, GIFINFO* gifInfo, int loopCount, float opacity = 1.0f) :
 		gifInfo(gifInfo), loopCount(loopCount), opacity(opacity)
 	{
 		this->width = std::max(0, width);
