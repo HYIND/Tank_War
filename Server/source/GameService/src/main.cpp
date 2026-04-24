@@ -40,11 +40,16 @@ auto g_gameservice = std::make_shared<GameService>();
 Task<bool> StartGameService(
 	const std::string &IP, int Port,
 	const std::string &stub_IP, int stub_Port,
-	const std::string &gameStateService_IP, int gameStateService_Port)
+	const std::string &gameStateService_IP, int gameStateService_Port,
+	const std::string& report_IP, int report_Port,
+	const std::string& stubReport_IP, int stubReport_Port
+)
 {
 	g_gameservice->SetServiceEndPoint(IP, Port);
 	g_gameservice->SetStubEndPoint(stub_IP, stub_Port);
 	g_gameservice->SetGameStateEndPoint(gameStateService_IP, gameStateService_Port);
+	g_gameservice->SetServiceReportEndPoint(report_IP,report_Port);
+	g_gameservice->SetStubReportEndPoint(stubReport_IP,stubReport_Port);
 	co_return co_await g_gameservice->Start();
 }
 
@@ -81,7 +86,10 @@ int main()
 	{
 		if (!StartGameService(GameServiceIP, GameServicePort,
 							  GameServiceStubIP, GameServiceStubPort,
-							  GameStatesServiceStubIP, GameStatesServiceStubPort).sync_wait())
+							  GameStatesServiceStubIP, GameStatesServiceStubPort,
+							  GameServiceReportIP, GameServiceReportPort,
+							  GameServiceStubReportIP, GameServiceStubReportPort
+		).sync_wait())
 		{
 			std::cout << "StartService Error!\n";
 			return -1;

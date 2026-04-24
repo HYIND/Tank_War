@@ -253,12 +253,19 @@ void AIInputSystem::handleAIInputToTank(Entity AITank)
 
 	if (!controller.wantToFire)
 	{
-		if (auto* weapon = AITank.tryGetComponent<Weapon>())
+		if (auto* weaponcontainer = AITank.tryGetComponent<WeaponContainer>())
 		{
-			if (weapon->maxBullets <= 2)
-				controller.setWantToFire(true);
-			else if (weapon->maxBullets - weapon->currentBullets > 2)
-				controller.setWantToFire(true);
+			static std::vector<WeaponType> checkTypeOrders = { WeaponType::EnergyWave,WeaponType::Default };
+			for (auto weapontype : checkTypeOrders)
+			{
+				if (auto* weaponconfig = weaponcontainer->tryGetWeapon(weapontype))
+				{
+					if (weaponconfig->maxBullets <= 2)
+						controller.setWantToFire(true);
+					else if (weaponconfig->maxBullets - weaponconfig->currentBullets > 2)
+						controller.setWantToFire(true);
+				}
+			}
 		}
 	}
 }

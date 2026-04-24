@@ -59,10 +59,11 @@ Task<bool> StartServiceDiscovery(const std::string& IP, int Port)
 	co_return g_SD->Start(IP, Port);
 }
 
-Task<bool> StartGameStateService(const std::string& IP, int Port)
+Task<bool> StartGameStateService(const std::string& IP, int Port,const std::string& reportIP, int reportPort)
 {
 	g_GSS->SetStubEndPoint(IP, Port);
 	g_GSS->SetGameStateManager(g_GSM);
+	g_GSS->SetStubReportEndPoint(reportIP, reportPort);
 	co_return co_await g_GSS->Start();
 }
 
@@ -96,7 +97,7 @@ int main()
 #endif
 
 	{
-		if (!StartServiceRegistry(ServiceRegistryIP, ServiceRegistryPort).sync_wait())
+		if (!StartServiceRegistry(ServiceRegistryListenIP, ServiceRegistryListenPort).sync_wait())
 		{
 			std::cout << "StartServiceRegistry Error!\n";
 			return -1;
@@ -104,7 +105,7 @@ int main()
 	}
 
 	{
-		if (!StartServiceDiscovery(ServiceDiscoveryIP, ServiceDiscoveryPort).sync_wait())
+		if (!StartServiceDiscovery(ServiceDiscoveryListenIP, ServiceDiscoveryListenPort).sync_wait())
 		{
 			std::cout << "StartServiceDiscovery Error!\n";
 			return -1;
@@ -112,7 +113,7 @@ int main()
 	}
 
 	{
-		if (!StartGameStateService(GameStatesServiceStubIP, GameStatesServiceStubPort).sync_wait())
+		if (!StartGameStateService(GameStatesServiceStubIP, GameStatesServiceStubPort, GameStatesServiceStubReportIP, GameStatesServiceStubReportPort).sync_wait())
 		{
 			std::cout << "StartService Error!\n";
 			return -1;

@@ -38,6 +38,8 @@ void PropSystem::processPropCollision(Entity prop, Entity picker, Pos2 point)
 		bool pickup = false;
 		if (propProperty->type == PropProperty::PropType::HEALTH_PACK)
 			pickup = pickUpHealthPack(prop, picker);
+		else if (propProperty->type == PropProperty::PropType::ENERGY_WAVE)
+			pickup = pickUpEnergyWave(prop, picker);
 
 		if (pickup)
 		{
@@ -73,4 +75,22 @@ bool PropSystem::pickUpHealthPack(Entity prop, Entity picker)
 	{
 		return false;
 	}
+}
+
+bool PropSystem::pickUpEnergyWave(Entity prop, Entity picker)
+{
+	auto* weaponcontainer = picker.tryGetComponent<WeaponContainer>();
+	if (!weaponcontainer)
+		return false;
+
+	if (auto w = weaponcontainer->tryGetWeapon(WeaponType::EnergyWave))
+		return false;
+
+	auto weaponconfig = new WeaponConfig(WeaponType::EnergyWave);
+	weaponconfig->durationType = WeaponDurationType::CountTemporary;
+	weaponconfig->bulletSpeed = 400.f;
+	weaponconfig->maxBullets = 1;
+	weaponcontainer->addWeapon(weaponconfig);
+
+	return true;
 }

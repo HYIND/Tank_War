@@ -299,7 +299,7 @@ void ClientSyncSystem::SyncBullet(const std::vector<BulletState>& bulletState, s
 			auto& sync = world.getComponent<TagSync>(entity);
 			if (sync.syncEntityType != TagSync::SyncEntityType::BULLET)
 				continue;
-			if (!entity.hasComponents<TagSync, TagBullet, BulletProperty, Transform, Movement >())
+			if (!entity.hasComponents<TagSync, TagBullet, BulletCore, Transform, Movement >())
 				continue;
 			handleSyncBulletFromServer(bulletstate, entity, server_timestamp);
 		}
@@ -494,11 +494,11 @@ void ClientSyncSystem::handleSyncBulletFromServer(const BulletState& state, Enti
 	auto& world = getWorld();
 
 	auto& sync = world.getComponent<TagSync>(entity);
-	auto& bulletProperty = world.getComponent<BulletProperty>(entity);
+	auto& bulletCore = world.getComponent<BulletCore>(entity);
 	auto& trans = world.getComponent<Transform>(entity);
 	auto& movement = world.getComponent<Movement>(entity);
 
-	bulletProperty.ownerPlayerId = state.ownerPlayerId;
+	bulletCore.ownerPlayerId = state.ownerPlayerId;
 	//bulletProperty.owner = state.owner;
 
 	if (entity.hasComponent<Interpolation>() && world.getSystem<InterpolationSystem>() != nullptr)
@@ -526,7 +526,32 @@ void ClientSyncSystem::handleSyncBulletFromServer(const BulletState& state, Enti
 		trans.rotation = state.rotation;
 	}
 
-	bulletProperty.radius = state.radius;
+	bulletCore.type = state.type;
+
+	if (bulletCore.type == WeaponType::Default)
+	{
+		if (entity.hasComponent<RectShape>())
+			entity.removeComponent<RectShape>();
+
+		if (auto* shape = entity.tryGetComponent<CircleShape>())
+			shape->radius = state.width;
+		else
+			entity.addComponent<CircleShape>(state.width);
+	}
+	else if (bulletCore.type == WeaponType::EnergyWave)
+	{
+		if (entity.hasComponent<CircleShape>())
+			entity.removeComponent<CircleShape>();
+
+		if (auto* shape = entity.tryGetComponent<RectShape>())
+		{
+			shape->width = state.width;
+			shape->height = state.height;
+		}
+		else
+			entity.addComponent<RectShape>(state.width, state.height);
+
+	}
 
 	movement.maxMoveSpeed = state.maxMoveSpeed;
 	movement.maxRotationSpeed = state.maxRotationSpeed;
@@ -552,14 +577,26 @@ void ClientSyncSystem::handleCreateClientBullet(const BulletState& state, uint64
 		}
 	}
 
-	auto entity = BulletFactory::CreateClientBullet(world,
-		state.syncId, owner, state.ownerPlayerId,
-		state.bulletDamage, state.currentMoveSpeed,
-		state.posX, state.posY, state.radius,
-		state.rotation
-	);
+	Entity bulletentity;
+	if (state.type == WeaponType::Default)
+		bulletentity = BulletFactory::CreateClientDefaultBullet(world,
+			state.syncId, owner, state.ownerPlayerId,
+			state.bulletDamage, state.currentMoveSpeed,
+			state.posX, state.posY, state.width,
+			state.rotation
+		);
+	else if (state.type == WeaponType::EnergyWave)
+		bulletentity = BulletFactory::CreateClientEnergyWaveBullet(world,
+			state.syncId, owner, state.ownerPlayerId,
+			state.bulletDamage, state.currentMoveSpeed,
+			state.posX, state.posY, state.width, state.height,
+			state.rotation
+		);
 
-	if (auto move = entity.tryGetComponent<Movement>())
+	if (!bulletentity.isValid())
+		return;
+
+	if (auto move = bulletentity.tryGetComponent<Movement>())
 	{
 		move->maxMoveSpeed = state.maxMoveSpeed;
 		move->maxRotationSpeed = state.maxRotationSpeed;
@@ -567,9 +604,9 @@ void ClientSyncSystem::handleCreateClientBullet(const BulletState& state, uint64
 		move->currentRotationSpeed = state.currentRotationSpeed;
 	}
 
-	if (entity.hasComponent<Interpolation>() && world.getSystem<InterpolationSystem>() != nullptr)
+	if (bulletentity.hasComponent<Interpolation>() && world.getSystem<InterpolationSystem>() != nullptr)
 	{
-		auto& inter = entity.getComponent<Interpolation>();
+		auto& inter = bulletentity.getComponent<Interpolation>();
 		Interpolation::Snapshot snap;
 		snap.position = { state.posX,state.posY };
 		snap.rotation = state.rotation;

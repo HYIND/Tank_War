@@ -48,16 +48,28 @@ void UserFrontendService::SetGameStateEndPoint(const std::string &IP, int Port)
     _gameStateStubPort = Port;
 }
 
+void UserFrontendService::SetServiceReportEndPoint(const std::string &IP, int Port)
+{
+    _serviceReportIP = IP;
+    _serviceReportPort = Port;
+}
+
+void UserFrontendService::SetStubReportEndPoint(const std::string &IP, int Port)
+{
+    _stubReportIP = IP;
+    _stubReportPort = Port;
+}
+
 Task<bool> UserFrontendService::Start()
 {
     bool result = co_await _gameStateStub->Connect(_gameStateStubIP, _gameStateStubPort) && BaseService::Start();
     if (result)
     {
         _delegator->AddLocalService(shared_from_this(), _serviceinfo->service_id, _serviceinfo->service_type);
-        if (ServiceEnable())
-            _serviceinfo->set_endpoint(_serviceIP, _servicePort);
-        if (StubEnable())
-            _serviceinfo->set_stub_endpoint(_stubIP, _stubPort);
+		if (ServiceEnable())
+			_serviceinfo->set_endpoint(_serviceReportIP, _serviceReportPort);
+		if (StubEnable())
+			_serviceinfo->set_stub_endpoint(_stubReportIP, _stubReportPort);
     }
     else
     {

@@ -17,6 +17,7 @@ namespace ResName
 	const std::string ironWall = "ironWall";
 	const std::string sandBK = "sandBK";
 	const std::string aidKit = "aidKit";
+	const std::string EnergyWaveProp = "EnergyWaveProp";
 	const std::string defTank = "defTank";
 	const std::string blueTank = "blueTank";
 	const std::string redTank = "redTank";
@@ -27,6 +28,7 @@ namespace ResName
 	const std::string purpleBullet = "purpleBullet";
 
 	const std::string explosionGIF = "explosionGIF";
+	const std::string energywaveGIF = "energywaveGIF";
 
 	const std::string healAudio = "healAudio";
 	const std::string defaultShootAudio = "defaultShootAudio";

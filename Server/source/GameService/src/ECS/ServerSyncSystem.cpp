@@ -141,7 +141,7 @@ void ServerSyncSystem::BroadCaseGameState()
 		}
 		else if (sync.syncEntityType == TagSync::SyncEntityType::BULLET)
 		{
-			if (!entity.hasComponents<TagSync, TagBullet, BulletProperty, Transform, Movement>())
+			if (!entity.hasComponents<TagSync, TagBullet, BulletCore, Transform, Movement>())
 				continue;
 			handleSyncBullet(allstate, entity);
 		}
@@ -230,20 +230,39 @@ void ServerSyncSystem::handleSyncBullet(GameState& allstate, Entity entity)
 	auto& world = getWorld();
 
 	auto& sync = world.getComponent<TagSync>(entity);
-	auto& bulletProperty = world.getComponent<BulletProperty>(entity);
+	auto& bulletCore = world.getComponent<BulletCore>(entity);
 	auto& trans = world.getComponent<Transform>(entity);
 	auto& movement = world.getComponent<Movement>(entity);
 
 	BulletState state;
 	state.entityId = entity.getId();
 	state.syncId = sync.syncId;
-	state.ownerId = bulletProperty.owner.getId();
-	state.ownerPlayerId = bulletProperty.ownerPlayerId;
+	state.ownerId = bulletCore.owner.getId();
+	state.ownerPlayerId = bulletCore.ownerPlayerId;
 	state.posX = trans.position.x;
 	state.posY = trans.position.y;
 	state.rotation = trans.rotation;
-	state.radius = bulletProperty.radius;
-	state.bulletDamage = bulletProperty.bulletDamage;
+
+	state.type = bulletCore.type;
+
+	if (state.type == WeaponType::Default)
+	{
+		if (auto* shape = entity.tryGetComponent<CircleShape>())
+		{
+			state.width = shape->radius;
+			state.height = shape->radius;
+		}
+	}
+	else if (state.type == WeaponType::EnergyWave)
+	{
+		if (auto* shape = entity.tryGetComponent<RectShape>())
+		{
+			state.width = shape->width;
+			state.height = shape->height;
+		}
+	}
+
+	state.bulletDamage = bulletCore.damage;
 	state.maxMoveSpeed = movement.maxMoveSpeed;
 	state.maxRotationSpeed = movement.maxRotationSpeed;
 	state.currentMoveSpeed = movement.currentMoveSpeed;

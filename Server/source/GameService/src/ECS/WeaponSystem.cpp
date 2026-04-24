@@ -5,41 +5,91 @@
 #include "ECS/Factory/BulletFactory.h"
 #include <algorithm>
 
-void WeaponSystem::onAttach(World &world)
+void WeaponSystem::onAttach(World& world)
 {
 	m_world->Subscribe<WeaponSystem, BulletDestroyedEvent>(
-		[&](const BulletDestroyedEvent &event) -> void
+		[&](const BulletDestroyedEvent& event)->void
 		{
-			Entity entity = event.shooter;
-			if (auto *weapon = entity.tryGetComponent<Weapon>())
-				weapon->currentBullets = std::max(0, weapon->currentBullets - 1);
+			if (auto* bulletcore = event.bullet.tryGetComponent<BulletCore>())
+			{
+				if (auto* weaponcontainer = event.shooter.tryGetComponent<WeaponContainer>())
+				{
+					if (auto* weaponconfig = weaponcontainer->tryGetWeapon(bulletcore->type))
+					{
+						if (weaponconfig->durationType != WeaponDurationType::CountTemporary)
+							weaponconfig->currentBullets = std::max(0, weaponconfig->currentBullets - 1);
+					}
+				}
+			}
 		}
 	);
 }
 
 void WeaponSystem::update(float deltaTime)
 {
-	auto entities = m_world->getEntitiesWith<Controller, Weapon, Transform>();
+	auto entities = m_world->getEntitiesWith<Controller, WeaponContainer, Transform>();
 
-	for (auto &entity : entities)
+	for (auto& entity : entities)
 	{
-		auto &weapon = entity.getComponent<Weapon>();
-		if (weapon.cooldown > 0)
-			weapon.cooldown = std::max(0.f, float(weapon.cooldown) - deltaTime);
+		auto& weaponcontainer = entity.getComponent<WeaponContainer>();
 
-		auto &controller = entity.getComponent<Controller>();
-		if (controller.wantToFire && weapon.cooldown <= 0 && weapon.currentBullets < weapon.maxBullets)
+		weaponcontainer.changeWeapon_cooldown = std::max(0.f, float(weaponcontainer.changeWeapon_cooldown) - deltaTime);
+
+		if (weaponcontainer.weapons.empty())
+			continue;
+
+		for (auto it : weaponcontainer.weapons)
 		{
-			PlayerID playerid;
-			if (auto* tankproperty = entity.tryGetComponent<TankProperty>())
-				playerid = tankproperty->playerId;
+			if (auto weaponconfig = it.second)
+				weaponconfig->cooldown = std::max(0.f, float(weaponconfig->cooldown) - deltaTime);
+		}
 
-			auto &trans = entity.getComponent<Transform>();
-			BulletFactory::CreateServerBullet(*m_world, entity, playerid, weapon.bulletDamage, weapon.bulletSpeed, trans.position.x, trans.position.y, 20, trans.rotation);
-			weapon.cooldown = weapon.fireRate;
-			weapon.currentBullets++;
+		if (weaponcontainer.changeWeapon_cooldown > 0.f)
+			continue;
 
-			m_world->Emit<WeaponShootEvent>(WeaponShootEvent{ .source = entity });
+		static std::vector<WeaponType> checkTypeOrders = { WeaponType::EnergyWave ,WeaponType::Default };
+		for (auto weapontype : checkTypeOrders)
+		{
+			if (auto* weaponconfig = weaponcontainer.tryGetWeapon(weapontype))
+			{
+				auto& controller = entity.getComponent<Controller>();
+				if (controller.wantToFire && weaponconfig->cooldown <= 0 && weaponconfig->currentBullets < weaponconfig->maxBullets)
+				{
+					PlayerID playerid;
+					if (auto* tankproperty = entity.tryGetComponent<TankProperty>())
+						playerid = tankproperty->playerId;
+
+					auto& trans = entity.getComponent<Transform>();
+					if (weaponconfig->type == WeaponType::Default)
+						BulletFactory::CreateServerDefaultBullet(*m_world,
+							entity, playerid,
+							weaponconfig->bulletDamage, weaponconfig->bulletSpeed,
+							trans.position.x, trans.position.y, 20, trans.rotation);
+					else if (weaponconfig->type == WeaponType::EnergyWave)
+						BulletFactory::CreateServerEnergyWaveBullet(*m_world,
+							entity, playerid,
+							weaponconfig->bulletDamage, weaponconfig->bulletSpeed,
+							trans.position.x, trans.position.y, 80, 35, trans.rotation);
+
+					weaponconfig->cooldown = weaponconfig->fireRate;
+					weaponconfig->currentBullets++;
+
+
+					if (weaponconfig->durationType == WeaponDurationType::CountTemporary)
+					{
+						if (weaponconfig->currentBullets >= weaponconfig->maxBullets)
+						{
+							weaponcontainer.removeWeapon(weaponconfig->type);
+							weaponcontainer.changeWeapon_cooldown = weaponcontainer.changeWeapon_Time;
+						}
+					}
+
+					m_world->Emit<WeaponShootEvent>(WeaponShootEvent{ .source = entity });
+
+				}
+
+				break;
+			}
 		}
 	}
 }

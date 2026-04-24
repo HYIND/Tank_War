@@ -5,10 +5,8 @@
 struct PropProperty :public IComponent
 {
 	enum PropType {
-		HEALTH_PACK,    // 医疗包
-		FAST_BULLET,    // 快速子弹
-		SHIELD,         // 护盾
-		MULTI_SHOT      // 多重射击
+		HEALTH_PACK = 0,    // 医疗包
+		ENERGY_WAVE
 	};
 
 	PropType type;

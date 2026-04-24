@@ -581,6 +581,10 @@
     <Image Include="..\Resource\Tank_Red.png">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="..\Resource\EnergyWave.gif">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\Resource\EnergyWave_Prop.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Resource\Cursor.cur">

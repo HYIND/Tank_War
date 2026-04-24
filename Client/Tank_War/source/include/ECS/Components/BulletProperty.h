@@ -4,27 +4,39 @@
 #include "Helper/math2d.h"
 #include "ECS/Core/IComponent.h"
 #include "GameDataDef.h"
+#include "Weapon.h"
 
-struct BulletProperty :public IComponent
-{
-	int bounceCount;        // 已反弹次数
-	int bulletDamage;		// 伤害
-	int maxBounces;         // 最大反弹次数
+struct CircleShape : public IComponent {
+	float radius;
 
-	int radius;
+	CircleShape() {}
+	CircleShape(float r) : radius(r) {}
+};
 
-	Entity owner;           // 发射者实体ID
+struct RectShape : public IComponent {
+	float width;
+	float height;
+
+	RectShape() {}
+	RectShape(float w, float h) : width(w), height(h) {}
+};
+
+struct BulletCore : public IComponent {
+	WeaponType type;
+	Entity owner;
+	int damage;
 
 	PlayerID ownerPlayerId;
 
-	BulletProperty() {}
-	BulletProperty(Entity owner, int radius, int bulletDamage)
-		: bounceCount(0), bulletDamage(bulletDamage), maxBounces(5), owner(owner), radius(radius) {
-	}
-	BulletProperty(PlayerID ownerplayerid, int radius, int bulletDamage)
-		: bounceCount(0), bulletDamage(bulletDamage), maxBounces(5), ownerPlayerId(ownerplayerid), radius(radius) {
-	}
-	BulletProperty(Entity owner, PlayerID ownerplayerid, int radius, int bulletDamage)
-		: bounceCount(0), bulletDamage(bulletDamage), maxBounces(5), owner(owner), ownerPlayerId(ownerplayerid), radius(radius) {
-	}
+	BulletCore() {}
+	BulletCore(WeaponType type, Entity owner, int damage) :type(type), owner(owner), damage(damage) {}
+	BulletCore(WeaponType type, PlayerID ownerid, int damage) : type(type), ownerPlayerId(ownerid), damage(damage) {}
+};
+
+struct BounceAbility : public IComponent
+{
+	int bounceCount = 0;
+	int maxBounces = 5;
+
+	BounceAbility() {};
 };

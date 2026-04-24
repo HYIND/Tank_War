@@ -11,12 +11,12 @@ void BulletSystem::onAttach(World& world)
 		[&](const EntityDestroyedEvent& event)->void
 		{
 			auto entity = event.entity;
-			if (entity.hasComponent<TagBullet>() && entity.hasComponent<BulletProperty>())
+			if (entity.hasComponent<TagBullet>() && entity.hasComponent<BulletCore>())
 			{
-				auto& bulletProperty = entity.getComponent<BulletProperty>();
+				auto& bulletCore = entity.getComponent<BulletCore>();
 				BulletDestroyedEvent bulletDestroyedEvent{
 					.bullet = entity,
-					.shooter = bulletProperty.owner
+					.shooter = bulletCore.owner
 				};
 				if (auto* trans = entity.tryGetComponent<Transform>())
 					bulletDestroyedEvent.position = trans->position;
@@ -33,8 +33,8 @@ void BulletSystem::onAttach(World& world)
 			auto entityA = event.entityA;
 			auto entityB = event.entityB;
 
-			bool isA_bullet = entityA.hasComponent<TagBullet>() && entityA.hasComponent<BulletProperty>();
-			bool isB_bullet = entityB.hasComponent<TagBullet>() && entityB.hasComponent<BulletProperty>();
+			bool isA_bullet = entityA.hasComponent<TagBullet>() && entityA.hasComponent<BulletCore>();
+			bool isB_bullet = entityB.hasComponent<TagBullet>() && entityB.hasComponent<BulletCore>();
 
 			if (isA_bullet && !isB_bullet)
 			{
@@ -54,25 +54,27 @@ void BulletSystem::processBulletCollision(Entity bullet, Entity target, Pos2 poi
 		return;
 
 	auto* health = target.tryGetComponent<Health>();
-	if (!health || health->isInvulnerable)
+	if ((!health || health->isInvulnerable) && bullet.hasComponent<BounceAbility>())
 	{
 		processBulletBounce(bullet);
 		return;
 	}
 
-	auto& bulletproperty = bullet.getComponent<BulletProperty>();
+	auto& bulletCore = bullet.getComponent<BulletCore>();
 	m_world->Emit<DamageEvent>(DamageEvent{
 		.target = target,
 		.source = bullet,
-		.damage = bulletproperty.bulletDamage
+		.damage = bulletCore.damage
 		});
-	m_world->destroyEntityLater(bullet);
+
+	if (bulletCore.type != WeaponType::EnergyWave)
+		m_world->destroyEntityLater(bullet);
 };
 
 void BulletSystem::processBulletBounce(Entity bullet)
 {
-	auto& bulletproperty = bullet.getComponent<BulletProperty>();
-	bulletproperty.bounceCount++;
-	if (bulletproperty.bounceCount > bulletproperty.maxBounces)
+	auto& bulletBounceAbility = bullet.getComponent<BounceAbility>();
+	bulletBounceAbility.bounceCount++;
+	if (bulletBounceAbility.bounceCount > bulletBounceAbility.maxBounces)
 		m_world->destroyEntityLater(bullet);
 }

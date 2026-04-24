@@ -25,15 +25,27 @@ void GameService::SetGameStateEndPoint(const std::string& IP, int Port)
 	_gameStateStubPort = Port;
 }
 
+void GameService::SetServiceReportEndPoint(const std::string &IP, int Port)
+{
+    _serviceReportIP = IP;
+    _serviceReportPort = Port;
+}
+
+void GameService::SetStubReportEndPoint(const std::string &IP, int Port)
+{
+    _stubReportIP = IP;
+    _stubReportPort = Port;
+}
+
 Task<bool> GameService::Start()
 {
 	bool result = co_await _gameStateStub->Connect(_gameStateStubIP, _gameStateStubPort) && BaseService::Start();
 	if (result)
 	{
 		if (ServiceEnable())
-			_serviceinfo->set_endpoint(_serviceIP, _servicePort);
+			_serviceinfo->set_endpoint(_serviceReportIP, _serviceReportPort);
 		if (StubEnable())
-			_serviceinfo->set_stub_endpoint(_stubIP, _stubPort);
+			_serviceinfo->set_stub_endpoint(_stubReportIP, _stubReportPort);
 	}
 	else
 	{
@@ -456,55 +468,28 @@ Task<void> GameService::ProcessPlayerLeave(const PlayerID& playerId, json& js_sr
 
 Task<bool> GameService::Stub_PlayerLeaveGame(const PlayerID& playerId, const GameID& gameId)
 {
-	std::vector<ServiceInfo> services;
-	if (!co_await _servcieDiscoverClient.GetAvailableServiceInfo(ServiceType::GAMESTATE, services) || services.empty())
-		co_return false;
-
 	json js_request, js_response;
 	js_request["command"] = GameStateServiceCommand::GameStateService_PlayerLeaveGame;
 	js_request["playerid"] = playerId;
 	js_request["gameid"] = gameId;
 
-	JsonProtocolClient client;
-	for (auto& service : services)
-	{
-		if (service.stub_endpoint.ip.empty() ||
-			service.stub_endpoint.port == 0)
-			continue;
+	if(!_gameStateStub)
+		co_return false;
 
-		if (!co_await client.Connect(service.stub_endpoint.ip, service.stub_endpoint.port))
-			continue;
-
-		co_return co_await Stub_Request(client, js_request, js_response);
-	}
-
-	co_return false;
+	co_return co_await Stub_Request(*_gameStateStub, js_request, js_response);
 }
 
 Task<bool> GameService::Stub_GameEnd(const GameID& gameId)
 {
-	std::vector<ServiceInfo> services;
-	if (!co_await _servcieDiscoverClient.GetAvailableServiceInfo(ServiceType::GAMESTATE, services) || services.empty())
-		co_return false;
 
 	json js_request, js_response;
 	js_request["command"] = GameStateServiceCommand::GameStateService_GameEnd;
 	js_request["gameid"] = gameId;
 
-	JsonProtocolClient client;
-	for (auto& service : services)
-	{
-		if (service.stub_endpoint.ip.empty() ||
-			service.stub_endpoint.port == 0)
-			continue;
+	if(!_gameStateStub)
+		co_return false;
 
-		if (!co_await client.Connect(service.stub_endpoint.ip, service.stub_endpoint.port))
-			continue;
-
-		co_return co_await Stub_Request(client, js_request, js_response);
-	}
-
-	co_return false;
+	co_return co_await Stub_Request(*_gameStateStub, js_request, js_response);
 }
 
 Task<bool> GameService::Stub_Request(JsonProtocolClient& client, const json& js_request, json& response)

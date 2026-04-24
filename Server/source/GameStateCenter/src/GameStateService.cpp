@@ -32,7 +32,7 @@ Task<bool> GameStateService::Start()
         if (ServiceEnable())
             _serviceinfo->set_endpoint(_serviceIP, _servicePort);
         if (StubEnable())
-            _serviceinfo->set_stub_endpoint(_stubIP, _stubPort);
+            _serviceinfo->set_stub_endpoint(_stubReportIP, _stubReportPort);
     }
     else
     {
@@ -45,6 +45,12 @@ Task<bool> GameStateService::Start()
 void GameStateService::SetGameStateManager(std::shared_ptr<GameStateManager> gsm)
 {
     _GSM_Weak = gsm;
+}
+
+void GameStateService::SetStubReportEndPoint(const std::string &IP, int Port)
+{
+    _stubReportIP = IP;
+    _stubReportPort = Port;
 }
 
 Task<void> GameStateService::OnSessionEstablish(JsonProtocolSession session)

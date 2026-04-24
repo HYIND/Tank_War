@@ -26,6 +26,8 @@ Entity PropFactory::CreateProp(World& world,
 	ID2D1Bitmap* bitmap = nullptr;
 	if (type == PropProperty::PropType::HEALTH_PACK)
 		bitmap = ResFactory->GetBitMapRes(ResName::aidKit);
+	else if (type == PropProperty::PropType::ENERGY_WAVE)
+		bitmap = ResFactory->GetBitMapRes(ResName::EnergyWaveProp);
 
 	entity.addComponent<Sprite>(width, height, bitmap);
 
@@ -65,6 +67,8 @@ Entity PropFactory::CreateClientProp(World& world,
 	ID2D1Bitmap* bitmap = nullptr;
 	if (type == PropProperty::PropType::HEALTH_PACK)
 		bitmap = ResFactory->GetBitMapRes(ResName::aidKit);
+	else if (type == PropProperty::PropType::ENERGY_WAVE)
+		bitmap = ResFactory->GetBitMapRes(ResName::EnergyWaveProp);
 
 	entity.addComponent<Sprite>(width, height, bitmap);
 
